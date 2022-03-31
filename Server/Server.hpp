@@ -8,11 +8,11 @@
 class Server {
 	private :
 		std::vector<User *>		users;
-		std::vector<Channel *>	channel; // NOTE must keep track of channels modes
+		std::vector<Channel *>	channels; // NOTE must keep track of channels modes
 
 		std::string				name; // NOTE max 63 characters
 		std::string				password;
-		int						port;
+		const char				*port;
 
 	public :
 		Server (); // TODO maybe set in private ?
