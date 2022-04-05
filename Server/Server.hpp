@@ -35,7 +35,7 @@ namespace irc {
 			std::vector<pollfd>			pfds;
 			std::vector<User *>			users;
 			std::vector<Channel *>		channels;
-			std::vector<std::string>	messages;
+			std::vector<std::string>	datas;
 
 			std::string		name; // NOTE max 63 characters
 			std::string		password;
@@ -58,7 +58,8 @@ namespace irc {
 			void	deleteSocketFromPoll (std::vector<pollfd>::iterator to_del);
 
 			void	createUser ();
-			void	receiveMessages ();
+			void	receiveDatas ();
+			void	datasAnalysis (const char* buf);
 	};
 };
 

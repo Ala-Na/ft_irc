@@ -102,6 +102,7 @@ void	Server::deleteSocketFromPoll(std::vector<pollfd>::iterator& to_del) {
 }
 
 void	Server::createUser() {
+	// TODO create max number of user to avoid slow server
 	struct sockaddr_in	client_addr;
 	socklen_t			addr_len;
 	int					client_fd;
@@ -116,7 +117,7 @@ void	Server::createUser() {
 
 # TODO create channel method which could be called by channel
 
-void	Server::receiveMessages() {
+void	Server::receiveDatas() {
 	char	buf[BUF_SIZE + 1];
 
 	for (std::vector<pollfd>::iterator it = pfds.begin() + 1; it != pfds.end(); it++) {
@@ -133,7 +134,18 @@ void	Server::receiveMessages() {
 			} else {
 				buf[bytes_recv] = 0;
 				std::cout << "From client (fd = " << (*it).fd << "): " << buf << std::endl;
+				this->datasAnalysis(&buf, it - pfds.begin());
 				// TODO go to parsing
 			}
 }
 
+void	Server::datasAnalysis (const char* buf, int pos) {
+	datas[pos].append(buf);
+	size_t cmd_end = datas[pos].find("\r\n");
+	while (cmd_end != string::npos) {
+		// Create new cmd with datas[pos] from begin to cmd_end
+		// Delete cmd part from datas[pos] to cmd_end.
+		// Go to parse cmd.
+		cmd_end = datas[pos].find("\r\n");
+	}
+}
