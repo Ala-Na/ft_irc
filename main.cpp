@@ -6,6 +6,8 @@ using namespace irc;
 
 bool	irc::running = true;
 
+bool	running = true;
+
 short	check_port_validity(const char* port)
 {
 	int	port_nb = std::atoi(port);
