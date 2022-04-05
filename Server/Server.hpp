@@ -1,4 +1,5 @@
-#ifndef USER_HPP
+#ifndef SERVER_HPP
+#define SERVER_HPP
 
 #include <vector>
 #include <string>
@@ -22,21 +23,32 @@
 #include "User.hpp"
 #include "Channel.hpp"
 
+class	User;
+class	Channel;
+
 // TODO maybe put in canonical form ?
 class Server {
 	private :
+		std::vector<pollfd>		pfds;
 		std::vector<User *>		users;
 		std::vector<Channel *>	channels; // NOTE must keep track of channels modes
 
-		std::string				name = "In Real unControl - An ft_irc server"; // NOTE max 63 characters
+		std::string				name; // NOTE max 63 characters
 		std::string				password;
-		const char				*port;
-		bool					running = true;
+		const char*				port;
+
+		int						server_socket;
+
+		Server ();
 
 	public :
-		Server (); // TODO maybe set in private ?
 		Server (std::string password, int port);
 		~Server ();
+
+		int	initServer ();
+
+
+
 
 
 };
