@@ -114,6 +114,8 @@ void	Server::createUser() {
 	this->messages.push_back("");
 }
 
+# TODO create channel method which could be called by channel
+
 void	Server::receiveMessages() {
 	char	buf[BUF_SIZE + 1];
 
