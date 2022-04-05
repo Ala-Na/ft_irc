@@ -6,12 +6,12 @@
 namespace irc {
 	class	Command {
 		private :
-			const std::string content;
+			const char* content;
 
 			Command ();
 
 		public :
-			Command (const std::string content);
+			Command (const char* content);
 			~Command ();
 
 			void	parseCommand();
