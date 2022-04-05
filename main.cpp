@@ -6,6 +6,8 @@ using namespace irc;
 
 bool	irc::running = true;
 
+using namespace irc;
+
 bool	running = true;
 
 short	check_port_validity(const char* port)

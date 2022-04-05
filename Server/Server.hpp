@@ -1,56 +1,65 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
+// Cpp librairy
 #include <vector>
-#include <string>
 #include <iostream>
 #include <stdlib.h>
 #include <cstring>
-#include <errno.h>
-#include <unistd.h>
-#include <arpa/inet.h>
+
+// C librairy with no cpp equivalent
+#include <poll.h>
+#include <netdb.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
-#include <sys/time.h>
-#include <netdb.h>
-#include <vector>
-#include <poll.h>
+#include <unistd.h>
+#include <arpa/inet.h> //inet_ntoa
+#include <netinet/in.h> //inet_ntoa
 #include <fcntl.h>
-#include <signal.h>
 
 // TODO modify following path
 #include "User.hpp"
 #include "Channel.hpp"
 
-class	User;
-class	Channel;
+#define BUF_SIZE 512 // Max size of IRC message (last 2 characters for carriage return - line feed)
 
-// TODO maybe put in canonical form ?
-class Server {
-	private :
-		std::vector<pollfd>		pfds;
-		std::vector<User *>		users;
-		std::vector<Channel *>	channels; // NOTE must keep track of channels modes
+namespace irc {
 
-		std::string				name; // NOTE max 63 characters
-		std::string				password;
-		const char*				port;
+	extern bool	running;
 
-		int						server_socket;
+	class	User;
+	class	Channel;
 
-		Server ();
+	class Server {
+		private :
+			std::vector<pollfd>			pfds;
+			std::vector<User *>			users;
+			std::vector<Channel *>		channels;
+			std::vector<std::string>	messages;
 
-	public :
-		Server (std::string password, int port);
-		~Server ();
+			std::string		name; // NOTE max 63 characters
+			std::string		password;
+			const char*		port;
 
-		int	initServer ();
+			int	server_socket;
 
+			Server ();
+			Server (const Server& other);
+			Server&	operator= (const Server& other);
 
+		public :
+			Server (std::string password, int port);
+			~Server ();
 
+			int	initServer ();
+			int	runServer ();
 
+			void	addSocketToPoll (int socket_fd);
+			void	deleteSocketFromPoll (std::vector<pollfd>::iterator to_del);
 
+			void	createUser ();
+			void	receiveMessages ();
+	};
 };
 
 #endif
