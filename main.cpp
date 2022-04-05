@@ -1,4 +1,8 @@
+#include <ctsdlib>
+#include <csignal>
 #include "./Server/Server.hpp"
+
+using namespace irc;
 
 bool	running = true;
 
@@ -41,17 +45,19 @@ int	main (int argc, char **argv)
 
 	if (server.initServer() == -1) {
 		std::cerr << "Error while initializing server socket." << std::endl;
+		delete server;
 		return 1;
 	}
 
-	while (running == true) {
-		if (server.runServer() == -1) {
-			break;
-		}
-		// Execution server
+	if (server.runServer() == -1) {
+		std::cerr << "Error while executing server." << std::endl;
+		delete server;
+		return 1;
 	}
 
 	delete server;
+
+	std::cout << "Bye !" << std::endl;
 
 	return 0;
 }

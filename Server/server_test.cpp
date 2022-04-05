@@ -161,7 +161,6 @@ void	interact_with_client(int server_fd)
 
 	std::cout << "Server started" << std::endl;
 
-	// TODO take ctrl D in account with signal to stop execution
 	while (!exit_val) {
 		// Here's the poll function, it permits to detect when a change of status
 		// is done in all the fd stocked inside pfds.

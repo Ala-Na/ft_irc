@@ -1,15 +1,18 @@
 #include "Server.hpp"
 
+using namespace irc;
+
 Server::Server(std::string password, int port) : password(password), port(port), \
 	name("In Real unControl - An ft_irc server")
 {
+	std::cout << "Initializating server..." << std::endl;
 	this->users = new std::vector<User *>();
 	this->channels = new std::vector<User *>();
 	this->pfds = new std::vector<pollfd>();
-	std::cout << "Initializating server..." << std::endl;
 }
 
 Server::~Server() {
+	std::cout << "Closing server..." << std::endl;
 	delete this->users;
 	delete this->channels;
 	for (std::vector<pollfd>::iterator it = pfds.rbegin(); it != pfds.rend(); it++) {
@@ -26,13 +29,13 @@ int	Server::initServer() {
 	int	opt = 1;
 	int res;
 
-	memset(&hints, 0, sizeof(hints));
+	std::memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
 
 	if ((res = getaddrinfo(NULL, port, &hints, &ai)) != 0) {
-		std::cerr << "getaddrinfo error " << gai_strerror(res) << std::endl;
+		std::cerr << "Error : getaddrinfo() - " << gai_strerror(res) << std::endl;
 		return (-1);
 	}
 	for (p = ai; p != NULL; p = p->ai_next) {
@@ -59,55 +62,76 @@ int	Server::initServer() {
 }
 
 int	Server::runServer() {
-	struct sockaddr_in	client_addr;
-	socklen_t			addr_len;
-	int					cli_fd;
-	char				buf[BUF_SIZE + 1];
-
-	// We add the server socket fd to a vector of pollfd.
-	add_socket_fd_to_poll(pfds, this->server_socket);
+	this->addSocketToPoll(this->server_socket);
 
 	std::cout << "Server started" << std::endl;
 
 	int poll_count = poll(&pfds[0], pfds.size(), -1);
 
-	if (!exit_val && poll_count < 0) {
-		std::cerr << "poll error" << std::endl;
-		return (-1);
-	} else if (!exit_val) {
-		std::cout << "Number of detected connection:" << pfds.size() - 1 << std::endl;
-		if (pfds[0].revents & POLLIN) {
-			addr_len = sizeof(cli_addr);
-			cli_fd = accept(server_fd, (struct sockaddr *)&cli_addr, &addr_len);
-			add_socket_fd_to_poll(pfds, cli_fd);
-			std::cout << "New connection accepted from " << inet_ntoa(cli_addr.sin_addr) << std::endl;
-		}
-		for (std::vector<pollfd>::iterator it = pfds.begin() + 1; it != pfds.end(); it++) {
-			// POLLIN = data to receive through client socket fd.
-			if ((*it).revents & POLLIN) {
-				// To retrieve this datam we make a call to recv() function.
-				ssize_t	bytes_recv = recv((*it).fd, &buf, BUF_SIZE, 0);
-				// We check for recv() errors or end of client connection.
-				if (bytes_recv <= 0) {
-					if (bytes_recv == -1) { // Case of error with recv
-						std::cerr << "recv error" << std::endl;
-					} else { // Case where client connection closed
-						std::cout << "Client " << (*it).fd << " exited" << std::endl;
-					}
-					// We close the corresponding fd to avoid fd leak
-					close((*it).fd);
-					// We delete the fd socket from the vector pfds, in order to
-					// stop checking the fd status.
-					delete_socket_fd_from_poll(pfds, it);
-					break ;
-				} else {
-					// Here, we received data correctly. The buffer is filled with data,
-					// we had a '\0' at the end of it.
-					buf[bytes_recv] = 0;
-					// Just displaying the message received.
-					std::cout << "From client (fd = " << (*it).fd << "): " << buf << std::endl;
-				}
+	while (runnning == true) {
+		if (running = true && poll_count < 0) {
+			std::cerr << "Error: poll()" << std::endl;
+			return (-1);
+		} else if (running == true) {
+			if (pfds[0].revents & POLLIN) {
+				this->createUser();
 			}
+			this->receiveMessages();
 		}
 	}
 }
+
+void	Server::addSocketToPoll(int socket_fd) {
+	fcntl(new_fd, F_SETFL, O_NONBLOCK);
+	this->pfds.push_back(pollfd());
+	this->pfds.back().fd = new_fd;
+	this->pfds.back().events = POLLIN;
+}
+
+void	Server::deleteSocketFromPoll(std::vector<pollfd>::iterator& to_del) {
+	std::cout << "Closing connection to client fd = " << (*to_del).fd << std::endl;
+
+	int	position = to_del - this->pfds.begin();
+
+	close((*to_del).fd);
+	this->pfds.erase(place);
+	delete (*(this->users[position]));
+	this->users.erase(position);
+	this->messages.erase(position);
+
+}
+
+void	Server::createUser() {
+	struct sockaddr_in	client_addr;
+	socklen_t			addr_len;
+	int					client_fd;
+
+	addr_len = sizeof(client_addr);
+	client_fd = accept(this->server_socket, (struct sockaddr *)&client_addr, &addr_len);
+	this->addSocketToPoll(client_fd);
+	std::cout << "Accepting new connection from " << inet_ntoa(client_addr.sin_addr) << " on fd :" << client_fd << std::endl;
+	this->users.push_back(new User(user_fd, address));
+	this->messages.push_back("");
+}
+
+void	Server::receiveMessages() {
+	char	buf[BUF_SIZE + 1];
+
+	for (std::vector<pollfd>::iterator it = pfds.begin() + 1; it != pfds.end(); it++) {
+		if ((*it).revents & POLLIN) {
+			ssize_t	bytes_recv = recv((*it).fd, &buf, BUF_SIZE, 0);
+			if (bytes_recv <= 0) {
+				if (bytes_recv == -1) {
+					std::cerr << "Error : recv()" << std::endl;
+				} else {
+					std::cout << "Client " << (*it).fd << " exited" << std::endl;
+				}
+				this->deleteSocketFromPoll(it);
+				break ;
+			} else {
+				buf[bytes_recv] = 0;
+				std::cout << "From client (fd = " << (*it).fd << "): " << buf << std::endl;
+				// TODO go to parsing
+			}
+}
+
