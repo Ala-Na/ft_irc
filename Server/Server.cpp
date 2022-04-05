@@ -143,6 +143,7 @@ void	Server::datasAnalysis (const char* buf, int pos) {
 	datas[pos].append(buf);
 	size_t cmd_end = datas[pos].find("\r\n");
 	while (cmd_end != string::npos) {
+		// TODO following instructions
 		// Create new cmd with datas[pos] from begin to cmd_end
 		// Delete cmd part from datas[pos] to cmd_end.
 		// Go to parse cmd.
