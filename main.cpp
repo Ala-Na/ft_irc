@@ -1,11 +1,19 @@
 #include "./Server/Server.hpp"
 
+bool	running = true;
+
 short	check_port_validity(const char* port)
 {
 	int	port_nb = std::atoi(port);
 	if (port_nb < 1 || port_nb > 65535)
 		return 0;
 	return port_nb;
+}
+
+void sig_handler_function(int signum)
+{
+	if (signum == SIGINT)
+		running = false;
 }
 
 int	main (int argc, char **argv)
@@ -24,7 +32,26 @@ int	main (int argc, char **argv)
 		return 1;
 	}
 
-	// Launch server and exit
+	signal(SIGINT, sig_handler_function);
+
+	// TODO make verification for password
+
+	// Launch server
+	Server server = new Server(argv[2], argv[1]);
+
+	if (server.initServer() == -1) {
+		std::cerr << "Error while initializing server socket." << std::endl;
+		return 1;
+	}
+
+	while (running == true) {
+		if (server.runServer() == -1) {
+			break;
+		}
+		// Execution server
+	}
+
+	delete server;
 
 	return 0;
 }
