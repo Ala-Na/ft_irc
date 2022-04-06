@@ -6,8 +6,8 @@
 
 // TODO modify following
 #include "Server.hpp"
-// #include "User.hpp"
-// #include "Channel.hpp"
+#include "User.hpp"
+#include "Channel.hpp"
 
 namespace irc {
 	class Server;
@@ -17,7 +17,7 @@ namespace irc {
 	class	Command {
 		private :
 			Server&		server;
-			// User*		user;
+			User*		user;
 			std::string	content;
 
 			std::string	prefix;
@@ -29,7 +29,7 @@ namespace irc {
 			Command&	operator= (const Command& other);
 
 		public :
-			// Command (Server& server, User* user, std::string& content);
+			Command (Server& server, User* user, std::string& content);
 			Command (Server& server, std::string& content);
 			~Command ();
 

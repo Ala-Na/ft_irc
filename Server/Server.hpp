@@ -18,8 +18,8 @@
 #include <fcntl.h>
 
 // TODO modify following path
-// #include "User.hpp"
-// #include "Channel.hpp"
+#include "User.hpp"
+#include "Channel.hpp"
 #include "Command.hpp"
 
 #define BUF_SIZE 512 // Max size of IRC message (last 2 characters for carriage return - line feed)
@@ -35,8 +35,8 @@ namespace irc {
 	class Server {
 		private :
 			std::vector<pollfd>			pfds;
-			// std::vector<User *>			users;
-			// std::vector<Channel *>		channels;
+			std::vector<User *>			users;
+			std::vector<Channel *>		channels;
 			std::vector<std::string>	datas;
 
 			std::string		name; // NOTE max 63 characters
@@ -60,13 +60,13 @@ namespace irc {
 			void	deleteSocketFromPoll (std::vector<pollfd>::iterator& to_del);
 
 			void	createUser ();
-			// Channel*	createChannel (std::string name);
+			Channel*	createChannel (std::string name);
 			void	receiveDatas ();
 			void	datasExtraction (std::string& buf, int pos);
 
 			Server&		getServer ();
-			// User*		getSpecificUser (int user_nb);
-			// Channel*	getChannelByName (std::string name);
+			User*		getSpecificUser (int user_nb);
+			Channel*	getChannelByName (std::string name);
 	};
 };
 
