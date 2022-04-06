@@ -179,3 +179,4 @@ Channel*	Server::getChannelByName(std::string name) const {
 	}
 	return NULL;
 }
+
