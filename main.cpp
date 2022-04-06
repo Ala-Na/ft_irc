@@ -18,6 +18,7 @@ void sig_handler_function(int signum)
 {
 	if (signum == SIGINT)
 		irc::running = false;
+	std::cout << std::endl;
 }
 
 int	main (int argc, char **argv)
