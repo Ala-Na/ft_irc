@@ -96,7 +96,7 @@ void	Server::deleteSocketFromPoll(std::vector<pollfd>::iterator& to_del) {
 	std::vector<User *>::iterator it1 = this->users.begin();
 	std::advance(it1, position);
 	delete (it1);
-	this->users.erase(this->user[position - 1]);
+	this->users.erase(it1);
 	std::vector<std::string>::iterator it2 = this->datas.begin();
 	std::advance(it2, position);
 	this->datas.erase(it2);
@@ -115,6 +115,24 @@ void	Server::createUser() {
 	std::cout << "Accepting new connection from " << inet_ntoa(client_addr.sin_addr) << " on fd :" << client_fd << std::endl;
 	this->users.push_back(new User(user_fd, address));
 	this->datas.push_back("");
+}
+
+void	Server::deleteUser (User* user) {
+	for (std::vector<User *>::iterator it1 = this->users.begin(); \
+			it1 != this->users.end(); it1++) {
+		if ((*it1) == user) {
+			// TODO Response with ERROR
+			int position = it1 - this->users.begin();
+			std::vector<std::string>::iterator it2 = this->datas.begin();
+			std::advance(it2, position);
+			this->datas.erase(it2);
+			std::vector<pollfd>::iterator it3 = this->pfds.begin();
+			std::advance(it3, position);
+			close((*it3).fd);
+			this->datas.erase(it3);
+			delete *it1;
+		}
+	}
 }
 
 // TODO check parameters for channel creation
@@ -185,3 +203,25 @@ Channel*	Server::getChannelByName(std::string name) const {
 	return NULL;
 }
 
+void	Server::checkPassword (User* user, std::string parameters) {
+	// if user->isRegistered() == true {}
+		// Send error ERR_ALREADYREGISTERED 462
+	// }
+	if (parameters.empty()) {
+		// Send error ERR_NEEDMOREPARAMS 461
+		this->deleteUser(user);
+	} else if (parameters.compare(this->password) != 0) {
+		// Send error ERR_PASSWDMISMATCH 464
+		this->deleteUser(user);
+	}
+	// Modify user to take into account the PASS status and wait for NICK and USER.
+}
+
+void	Server::listChannels(User* user) {
+	int fd = user->getFd();
+
+	for (std::vector<Channel *>::iterator it = this->channels.begin(); it != this->channels.end(); it++) {
+		//(*it).getChanName()
+		// Response must be : '322 nickname channelname nb_user_in_channel: topic'
+	}
+}
