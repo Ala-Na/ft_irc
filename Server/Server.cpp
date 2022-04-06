@@ -64,10 +64,9 @@ int	Server::runServer() {
 
 	std::cout << "Server started" << std::endl;
 
-	int poll_count = poll(&pfds[0], pfds.size(), -1);
-
 	while (running == true) {
-		if (running = true && poll_count < 0) {
+		int poll_count = poll(&pfds[0], pfds.size(), -1);
+		if (running == true && poll_count < 0) {
 			std::cerr << "Error: poll()" << std::endl;
 			return (-1);
 		} else if (running == true) {
@@ -144,7 +143,7 @@ void	Server::receiveDatas() {
 				buf[bytes_recv] = 0;
 				std::cout << "From client (fd = " << (*it).fd << "): " << buf << std::endl;
 				s_buf = buf;
-				this->datasExtraction(s_buf, it - pfds.begin());
+				this->datasExtraction(s_buf, it - pfds.begin() - 1);
 			}
 		}
 	}
@@ -153,16 +152,16 @@ void	Server::receiveDatas() {
 void	Server::datasExtraction(std::string& buf, int pos) {
 	// User *user = this->getSpecificUser(pos - 1);
 	datas[pos].append(buf);
-	size_t cmd_end = datas[pos].find("\r\n");
-	while (cmd_end != std::string::npos) {
-		std::string	content = datas[pos].substr(0, cmd_end);
-		datas[pos].erase(0, cmd_end + 2);
-		cmd_end = datas[pos].find("\r\n");
+	//size_t cmd_end = datas[pos].find("\r\n");
+	//while (cmd_end != std::string::npos) {
+		std::string	content = datas[pos].substr(0, datas[pos].size());//cmd_end);
+		datas[pos].erase(0, datas[pos].size()); //cmd_end + 2);
+		//cmd_end = datas[pos].find("\r\n");
 		// Command cmd = new Command(this.getServer(), user, content);
 		Command* cmd = new Command(this->getServer(), content);
 		cmd->parseCommand();
 		delete cmd;
-	}
+	//}
 }
 
 Server&	Server::getServer() {
