@@ -1,10 +1,10 @@
-#include <ctsdlib>
+#include <cstdlib>
 #include <csignal>
 #include "./Server/Server.hpp"
 
 using namespace irc;
 
-bool	running = true;
+bool	irc::running = true;
 
 short	check_port_validity(const char* port)
 {
@@ -17,12 +17,13 @@ short	check_port_validity(const char* port)
 void sig_handler_function(int signum)
 {
 	if (signum == SIGINT)
-		running = false;
+		irc::running = false;
 }
 
 int	main (int argc, char **argv)
 {
-	short	port;
+	short		port;
+	std::string	password;
 
 	// First, check than arguments are presents
 	if (argc != 3) {
@@ -39,17 +40,18 @@ int	main (int argc, char **argv)
 	signal(SIGINT, sig_handler_function);
 
 	// TODO make verification for password
+	password = argv[2];
 
 	// Launch server
-	Server server = new Server(argv[2], argv[1]);
+	Server* server = new Server(password, argv[1]);
 
-	if (server.initServer() == -1) {
+	if (server->initServer() == -1) {
 		std::cerr << "Error while initializing server socket." << std::endl;
 		delete server;
 		return 1;
 	}
 
-	if (server.runServer() == -1) {
+	if (server->runServer() == -1) {
 		std::cerr << "Error while executing server." << std::endl;
 		delete server;
 		return 1;
