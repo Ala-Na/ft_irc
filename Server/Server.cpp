@@ -10,6 +10,7 @@ Server::Server(std::string password, const char* port) : password(password), por
 	this->users = std::vector<User *>();
 	this->channels = std::vector<Channel *>();
 	this->pfds = std::vector<pollfd>();
+	// TODO recuperate info from .conf file
 }
 
 Server::~Server() {
@@ -217,11 +218,98 @@ void	Server::checkPassword (User* user, std::string parameters) {
 	// Modify user to take into account the PASS status and wait for NICK and USER.
 }
 
-void	Server::listChannels(User* user) {
+void	Server::listChannels (User* user) {
 	int fd = user->getFd();
 
+	// Maybe send 321 and 323 from intList ?
+	// Send RPL_liststart 321
 	for (std::vector<Channel *>::iterator it = this->channels.begin(); it != this->channels.end(); it++) {
 		//(*it).getChanName()
 		// Response must be : '322 nickname channelname nb_user_in_channel: topic'
+		// Maybe do call to function ?
 	}
+	// Send RPL_LISTEND 323
+}
+
+void	Server::getMotd (User* user, std::string parameters) {
+	int fd = user->getFd();
+
+	// TODO use split of channel_management branch
+	if (!parameters.empty() && parameters.compare(this->name)) {
+		// Send ERR_NOSUCHSERVER 402
+		return ;
+	} else if (motd.empty()) {
+		// Send ERR_NOMOTD 422
+		return ;
+	}
+	// Send RPL_MOTDSTART 375
+	std::vector<std::string> lines = split(motd, "\n");
+	for (std::vector<std::string>::iterator it = lines.begin(); it != lines.end(); it++) {
+		// Send RPL_MOTD 372 with (*it) 
+	}
+	// Send RPL_ENDOFMOTD 376
+}
+
+void	Server::getTime (User* user, std::string parameters) {
+	int fd = user->getFd();
+
+	if (!parameters.empty() && parameters.compare(this->name)) {
+		// Send ERR_NOSUCHSERVER 402
+		return ;
+	}
+	std::time_t time;
+	std::time(&time);
+	std::string s_time = std::asctime(std::localtime(&time));
+	// Send RPL_TIME 391 with time as parameter
+}
+
+void	Server::getVersion (User* user, std::string parameter) {
+	int fd = user->getFd();
+
+	if (!parameters.empty() && parameters.compare(this->name)) {
+		// Send ERR_NOSUCHSERVER 402
+		return ;
+	}
+	// Send RPL 351 - client this->version this->name :comments but without comment
+}
+
+void	Server::getAdmin (User* user, std::string parameter) {
+	int fd = user->getFd();
+
+	if (!parameters.empty() && parameters.compare(this->name)) {
+		// Send ERR_NOSUCHSERVER 402
+		return ;
+	}
+	// Send RPL_ADMINME 256	
+	// Send RPL_ADMINLOC1 257 with this->adminloc1
+	// Send RPL_ADMINLOC2 258 with this->adminloc2	
+	// Send RPL_ADMINEMAIL 259 with this->adminemail
+}
+
+void	Server::sendError (User* user, std::string parameter) {
+	int fd = user->getFd();
+
+	parameter.append(0, "ERROR :");
+	ssize_t bytes_send = send(fd, &parameter, parameter.size(), 0);
+	if (bytes_send == -1) {
+		std::cout << "Error: send()" << std::endl;
+		return ;
+	}
+}
+
+void	Server::sendPong (User* user, std::string parameter) {
+	int fd = user->getFd();
+
+	parameter.append(0, " :");
+	parameter.append(0, this->name);
+	parameter.append(0, " PONG ");
+	parameter.append(0, this->name);
+	parameter.append(0, " :");
+	ssize_t bytes_send = send(fd, &parameter, parameter.size(), 0);
+	if (bytes_send == -1) {
+		std::cout << "Error: send()" << std::endl;
+		// TODO delete user ?
+		return ;
+	}	
+
 }
