@@ -2,11 +2,11 @@
 
 using namespace irc;
 
-Command::Command(std::string content) : content(content) {};
+Command::Command(std::string content) : content(content) {}
 
 // TODO check if memory allocated need to be free
-Command::~Command() {};
+Command::~Command() {}
 
 void	Command::parseCommand(){
-
-};
+	
+}
