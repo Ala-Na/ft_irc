@@ -13,7 +13,7 @@ void	Command::parseCommand () {
 	std::string	first_word = this->getWord();
 	if (first_word.empty()) {
 		this->prefix = this->content;
-		this->content.clear();
+		this->content = "";
 	} else {
 		this->prefix = first_word;
 	}
