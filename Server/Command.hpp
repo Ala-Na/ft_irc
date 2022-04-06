@@ -15,7 +15,7 @@ namespace irc {
 		private :
 			Server&				server;
 			User*				user;
-			const std::string	content;
+			std::string	content;
 
 			std::string prefix;
 
@@ -23,7 +23,7 @@ namespace irc {
 			Command ();
 
 		public :
-			Command (Server& server, User* user, const std::string content);
+			Command (Server& server, User* user, std::string& content);
 			~Command ();
 
 			void	parseCommand();
