@@ -18,8 +18,7 @@ void	Command::parseCommand() {
 		this->prefix = first_word;
 	}
 	std::transform(this->prefix.begin(), this->prefix.end(), this->prefix.begin(), ::toupper);
-	// Check prefix exist
-	// Get parameters.
+	this->parameters = this->content;
 }
 
 std::string	Command::getWord () {
@@ -35,18 +34,27 @@ std::string	Command::getWord () {
 
 bool	Command::checkPrefix () {
 	// TODO delete unimplemented functions
-	int nbr_cmd = 40;
-	void (Command::pmf[]) = {&Command::intOper, &Command::intJoin, \
+	int nbr_cmd = 29;
+	void (Command::pmf[nbr_cmd]) = {&Command::intOper, &Command::intJoin, \
 		&Command::intTopic, &Command::intMode, &Command::intPart, \
 		&Command::intNames, &Command::intList, &Command::intInvite, \
 		&Command::intKick, &Command::intPrivmsg, &Command::intNotice, \
-		&Command::
-		});
-	std::string msg[] = {"OPER", "JOIN", "TOPIC", "MODE", "PART", "NAMES", \
+		&Command::intKill, &Command::intQuit, &Command::intNick, \
+		&Command::intWhoIs, &Command::intAway, &Command::intWallops, \
+		&Command::intUserhost, &Command::intPass, &Command::intUser, \
+		&Command::intSquit, &Command::intMotd, &Command::intTime, \
+		&Command::intVersion, &Command::intPing, &Command::intPong, \
+		&Command::intError, &Command::intWho, &Command::intAdmin};
+	std::string msg[nbr_cmd] = {"OPER", "JOIN", "TOPIC", "MODE", "PART", "NAMES", \
 		"LIST", "INVITE", "KICK", "PRIVMSG", "NOTICE", "KILL", "QUIT", "NICK", \
-		"WHOIS", "AWAY", "WALLOPS", "USERHOST", "PASS", "USER", "SQUIT", "LIST", \
-		"MOTD", "TIME", "LUSERS", "VERSION", "STATS", "LINKS", "ISON", "RESTART", \
-		"PING", "PONG", "ERROR", "DIE", "WHO", "WHOWAS", "SUMMON", "INFO", \
-		"TRACE", "ADMIN"};
+		"WHOIS", "AWAY", "WALLOPS", "USERHOST", "PASS", "USER", "SQUIT", \
+		"MOTD", "TIME", "VERSION", "PING", "PONG", "ERROR", "WHO", "ADMIN"};
+
+	for (int i = 0; i < nbr_cmd; i++) {
+		if (!this->prefix.compare(msg[i])) {
+			this->*pmf[i]();
+			return ;
+		}
+	}
 	// TODO send error unknown code 421 if not found
 }
