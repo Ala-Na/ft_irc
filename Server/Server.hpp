@@ -59,7 +59,11 @@ namespace irc {
 
 			void	createUser ();
 			void	receiveDatas ();
-			void	datasAnalysis (const char* buf);
+			void	datasExtraction (const char* buf);
+
+			Server&		getServer () const;
+			User*		getSpecificUser (int user_nb);
+			Channel*	getChannelByName (std::string name);
 	};
 };
 

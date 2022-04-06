@@ -2,6 +2,7 @@
 
 using namespace irc;
 
+// TODO check name validity
 Server::Server(std::string password, int port) : password(password), port(port), \
 	name("In Real unControl - An ft_irc server")
 {
@@ -115,6 +116,11 @@ void	Server::createUser() {
 	this->messages.push_back("");
 }
 
+// TODO check parameters for channel creation
+Channel&	Server::createChannel(std::string name) {
+	this->channels.push_back(new Channel(name));
+	return *(channels.back());
+}
 # TODO create channel method which could be called by channel
 
 void	Server::receiveDatas() {
@@ -134,19 +140,42 @@ void	Server::receiveDatas() {
 			} else {
 				buf[bytes_recv] = 0;
 				std::cout << "From client (fd = " << (*it).fd << "): " << buf << std::endl;
-				this->datasAnalysis(&buf, it - pfds.begin());
-				// TODO go to parsing
+				this->datasExtraction(&buf, it - pfds.begin());
 			}
 }
 
-void	Server::datasAnalysis (const char* buf, int pos) {
+void	Server::datasExtraction(const char* buf, int pos) {
+	User *user = this->getSpecificUser(pos - 1);
 	datas[pos].append(buf);
 	size_t cmd_end = datas[pos].find("\r\n");
 	while (cmd_end != string::npos) {
-		// TODO following instructions
-		// Create new cmd with datas[pos] from begin to cmd_end
-		// Delete cmd part from datas[pos] to cmd_end.
-		// Go to parse cmd.
+		std::string	content = datas[pos].substr(0, cmd_end);
+		datas[pos].erase(0, cmd_end + 2);
 		cmd_end = datas[pos].find("\r\n");
+		Command cmd = new Command(this.getServer(), user, content);
+		cmd.parseCommand();
+		delete cmd;
 	}
+}
+
+Server&	Server::getServer() const {
+	return *this;
+}
+
+// Here, user_nb is from 0 to max - 1.
+User*	Server::getSpecificUser(int user_nb) const {
+	if (user_nb < this->users.size())
+		return this->users[user_nb];
+	return NULL;
+}
+
+Channel*	Server::getChannelByName(std::string name) const {
+	for (std::vector<Channel *>::iterator it = this->channels.begin(); \
+		it != this->channels.end(); it++)
+	{
+		// TODO
+		// Check if (*it)->getname() == name;
+		// If true, return channel;
+	}
+	return NULL;
 }

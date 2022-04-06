@@ -3,15 +3,27 @@
 
 #include <cstring>
 
+// TODO modify following
+#include "Server.hpp"
+#include "User.hpp"
+#include "Channel.hpp"
+
 namespace irc {
+	class Server;
+
 	class	Command {
 		private :
-			const char* content;
+			Server&				server;
+			User*				user;
+			const std::string	content;
+
+			std::string prefix;
+
 
 			Command ();
 
 		public :
-			Command (const char* content);
+			Command (Server& server, User* user, const std::string content);
 			~Command ();
 
 			void	parseCommand();
