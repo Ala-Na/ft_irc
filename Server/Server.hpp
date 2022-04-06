@@ -4,8 +4,8 @@
 // Cpp librairy
 #include <vector>
 #include <iostream>
-#include <stdlib.h>
 #include <cstring>
+#include <ctime>
 
 // C librairy with no cpp equivalent
 #include <poll.h>
@@ -16,6 +16,7 @@
 #include <arpa/inet.h> //inet_ntoa
 #include <netinet/in.h> //inet_ntoa
 #include <fcntl.h>
+#include <stdlib.h>
 
 // TODO modify following path
 #include "User.hpp"
@@ -39,11 +40,17 @@ namespace irc {
 			std::vector<Channel *>		channels;
 			std::vector<std::string>	datas;
 
-			std::string		name; // NOTE max 63 characters
 			std::string		password;
 			const char*		port;
+			int				server_socket;
+			// TODO .conf file and recuperate each corresponding data
+			std::string		name; // NOTE max 63 characters
+			std::string		adminloc1; //RPL 257
+			std::string 	adminloc2; //RPL 258
+			std::string		adminemail; //RPL 259
+			std::string		motd;
+			std::string		version;
 
-			int	server_socket;
 
 			Server ();
 			Server (const Server& other);
