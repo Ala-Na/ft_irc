@@ -3,23 +3,20 @@
 using namespace irc;
 
 // TODO check name validity
-Server::Server(std::string password, int port) : password(password), port(port), \
+Server::Server(std::string password, const char* port) : password(password), port(port), \
 	name("In Real unControl - An ft_irc server")
 {
 	std::cout << "Initializating server..." << std::endl;
-	this->users = new std::vector<User *>();
-	this->channels = new std::vector<User *>();
-	this->pfds = new std::vector<pollfd>();
+	// this->users = std::vector<User *>();
+	// this->channels = std::vector<Channel *>();
+	this->pfds = std::vector<pollfd>();
 }
 
 Server::~Server() {
 	std::cout << "Closing server..." << std::endl;
-	delete this->users;
-	delete this->channels;
-	for (std::vector<pollfd>::iterator it = pfds.rbegin(); it != pfds.rend(); it++) {
+	for (std::vector<pollfd>::reverse_iterator it = pfds.rbegin(); it != pfds.rend(); it++) {
 		close((*it).fd);
 	}
-	delete this->pfds;
 }
 
 int	Server::initServer() {
@@ -69,7 +66,7 @@ int	Server::runServer() {
 
 	int poll_count = poll(&pfds[0], pfds.size(), -1);
 
-	while (runnning == true) {
+	while (running == true) {
 		if (running = true && poll_count < 0) {
 			std::cerr << "Error: poll()" << std::endl;
 			return (-1);
@@ -77,15 +74,16 @@ int	Server::runServer() {
 			if (pfds[0].revents & POLLIN) {
 				this->createUser();
 			}
-			this->receiveMessages();
+			this->receiveDatas();
 		}
 	}
+	return 0;
 }
 
 void	Server::addSocketToPoll(int socket_fd) {
-	fcntl(new_fd, F_SETFL, O_NONBLOCK);
+	fcntl(socket_fd, F_SETFL, O_NONBLOCK);
 	this->pfds.push_back(pollfd());
-	this->pfds.back().fd = new_fd;
+	this->pfds.back().fd = socket_fd;
 	this->pfds.back().events = POLLIN;
 }
 
@@ -95,10 +93,14 @@ void	Server::deleteSocketFromPoll(std::vector<pollfd>::iterator& to_del) {
 	int	position = to_del - this->pfds.begin();
 
 	close((*to_del).fd);
-	this->pfds.erase(place);
-	delete (*(this->users[position]));
-	this->users.erase(position);
-	this->messages.erase(position);
+	this->pfds.erase(to_del);
+	// std::vector<User *>::iterator it1 = this->users.begin();
+	// std::advance(it1, position);
+	// delete (it1);
+	// this->users.erase(this->user[position - 1]);
+	std::vector<std::string>::iterator it2 = this->datas.begin();
+	std::advance(it2, position);
+	this->datas.erase(it2);
 
 }
 
@@ -112,19 +114,20 @@ void	Server::createUser() {
 	client_fd = accept(this->server_socket, (struct sockaddr *)&client_addr, &addr_len);
 	this->addSocketToPoll(client_fd);
 	std::cout << "Accepting new connection from " << inet_ntoa(client_addr.sin_addr) << " on fd :" << client_fd << std::endl;
-	this->users.push_back(new User(user_fd, address));
-	this->messages.push_back("");
+	// this->users.push_back(new User(user_fd, address));
+	this->datas.push_back("");
 }
 
 // TODO check parameters for channel creation
-Channel*	Server::createChannel(std::string name) {
-	this->channels.push_back(new Channel(name, this));
-	return this->channels.back();
-}
-# TODO create channel method which could be called by channel
+// Channel*	Server::createChannel(std::string name) {
+// 	this->channels.push_back(new Channel(name, this));
+// 	return this->channels.back();
+// }
+// TODO create channel method which could be called by channel
 
 void	Server::receiveDatas() {
-	char	buf[BUF_SIZE + 1];
+	char		buf[BUF_SIZE + 1];
+	std::string	s_buf;
 
 	for (std::vector<pollfd>::iterator it = pfds.begin() + 1; it != pfds.end(); it++) {
 		if ((*it).revents & POLLIN) {
@@ -140,43 +143,47 @@ void	Server::receiveDatas() {
 			} else {
 				buf[bytes_recv] = 0;
 				std::cout << "From client (fd = " << (*it).fd << "): " << buf << std::endl;
-				this->datasExtraction(&buf, it - pfds.begin());
+				s_buf = buf;
+				this->datasExtraction(s_buf, it - pfds.begin());
 			}
+		}
+	}
 }
 
-void	Server::datasExtraction(const char* buf, int pos) {
-	User *user = this->getSpecificUser(pos - 1);
+void	Server::datasExtraction(std::string& buf, int pos) {
+	// User *user = this->getSpecificUser(pos - 1);
 	datas[pos].append(buf);
 	size_t cmd_end = datas[pos].find("\r\n");
-	while (cmd_end != string::npos) {
+	while (cmd_end != std::string::npos) {
 		std::string	content = datas[pos].substr(0, cmd_end);
 		datas[pos].erase(0, cmd_end + 2);
 		cmd_end = datas[pos].find("\r\n");
-		Command cmd = new Command(this.getServer(), user, content);
-		cmd.parseCommand();
+		// Command cmd = new Command(this.getServer(), user, content);
+		Command* cmd = new Command(this->getServer(), content);
+		cmd->parseCommand();
 		delete cmd;
 	}
 }
 
-Server&	Server::getServer() const {
+Server&	Server::getServer() {
 	return *this;
 }
 
 // Here, user_nb is from 0 to max - 1.
-User*	Server::getSpecificUser(int user_nb) const {
-	if (user_nb < this->users.size())
-		return this->users[user_nb];
-	return NULL;
-}
+// User*	Server::getSpecificUser(int user_nb) const {
+// 	if (user_nb < this->users.size())
+// 		return this->users[user_nb];
+// 	return NULL;
+// }
 
-Channel*	Server::getChannelByName(std::string name) const {
-	for (std::vector<Channel *>::iterator it = this->channels.begin(); \
-		it != this->channels.end(); it++)
-	{
-		// TODO
-		// Check if (*it)->getname() == name;
-		// If true, return channel;
-	}
-	return NULL;
-}
+// Channel*	Server::getChannelByName(std::string name) const {
+// 	for (std::vector<Channel *>::iterator it = this->channels.begin(); \
+// 		it != this->channels.end(); it++)
+// 	{
+// 		// TODO
+// 		// Check if (*it)->getname() == name;
+// 		// If true, return channel;
+// 	}
+// 	return NULL;
+// }
 
