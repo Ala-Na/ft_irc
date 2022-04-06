@@ -14,14 +14,17 @@ namespace irc {
 
 	class	Command {
 		private :
-			Server&				server;
-			User*				user;
+			Server&		server;
+			User*		user;
 			std::string	content;
 
-			std::string prefix;
+			std::string	prefix;
+			std::string	parameters;
 
 
 			Command ();
+			Command (const Command& other);
+			Command&	operator= (const Command& other);
 
 		public :
 			Command (Server& server, User* user, std::string& content);
