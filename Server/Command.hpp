@@ -2,6 +2,7 @@
 #define COMMAND_HPP
 
 #include <cstring>
+#include <algorithm>
 
 // TODO modify following
 #include "Server.hpp"
@@ -29,6 +30,6 @@ namespace irc {
 			void	parseCommand();
 
 	};
-];
+};
 
 #endif

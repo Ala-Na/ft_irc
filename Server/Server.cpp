@@ -117,9 +117,9 @@ void	Server::createUser() {
 }
 
 // TODO check parameters for channel creation
-Channel&	Server::createChannel(std::string name) {
+Channel*	Server::createChannel(std::string name) {
 	this->channels.push_back(new Channel(name));
-	return *(channels.back());
+	return this->channels.back();
 }
 # TODO create channel method which could be called by channel
 

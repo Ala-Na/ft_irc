@@ -58,6 +58,7 @@ namespace irc {
 			void	deleteSocketFromPoll (std::vector<pollfd>::iterator to_del);
 
 			void	createUser ();
+			Channel*	createChannel (std::string name);
 			void	receiveDatas ();
 			void	datasExtraction (const char* buf);
 
