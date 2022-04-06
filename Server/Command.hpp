@@ -30,7 +30,9 @@ namespace irc {
 			Command (Server& server, User* user, std::string& content);
 			~Command ();
 
-			void	parseCommand();
+			void		parseCommand();
+			std::string	getWord();
+			void		goToExecution();
 
 	};
 };

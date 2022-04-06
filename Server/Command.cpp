@@ -2,14 +2,14 @@
 
 using namespace irc;
 
-Command::Command(Server& server, User* user, std::string& content) : server(server), user(user), content(content) {
+Command::Command (Server& server, User* user, std::string& content) : server(server), user(user), content(content) {
 	this->prefix = "";
 }
 
 // TODO check if memory is allocated and need to be free
-Command::~Command() {}
+Command::~Command () {}
 
-void	Command::parseCommand() {
+void	Command::parseCommand () {
 	std::string	first_word = this->getWord();
 	if (first_word.empty()) {
 		this->prefix = this->content;
@@ -19,6 +19,8 @@ void	Command::parseCommand() {
 	}
 	std::transform(this->prefix.begin(), this->prefix.end(), this->prefix.begin(), ::toupper);
 	this->parameters = this->content;
+	this->goToExec();
+
 }
 
 std::string	Command::getWord () {
@@ -32,7 +34,7 @@ std::string	Command::getWord () {
 	return word;
 }
 
-bool	Command::checkPrefix () {
+void	Command::goToExecution () {
 	// TODO delete unimplemented functions
 	int nbr_cmd = 29;
 	void (Command::pmf[nbr_cmd]) = {&Command::intOper, &Command::intJoin, \
