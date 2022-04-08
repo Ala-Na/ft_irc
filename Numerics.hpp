@@ -11,7 +11,8 @@
 
 namespace irc {
 	// No special need of class ?
-	void	getNumericReply (int numeric_nb, int fd, int param_nb, ...);
+	void	numericReply (int numeric_nb, int fd, std::string server, \
+		std::string nick, int param_nb, ...);
 
 };
 
