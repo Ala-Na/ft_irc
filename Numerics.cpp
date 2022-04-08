@@ -150,7 +150,9 @@ void	irc::numericReply(int num_nb, User* user, std::vector<std::string>& s_param
 	msg = ":" + server + " " + s_num_nb + " " + nick;
 
 	switch (num_nb) {
+		// TODO make system for non obligatory arguments or missing arguments
 		case 1:
+<<<<<<< HEAD
 			msg += irc::RplWelcome(nick, s_params[0], s_params[1]);
 			break;
 		case 2:
@@ -411,4 +413,44 @@ void	irc::numericReply(int num_nb, User* user, std::vector<std::string>& s_param
 	}
 	msg += END;
 	irc::sendNumeric(fd, msg);
+=======
+			msg += RplWelcome(server, nick, s_params[0], s_params[1], s_params[2]);
+			break;
+		case 2:
+			msg += RplYourHost(server, s_params[0]);
+			break;
+		case 3:
+			msg += RplCreated(s_params[0]);
+			break;
+		case 4:
+			msg += RplMyInfo(server, s_params[0], s_params[1], s_params[2], s_params[3]);
+			break;
+		case 5:
+			msg += RplBounce(server, s_params[0]);
+		case 20:
+			msg += RplProcessConnection();
+			break;
+		case 301:
+			msg += RplAway(nick, s_params[0], s_params[1]);
+		case 302:
+			msg += RplUserhost(s_params[0]);
+			break;
+			break;
+		default :
+			// TODO set error
+			break;
+	}
+	msg += END;
+	sendNumeric(fd, msg);
+
+}
+
+int main() {
+	irc::numericReply(20, 1, "server", "*", 0);
+	irc::numericReply(1, 1, "server", "nick", 3, "user", "network", "host");
+	irc::numericReply(2, 1, "server", "nick", 1, "version");
+	irc::numericReply(3, 1, "server", "nick", 1, "date");
+	irc::numericReply(4, 1, "server", "nick", 4, "version", "mode user", "mode channel", "more");
+	irc::numericReply(302, 1, "server", "nick", 1, "user=+/-host");
+>>>>>>> c698b0d (beginning of numerics)
 }
