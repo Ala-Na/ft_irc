@@ -51,7 +51,11 @@ int	Server::readConfFile () {
 		while ((found = line.find('"')) == std::string::npos) {
 			value.append(line);
 			std::getline(in, line);
-			value.append(" ");
+			if (key == "motd" || key == "infos") {
+				value.append("\n");
+			} else {
+				value.append(" ");
+			}
 		}
 		value += line.substr(0, found);
 		line.erase(0, found + 1);
