@@ -549,6 +549,34 @@ void Command::intJoin()
 	return ;
 }
 
+// User *  Server::getUserByUsername(std::string name)
+// {
+// 	int i;
+
+// 	i = 0;
+// 	while (i < users.size())
+// 	{
+// 		if (users[i].getName() == name)
+// 			return (&users[i]);
+// 		i++;
+// 	}
+// 	return (NULL);
+// }
+
+// User * Server::getUserByNick(std::string nick)
+// {
+// 	int i;
+
+// 	i = 0;
+// 	while (i < users.size())
+// 	{
+// 		if (users[i].getNick() == nick)
+// 			return (&users[i]);
+// 		i++;
+// 	}
+// 	return (NULL);
+// }
+
 void Command::intInvite()
 {
 	std::vector<std::string>	vec;

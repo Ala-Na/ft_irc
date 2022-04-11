@@ -2,14 +2,12 @@
 
 using namespace irc;
 
-// TODO check name validity
-Server::Server(std::string password, const char* port) : password(password), port(port)
-{
+Server::Server(std::string password, const char* port) : password(password), port(port) {
 	std::cout << "Initializating server..." << std::endl;
 	this->users = std::vector<User *>();
 	this->channels = std::vector<Channel *>();
 	this->pfds = std::vector<pollfd>();
-	// TODO recuperate info from .conf file
+	this->conf = std::map<std::string, std::string>();
 }
 
 Server::~Server() {
@@ -91,7 +89,6 @@ int	Server::initServer() {
 	int	server_fd;
 	int	opt = 1;
 	int res;
-
 
 	if (this->readConfFile() == -1 || this->checkConf() == -1) {
 		return (-1);
@@ -187,7 +184,7 @@ void	Server::createUser() {
 	this->datas.push_back("");
 }
 
-void	Server::deleteUser (User* user) {
+void	Server::deleteUser(User* user) {
 	for (std::vector<User *>::iterator it1 = this->users.begin(); \
 			it1 != this->users.end(); it1++) {
 		if ((*it1) == user) {
@@ -224,7 +221,6 @@ Channel*	Server::createChannel(std::string name) {
 	this->channels.push_back(new Channel(this, name));
 	return this->channels.back();
 }
-// TODO create channel method which could be called by channel
 
 void	Server::receiveDatas() {
 	char		buf[SERV_BUF_SIZE + 1];
@@ -282,7 +278,7 @@ User*	Server::getSpecificUser(unsigned long user_nb) {
 }
 
 Channel*	Server::getChannelByName(std::string name) {
-	for (std::vector<Channel *>::iterator it = this->channels.begin();
+	for (std::vector<Channel *>::iterator it = this->channels.begin(); \
 		it != this->channels.end(); it++)
 	{
 		// TODO
@@ -294,7 +290,7 @@ Channel*	Server::getChannelByName(std::string name) {
 }
 
 // User*	Server::getUserByName(std::string name) const {
-// 	for (std::vector<User *>::iterator it = this->users.begin();
+// 	for (std::vector<User *>::iterator it = this->users.begin(); \
 // 		it != this->users.end(); it++)
 // 	{
 // 		// TODO
@@ -348,7 +344,6 @@ void	Server::checkPassword(User* user, std::string parameters) {
 
 void	Server::listChannels (User* user) {
 	int fd = user->getFd();
-	(void)fd;
 	// Maybe send 321 and 323 from intList ?
 	// Send RPL_liststart 321
 	for (std::vector<Channel *>::iterator it = this->channels.begin(); it != this->channels.end(); it++) {

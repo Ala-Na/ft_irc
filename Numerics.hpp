@@ -8,7 +8,9 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
-// TODO include Server.hpp and User.hpp
+
+#include "Server.hpp"
+#include "User.hpp"
 
 #include "Server.hpp"
 #include "User.hpp"
