@@ -65,10 +65,10 @@ namespace irc {
 			void	addSocketToPoll (int socket_fd);
 			void	deleteSocketFromPoll (std::vector<pollfd>::iterator& to_del);
 
-			void	createUser ();
+			void		createUser ();
 			Channel*	createChannel (std::string name);
-			void	receiveDatas ();
-			void	datasExtraction (std::string& buf, int pos);
+			void		receiveDatas ();
+			void		datasExtraction (std::string& buf, int pos);
 
 			Server&		getServer ();
 			User*		getSpecificUser (int user_nb);
