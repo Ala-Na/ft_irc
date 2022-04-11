@@ -3,30 +3,82 @@
 using namespace irc;
 
 // TODO check name validity
-Server::Server(std::string password, const char* port) : password(password), port(port), \
-	name("In Real unControl - An ft_irc server")
-{
+Server::Server (std::string password, const char* port) : password(password), port(port) {
 	std::cout << "Initializating server..." << std::endl;
 	this->users = std::vector<User *>();
 	this->channels = std::vector<Channel *>();
 	this->pfds = std::vector<pollfd>();
+	this->conf = std::map<std::string, std::string>();
 	// TODO recuperate info from .conf file
 }
 
-Server::~Server() {
+Server::~Server () {
 	std::cout << "Closing server..." << std::endl;
 	for (std::vector<pollfd>::reverse_iterator it = pfds.rbegin(); it != pfds.rend(); it++) {
 		close((*it).fd);
 	}
 }
 
-int	Server::initServer() {
+int	Server::readConfFile () {
+	std::ifstream	in;
+	int				res = 0;
+	std::string		line;
+	std::string		key;
+	std::string		value = "";
+    ssize_t         found;
+
+	in.open("./ft_irc.conf", std::ifstream::in);
+	if (!in.good()) {
+		res = -1;
+	}
+	while (!in.eof() && in.good()) {
+        value = "";
+		std::getline(in, line);
+        found = line.find_first_not_of(' ');
+        line.erase(0, found);
+        if (line.empty() || line[found] == '#') {
+            continue;
+        }
+		if ((found = line.find("=\"")) == std::string::npos) {
+			std::cerr << "Should be under format key=\"value\"" << std::endl;
+			res = -1;
+			break;
+		}
+		key = line.substr(0, found);
+		line.erase(0, found + 2);
+		while ((found = line.find('"')) == std::string::npos) {
+			value.append(line);
+			std::getline(in, line);
+			value.append(" ");
+		}
+		value += line.substr(0, found);
+		line.erase(0, found + 1);
+		if (!line.empty()) {
+			std::cerr << "Error in configuration file" << std::endl;
+			std::cerr << "key=\"value\" should be followed by a line return" << std::endl;
+			res = -1;
+			break;
+		}
+		this->conf.insert({key, value});
+	}
+	if (!in.eof()) {
+		res = -1;
+	}
+	in.close();
+	return res;
+}
+
+int	Server::initServer () {
 	struct addrinfo	hints;
 	struct addrinfo	*ai;
 	struct addrinfo	*p;
 	int	server_fd;
 	int	opt = 1;
 	int res;
+
+	if (this->readConfFile() == -1) {
+		return (-1);
+	}
 
 	std::memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
@@ -60,7 +112,7 @@ int	Server::initServer() {
 	return this->server_socket;
 }
 
-int	Server::runServer() {
+int	Server::runServer () {
 	this->addSocketToPoll(this->server_socket);
 
 	std::cout << "Server started" << std::endl;
@@ -80,14 +132,14 @@ int	Server::runServer() {
 	return 0;
 }
 
-void	Server::addSocketToPoll(int socket_fd) {
+void	Server::addSocketToPoll (int socket_fd) {
 	fcntl(socket_fd, F_SETFL, O_NONBLOCK);
 	this->pfds.push_back(pollfd());
 	this->pfds.back().fd = socket_fd;
 	this->pfds.back().events = POLLIN;
 }
 
-void	Server::deleteSocketFromPoll(std::vector<pollfd>::iterator& to_del) {
+void	Server::deleteSocketFromPoll (std::vector<pollfd>::iterator& to_del) {
 	std::cout << "Closing connection to client fd = " << (*to_del).fd << std::endl;
 
 	int	position = to_del - this->pfds.begin();
@@ -104,7 +156,7 @@ void	Server::deleteSocketFromPoll(std::vector<pollfd>::iterator& to_del) {
 
 }
 
-void	Server::createUser() {
+void	Server::createUser () {
 	// TODO create max number of user to avoid slow server
 	struct sockaddr_in	client_addr;
 	socklen_t			addr_len;
@@ -137,13 +189,13 @@ void	Server::deleteUser (User* user) {
 }
 
 // TODO check parameters for channel creation
-Channel*	Server::createChannel(std::string name) {
+Channel*	Server::createChannel (std::string name) {
 	this->channels.push_back(new Channel(name, this));
 	return this->channels.back();
 }
 // TODO create channel method which could be called by channel
 
-void	Server::receiveDatas() {
+void	Server::receiveDatas () {
 	char		buf[BUF_SIZE + 1];
 	std::string	s_buf;
 
@@ -168,7 +220,7 @@ void	Server::receiveDatas() {
 	}
 }
 
-void	Server::datasExtraction(std::string& buf, int pos) {
+void	Server::datasExtraction (std::string& buf, int pos) {
 	User *user = this->getSpecificUser(pos - 1);
 	datas[pos].append(buf);
 	size_t cmd_end = datas[pos].find("\r\n");
@@ -182,18 +234,18 @@ void	Server::datasExtraction(std::string& buf, int pos) {
 	}
 }
 
-Server&	Server::getServer() {
+Server&	Server::getServer () {
 	return *this;
 }
 
 // Here, user_nb is from 0 to max - 1.
-User*	Server::getSpecificUser(int user_nb) const {
+User*	Server::getSpecificUser (int user_nb) const {
 	if (user_nb < this->users.size())
 		return this->users[user_nb];
 	return NULL;
 }
 
-Channel*	Server::getChannelByName(std::string name) const {
+Channel*	Server::getChannelByName (std::string name) const {
 	for (std::vector<Channel *>::iterator it = this->channels.begin(); \
 		it != this->channels.end(); it++)
 	{
