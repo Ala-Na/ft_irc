@@ -58,8 +58,9 @@ namespace irc {
 			Server (std::string password, const char* port);
 			~Server ();
 
-			int	readConfFile ();
 			int	initServer ();
+			int	readConfFile ();
+			int	checkConf ();
 			int	runServer ();
 
 			void	addSocketToPoll (int socket_fd);
