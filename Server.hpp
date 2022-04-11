@@ -1,7 +1,7 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-// Cpp librairy
+// Cpp library
 #include <vector>
 #include <iostream>
 #include <cstring>
@@ -10,7 +10,7 @@
 #include <fstream>
 #include <string>
 
-// C librairy with no cpp equivalent
+// C library with no cpp equivalent
 #include <poll.h>
 #include <netdb.h>
 #include <sys/types.h>
@@ -21,12 +21,12 @@
 #include <fcntl.h>
 #include <stdlib.h>
 
-// TODO modify following path
+#include "Utilitary.hpp"
 #include "User.hpp"
 #include "Channel.hpp"
 #include "Command.hpp"
 
-#define BUF_SIZE 512 // Max size of IRC message (last 2 characters for carriage return - line feed)
+#define SERV_BUF_SIZE 512 // Max size of IRC message (last 2 characters for carriage return - line feed)
 
 namespace irc {
 
@@ -40,6 +40,7 @@ namespace irc {
 		private :
 			std::vector<pollfd>			pfds;
 			std::vector<User *>			users;
+			std::vector<User *>			operators;
 			std::vector<Channel *>		channels;
 			std::vector<std::string>	datas;
 
@@ -47,7 +48,6 @@ namespace irc {
 			const char*		port;
 			int				server_socket;
 
-			// TODO .conf file and recuperate each corresponding data
 			std::map<std::string, std::string>	conf;
 
 			Server ();
@@ -58,22 +58,43 @@ namespace irc {
 			Server (std::string password, const char* port);
 			~Server ();
 
-			int	initServer ();
-			int	readConfFile ();
-			int	checkConf ();
-			int	runServer ();
+			int			initServer ();
+			int			readConfFile ();
+			int			checkConf ();
+			int			runServer ();
 
-			void	addSocketToPoll (int socket_fd);
-			void	deleteSocketFromPoll (std::vector<pollfd>::iterator& to_del);
+			void		addSocketToPoll (int socket_fd);
+			void		deleteSocketFromPoll (std::vector<pollfd>::iterator& to_del);
 
 			void		createUser ();
+			void		deleteUser (User* user);
 			Channel*	createChannel (std::string name);
 			void		receiveDatas ();
 			void		datasExtraction (std::string& buf, int pos);
 
+			void		checkPassword(User* user, std::string parameters);
+			void		listChannels (User* user);
+			void		getMotdFile(User* user, std::string parameters);
+			void		retrieveTime (User* user, std::string parameters);
+			void		retrieveVersion (User* user, std::string parameter);
+			void		sendError (User* user, std::string parameter);
+			void		sendPong (User* user, std::string parameter);
+			void		getAdmin(User* user, std::string parameters);
+			int			isServOp(User & user);
+
 			Server&		getServer ();
+
 			User*		getSpecificUser (int user_nb);
 			Channel*	getChannelByName (std::string name);
+			// User*		getUserByName (std::string name);
+
+			User *		getUserByUsername(std::string name);
+			User *		getUserByNick(std::string nick);
+			std::string	getPass();
+			std::string	*getVersionAddr();
+			std::string	getMotd();
+			std::vector<User *>	getServOp();
+			std::vector<User *>	getServUsers();
 	};
 };
 

@@ -2,24 +2,22 @@
 
 using namespace irc;
 
-// TODO check name validity
-Server::Server (std::string password, const char* port) : password(password), port(port) {
+Server::Server(std::string password, const char* port) : password(password), port(port) {
 	std::cout << "Initializating server..." << std::endl;
 	this->users = std::vector<User *>();
 	this->channels = std::vector<Channel *>();
 	this->pfds = std::vector<pollfd>();
 	this->conf = std::map<std::string, std::string>();
-	// TODO recuperate info from .conf file
 }
 
-Server::~Server () {
+Server::~Server() {
 	std::cout << "Closing server..." << std::endl;
 	for (std::vector<pollfd>::reverse_iterator it = pfds.rbegin(); it != pfds.rend(); it++) {
 		close((*it).fd);
 	}
 }
 
-int	Server::readConfFile () {
+int	Server::readConfFile() {
 	std::ifstream	in;
 	int				res = 0;
 	std::string		line;
@@ -71,7 +69,7 @@ int	Server::readConfFile () {
 	return res;
 }
 
-int	Server::checkConf () {
+int	Server::checkConf() {
 	if (this->conf.count("name") == 0 || this->conf.count("version") == 0
 		|| this->conf.count("adminloc1") == 0 || this->conf.count("adminemail") == 0) {
 		std::cerr << "Missing at least one non-optionnal configuration parameter" << std::endl;
@@ -84,7 +82,7 @@ int	Server::checkConf () {
 	return 0;
 }
 
-int	Server::initServer () {
+int	Server::initServer() {
 	struct addrinfo	hints;
 	struct addrinfo	*ai;
 	struct addrinfo	*p;
@@ -128,7 +126,7 @@ int	Server::initServer () {
 	return this->server_socket;
 }
 
-int	Server::runServer () {
+int	Server::runServer() {
 	this->addSocketToPoll(this->server_socket);
 
 	std::cout << "Server started" << std::endl;
@@ -148,14 +146,14 @@ int	Server::runServer () {
 	return 0;
 }
 
-void	Server::addSocketToPoll (int socket_fd) {
+void	Server::addSocketToPoll(int socket_fd) {
 	fcntl(socket_fd, F_SETFL, O_NONBLOCK);
 	this->pfds.push_back(pollfd());
 	this->pfds.back().fd = socket_fd;
 	this->pfds.back().events = POLLIN;
 }
 
-void	Server::deleteSocketFromPoll (std::vector<pollfd>::iterator& to_del) {
+void	Server::deleteSocketFromPoll(std::vector<pollfd>::iterator& to_del) {
 	std::cout << "Closing connection to client fd = " << (*to_del).fd << std::endl;
 
 	int	position = to_del - this->pfds.begin();
@@ -164,7 +162,7 @@ void	Server::deleteSocketFromPoll (std::vector<pollfd>::iterator& to_del) {
 	this->pfds.erase(to_del);
 	std::vector<User *>::iterator it1 = this->users.begin();
 	std::advance(it1, position);
-	delete (it1);
+	delete (*it1);
 	this->users.erase(it1);
 	std::vector<std::string>::iterator it2 = this->datas.begin();
 	std::advance(it2, position);
@@ -172,7 +170,7 @@ void	Server::deleteSocketFromPoll (std::vector<pollfd>::iterator& to_del) {
 
 }
 
-void	Server::createUser () {
+void	Server::createUser() {
 	// TODO create max number of user to avoid slow server
 	struct sockaddr_in	client_addr;
 	socklen_t			addr_len;
@@ -182,11 +180,11 @@ void	Server::createUser () {
 	client_fd = accept(this->server_socket, (struct sockaddr *)&client_addr, &addr_len);
 	this->addSocketToPoll(client_fd);
 	std::cout << "Accepting new connection from " << inet_ntoa(client_addr.sin_addr) << " on fd :" << client_fd << std::endl;
-	this->users.push_back(new User(user_fd, address));
+	this->users.push_back(new User(client_fd, client_addr));
 	this->datas.push_back("");
 }
 
-void	Server::deleteUser (User* user) {
+void	Server::deleteUser(User* user) {
 	for (std::vector<User *>::iterator it1 = this->users.begin(); \
 			it1 != this->users.end(); it1++) {
 		if ((*it1) == user) {
@@ -198,26 +196,39 @@ void	Server::deleteUser (User* user) {
 			std::vector<pollfd>::iterator it3 = this->pfds.begin();
 			std::advance(it3, position);
 			close((*it3).fd);
-			this->datas.erase(it3);
+			this->pfds.erase(it3);
 			delete *it1;
 		}
 	}
 }
 
+int	Server::isServOp(User & user)
+{
+	int	i;
+
+	i = 0;
+	while (i < operators.size())
+	{
+		if (operators[i]->getNickname() == user.getNickname())
+			return (1);
+		i++;
+	}
+	return (0);
+}
+
 // TODO check parameters for channel creation
-Channel*	Server::createChannel (std::string name) {
-	this->channels.push_back(new Channel(name, this));
+Channel*	Server::createChannel(std::string name) {
+	this->channels.push_back(new Channel(this, name));
 	return this->channels.back();
 }
-// TODO create channel method which could be called by channel
 
-void	Server::receiveDatas () {
-	char		buf[BUF_SIZE + 1];
+void	Server::receiveDatas() {
+	char		buf[SERV_BUF_SIZE + 1];
 	std::string	s_buf;
 
 	for (std::vector<pollfd>::iterator it = pfds.begin() + 1; it != pfds.end(); it++) {
 		if ((*it).revents & POLLIN) {
-			ssize_t	bytes_recv = recv((*it).fd, &buf, BUF_SIZE, 0);
+			ssize_t	bytes_recv = recv((*it).fd, &buf, SERV_BUF_SIZE, 0);
 			if (bytes_recv <= 0) {
 				if (bytes_recv == -1) {
 					std::cerr << "Error : recv()" << std::endl;
@@ -236,7 +247,7 @@ void	Server::receiveDatas () {
 	}
 }
 
-void	Server::datasExtraction (std::string& buf, int pos) {
+void	Server::datasExtraction(std::string& buf, int pos) {
 	User *user = this->getSpecificUser(pos - 1);
 	datas[pos].append(buf);
 	size_t cmd_end = datas[pos].find("\r\n");
@@ -244,24 +255,24 @@ void	Server::datasExtraction (std::string& buf, int pos) {
 		std::string	content = datas[pos].substr(0, cmd_end);
 		datas[pos].erase(0, cmd_end + 2);
 		cmd_end = datas[pos].find("\r\n");
-		Command* cmd = new Command(this.getServer(), user, content);
+		Command* cmd = new Command(getServer(), user, content);
 		cmd->parseCommand();
 		delete cmd;
 	}
 }
 
-Server&	Server::getServer () {
+Server&	Server::getServer() {
 	return *this;
 }
 
 // Here, user_nb is from 0 to max - 1.
-User*	Server::getSpecificUser (int user_nb) const {
+User*	Server::getSpecificUser(int user_nb) {
 	if (user_nb < this->users.size())
 		return this->users[user_nb];
 	return NULL;
 }
 
-Channel*	Server::getChannelByName (std::string name) const {
+Channel*	Server::getChannelByName(std::string name) {
 	for (std::vector<Channel *>::iterator it = this->channels.begin(); \
 		it != this->channels.end(); it++)
 	{
@@ -272,7 +283,46 @@ Channel*	Server::getChannelByName (std::string name) const {
 	return NULL;
 }
 
-void	Server::checkPassword (User* user, std::string parameters) {
+// User*	Server::getUserByName(std::string name) const {
+// 	for (std::vector<User *>::iterator it = this->users.begin(); \
+// 		it != this->users.end(); it++)
+// 	{
+// 		// TODO
+// 		// Check if (*it)->getname() == name;
+// 		// If true, return user;
+// 	}
+// 	return NULL;
+// }
+
+User *  Server::getUserByUsername(std::string name)
+{
+	int i;
+
+	i = 0;
+	while (i < users.size())
+	{
+		if (users[i]->getUsername() == name)
+			return (users[i]);
+		i++;
+	}
+	return (NULL);
+}
+
+User * Server::getUserByNick(std::string nick)
+{
+	int i;
+
+	i = 0;
+	while (i < users.size())
+	{
+		if (users[i]->getNickname() == nick)
+			return (users[i]);
+		i++;
+	}
+	return (NULL);
+}
+
+void	Server::checkPassword(User* user, std::string parameters) {
 	// if user->isRegistered() == true {}
 		// Send error ERR_ALREADYREGISTERED 462
 	// }
@@ -299,10 +349,10 @@ void	Server::listChannels (User* user) {
 	// Send RPL_LISTEND 323
 }
 
-void	Server::getMotd (User* user, std::string parameters) {
+void	Server::getMotdFile(User* user, std::string parameters) {
 	int fd = user->getFd();
 
-	// TODO use split of channel_management branch
+	// TODO use irc::split of channel_management branch
 	if (!parameters.empty() && parameters.compare(this->name)) {
 		// Send ERR_NOSUCHSERVER 402
 		return ;
@@ -311,14 +361,14 @@ void	Server::getMotd (User* user, std::string parameters) {
 		return ;
 	}
 	// Send RPL_MOTDSTART 375
-	std::vector<std::string> lines = split(motd, "\n");
+	std::vector<std::string> lines = irc::split(motd, "\n");
 	for (std::vector<std::string>::iterator it = lines.begin(); it != lines.end(); it++) {
 		// Send RPL_MOTD 372 with (*it) 
 	}
 	// Send RPL_ENDOFMOTD 376
 }
 
-void	Server::getTime (User* user, std::string parameters) {
+void	Server::retrieveTime(User* user, std::string parameters) {
 	int fd = user->getFd();
 
 	if (!parameters.empty() && parameters.compare(this->name)) {
@@ -331,7 +381,7 @@ void	Server::getTime (User* user, std::string parameters) {
 	// Send RPL_TIME 391 with time as parameter
 }
 
-void	Server::getVersion (User* user, std::string parameter) {
+void	Server::retrieveVersion(User* user, std::string parameters) {
 	int fd = user->getFd();
 
 	if (!parameters.empty() && parameters.compare(this->name)) {
@@ -341,7 +391,7 @@ void	Server::getVersion (User* user, std::string parameter) {
 	// Send RPL 351 - client this->version this->name :comments but without comment
 }
 
-void	Server::getAdmin (User* user, std::string parameter) {
+void	Server::getAdmin(User* user, std::string parameters) {
 	int fd = user->getFd();
 
 	if (!parameters.empty() && parameters.compare(this->name)) {
@@ -357,7 +407,7 @@ void	Server::getAdmin (User* user, std::string parameter) {
 void	Server::sendError (User* user, std::string parameter) {
 	int fd = user->getFd();
 
-	parameter.append(0, "ERROR :");
+	parameter.insert(0, "ERROR :");
 	ssize_t bytes_send = send(fd, &parameter, parameter.size(), 0);
 	if (bytes_send == -1) {
 		std::cout << "Error: send()" << std::endl;
@@ -368,16 +418,40 @@ void	Server::sendError (User* user, std::string parameter) {
 void	Server::sendPong (User* user, std::string parameter) {
 	int fd = user->getFd();
 
-	parameter.append(0, " :");
-	parameter.append(0, this->name);
-	parameter.append(0, " PONG ");
-	parameter.append(0, this->name);
-	parameter.append(0, " :");
+	parameter.insert(0, " :");
+	parameter.insert(0, this->name);
+	parameter.insert(0, " PONG ");
+	parameter.insert(0, this->name);
+	parameter.insert(0, " :");
 	ssize_t bytes_send = send(fd, &parameter, parameter.size(), 0);
 	if (bytes_send == -1) {
 		std::cout << "Error: send()" << std::endl;
 		// TODO delete user ?
 		return ;
-	}	
+	}
+}
 
+std::string	Server::getPass()
+{
+	return (password);
+}
+
+std::string	*Server::getVersionAddr()
+{
+	return (&version);
+}
+
+std::string	Server::getMotd()
+{
+	return (motd);
+}
+
+std::vector<User *>	Server::getServOp()
+{
+	return (operators);
+}
+
+std::vector<User *>	Server::getServUsers()
+{
+	return (users);
 }
