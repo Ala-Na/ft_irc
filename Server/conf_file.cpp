@@ -43,7 +43,7 @@ int readConfFile (std::map<std::string, std::string>& map) {
 			res = -1;
 			break;
 		}
-		map.insert({key, value});
+		map.insert(std::make_pair(key, value));
 	}
 	if (!in.eof()) {
 		res = -1;

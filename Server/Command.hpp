@@ -23,7 +23,6 @@ namespace irc {
 			std::string	prefix;
 			std::string	parameters;
 
-
 			Command ();
 			Command (const Command& other);
 			Command&	operator= (const Command& other);

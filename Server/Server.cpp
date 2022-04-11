@@ -29,17 +29,19 @@ int	Server::readConfFile () {
 
 	in.open("./ft_irc.conf", std::ifstream::in);
 	if (!in.good()) {
-		res = -1;
+		std::cerr << "Can't open configuration file" << std::endl;
+		std::cerr << "Please check that ./ft_irc.conf is present in Server folder" << std::endl; 
+		return (-1);
 	}
 	while (!in.eof() && in.good()) {
         value = "";
 		std::getline(in, line);
-        found = line.find_first_not_of(' ');
-        line.erase(0, found);
+        if ((found = line.find_first_not_of(' ')) != std::string::npos) {
+        	line.erase(0, found);
+		}
         if (line.empty() || line[found] == '#') {
             continue;
-        }
-		if ((found = line.find("=\"")) == std::string::npos) {
+        } else if ((found = line.find("=\"")) == std::string::npos) {
 			std::cerr << "Should be under format key=\"value\"" << std::endl;
 			res = -1;
 			break;
@@ -59,13 +61,18 @@ int	Server::readConfFile () {
 			res = -1;
 			break;
 		}
-		this->conf.insert({key, value});
+		this->conf.insert(std::make_pair(key, value));
 	}
 	if (!in.eof()) {
+		std::cerr << "Error while reading configuration file" << std::endl;
 		res = -1;
 	}
 	in.close();
 	return res;
+}
+
+int	checkConf () {
+
 }
 
 int	Server::initServer () {
@@ -76,7 +83,7 @@ int	Server::initServer () {
 	int	opt = 1;
 	int res;
 
-	if (this->readConfFile() == -1) {
+	if (this->readConfFile() == -1 || this->checkConf() == -1) {
 		return (-1);
 	}
 
