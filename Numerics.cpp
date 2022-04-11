@@ -204,6 +204,7 @@ void	irc::numericReply(int num_nb, User* user, std::vector<std::string>& s_param
 			break;
 		case 315:
 			msg += RplEndOfWho(s_params[0]);
+			break;
 		case 318:
 			msg += irc::RplEndOfWhoIs();
 			break;
@@ -416,6 +417,27 @@ void	irc::numericReply(int num_nb, User* user, std::vector<std::string>& s_param
 			break;
 		case 332:
 			msg += RplTopic(s_params[0], s_params[1]);
+			break;
+		case 341:
+			msg += RplInviting(nick, s_params[0]);
+			break;
+		case 346:
+			msg += RplInviteList(s_params[0], s_params[1]);
+			break;
+		case 347:
+			msg += RplEndOfInviteList(s_params[0]);
+			break;
+		case 348:
+			msg += RplExceptList(s_params[0], s_params[1]);
+			break;
+		case 349:
+			msg += RplEndOfExceptList(s_params[0]);
+			break;
+		case 351:
+			msg += RplVersion(server, s_params[0], s_params[1], s_params[2]);
+			break;
+		case 352:
+			msg += RplWhoReply(server, nick, s_params[0], s_params[1], s_params[2], s_params[3], s_params[4], s_params[5]);
 			break;
 		default :
 			msg += irc::ErrUnknownCommand(s_num_nb);
