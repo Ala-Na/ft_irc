@@ -178,6 +178,21 @@ void	irc::numericReply(int num_nb, User* user, std::vector<std::string>& s_param
 		case 259:
 			msg += irc::RplAdminEmail(s_params[0]);
 			break;
+		case 221:
+			msg += RplUModeIs(s_params[0]);
+			break;
+		case 256:
+			msg += RplAdminMe(server);
+			break;
+		case 257:
+			msg += RplAdminLocOne(s_params[0]);
+			break;
+		case 258:
+			msg += RplAdminLocTwo(s_params[0]);
+			break;
+		case 259:
+			msg += RplAdminEmail(s_params[0]);
+			break;
 		case 301:
 			msg += irc::RplAway(s_params[0], s_params[1]);
 			break;
@@ -438,6 +453,39 @@ void	irc::numericReply(int num_nb, User* user, std::vector<std::string>& s_param
 			break;
 		case 352:
 			msg += RplWhoReply(server, nick, s_params[0], s_params[1], s_params[2], s_params[3], s_params[4], s_params[5]);
+			break;
+		case 353:
+			msg += RplNamReply(s_params[0], s_params[1], s_params[2]);
+			break;
+		case 366:
+			msg += RplEndOfNames(s_params[0]);
+			break;
+		case 367:
+			msg += RplBanList(s_params[0], s_params[1]);
+			break;
+		case 368:
+			msg += RplEndOfBanList(s_params[0]);
+			break;
+		case 371:
+			msg += RplInfo(s_params[0]);
+			break;
+		case 372:
+			msg += RplMotd(s_params[0]);
+			break;
+		case 374:
+			msg += RplEndOfInfo();
+			break;
+		case 375:
+			msg += RplMotdStart(server);
+			break;
+		case 376:
+			msg += RplEndOfMotd();
+			break;
+		case 381:
+			msg += RplYourOper();
+			break;
+		case 391:
+			msg += RplTime(server, s_params[0]);
 			break;
 		default :
 			msg += irc::ErrUnknownCommand(s_num_nb);
