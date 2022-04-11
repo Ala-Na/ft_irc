@@ -41,11 +41,20 @@ void	sendNumeric(int fd, std::string msg) {
 /* 348 */ std::string	RplExceptList (std::string channel, std::string exceptionmask) { return (" " + channel + " " + exceptionmask); }
 /* 349 */ std::string	RplEndOfExceptList (std::string channel) { return (" " + channel + " :End of channel invite list"); }
 /* 351 */ std::string	RplVersion (std::string server, std::string version, std::string debug, std::string comments) { return (" " + version + "." + debug + " " + server + " :" + comments); }
-/* 352 */ std::string	RplWhoReply (std::string server, std::string nick, std::string channel, std::string user, std::string host, std::string more, std::string hopcount, std::string real_name) { return (" " + channel + " " + user + " " + host + " " + server + " " + nick + " " + more + ":" + hopcount + " " +  real_name); }
+/* 352 */ std::string	RplWhoReply (std::string server, std::string nick, std::string channel, std::string user, std::string host, std::string more, std::string hopcount, std::string real_name) { return (" " + channel + " " + user + " " + host + " " + server + " " + nick + " " + more + " :" + hopcount + " " +  real_name); }
 // Explanation for 352 : http://chi.cs.uchicago.edu/chirc/assignment3.html
+/* 353 */ std::string	RplNamReply (std::string type_chan, std::string channel, std::string nicks) { return (" " + type_chan + " " + channel + nicks); }
+// nicks must contains each nicks of the users presents in the channel with either nothing/@/+ as prefix (@ = operator of channel, +=authorization to speak in moderated channel)
+// 364 - No need
+// 365 - No need
+/* 366 */ std::string	RplEndOfNames (std::string channel) { return (" " + channel + " :Ed of NAMES list"); }
+/* 367 */ std::string	RplBanList (std::string channel, std::string mask) { return (" " + channel + " " + mask); }
+/* 368 */ std::string	RplEndOfBanList (std::string channel) { return (" " + channel + " :End of channel ban list"); }
+/* 371 */ std::string	RplInfo (std::string infos) { return (" :" + infos); }
+/* 374 */ std::string	RplEndOfInfo () { return (" :End of INFO list"); }
 
 
-# TODO make SUMMON cmd to sent ERR_SUMMONDISABLED 
+// TODO make SUMMON cmd to sent ERR_SUMMONDISABLED 
 
 // Examples :
 // 442 :openirc.snt.utwente.nl 442 lolilol #Cimitero :You're not on that channel
@@ -189,5 +198,5 @@ int main() {
 	irc::numericReply(348, 1, "server", "nick", 2, "channel", "exceptionmask");
 	irc::numericReply(349, 1, "server", "nick", 1, "channel");	 
 	irc::numericReply(351, 1, "server", "nick", 3, "version", "debug", "comments");
-	irc::numericReply(352, 1, "server", "nick", )
+	irc::numericReply(352, 1, "server", "nick", 6, "channel", "user", "host", "more", "hopcount", "real name");
 }
