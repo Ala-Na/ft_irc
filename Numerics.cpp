@@ -52,8 +52,11 @@ void	sendNumeric(int fd, std::string msg) {
 /* 368 */ std::string	RplEndOfBanList (std::string channel) { return (" " + channel + " :End of channel ban list"); }
 /* 371 */ std::string	RplInfo (std::string infos) { return (" :" + infos); }
 /* 372 */ std::string	RplMotd (std::string motd_line) { return (":- " + motd_line); }
+// Note : Max 80 char for each motd line
 /* 374 */ std::string	RplEndOfInfo () { return (" :End of INFO list"); }
 /* 375 */ std::string	RplMotdStart (std::string server) { return (" :- " + server + "Massage of the day -"); }
+/* 376 */ std::string	RplEndOfMotd () { return (" :End of MOTD command"); }
+
 
 // TODO make SUMMON cmd to sent ERR_SUMMONDISABLED 
 
