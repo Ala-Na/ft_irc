@@ -38,7 +38,7 @@ std::string	Command::getWord () {
 
 void	Command::goToExecution () {
 	// TODO delete unimplemented functions
-	int nbr_cmd = 29;
+	const int nbr_cmd = 29;
 	void (Command::*pmf[nbr_cmd])() = {&Command::intOper, &Command::intJoin, \
 		&Command::intTopic, &Command::intMode, &Command::intPart, \
 		&Command::intNames, &Command::intList, &Command::intInvite, \
