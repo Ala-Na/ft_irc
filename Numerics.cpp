@@ -25,6 +25,7 @@ void	sendNumeric(int fd, std::string msg) {
 /* 311 */ std::string	RplWhoIsUser (std::string w_nick, std::string w_user, std::string w_host, std::string w_real) { return (" " + w_nick + " " + w_user + " " + w_host + " * :" + w_real); }
 /* 312 */ std::string	RplWhoIsServer (std::string server, std::string infos) { return (" " + server + " :" + infos); };
 /* 313 */ std::string	RplWhoIsOperator (std::string o_nick) { return (" " + o_nick + " :is an IRC operator"); }
+/* 315 */ std::string	RplEndOfWho (std::string name_searched) { return (" " + name_searched + " :End of WHO list"); }
 // 317 - No need
 /* 318 */ std::string	RplEndOfWhoIs () { return (" :End of WHOIS list"); }
 // 319 - No need
@@ -40,7 +41,8 @@ void	sendNumeric(int fd, std::string msg) {
 /* 348 */ std::string	RplExceptList (std::string channel, std::string exceptionmask) { return (" " + channel + " " + exceptionmask); }
 /* 349 */ std::string	RplEndOfExceptList (std::string channel) { return (" " + channel + " :End of channel invite list"); }
 /* 351 */ std::string	RplVersion (std::string server, std::string version, std::string debug, std::string comments) { return (" " + version + "." + debug + " " + server + " :" + comments); }
-/* 352 */ std::string	RplWhoReply (std::string server, std::string nick, std::string channel, std::string user, std::string host, )
+/* 352 */ std::string	RplWhoReply (std::string server, std::string nick, std::string channel, std::string user, std::string host, std::string more, std::string hopcount, std::string real_name) { return (" " + channel + " " + user + " " + host + " " + server + " " + nick + " " + more + ":" + hopcount + " " +  real_name); }
+// Explanation for 352 : http://chi.cs.uchicago.edu/chirc/assignment3.html
 
 
 # TODO make SUMMON cmd to sent ERR_SUMMONDISABLED 
@@ -111,6 +113,8 @@ void	irc::numericReply(int num_nb, int fd, std::string server, \
 		case 313:
 			msg += RplWhoIsOperator(s_params[0]);
 			break;
+		case 315:
+			msg += RplEndOfWho(s_params[0]);
 		case 318:
 			msg += RplEndOfWhoIs();
 			break;
