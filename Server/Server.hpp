@@ -6,6 +6,9 @@
 #include <iostream>
 #include <cstring>
 #include <ctime>
+#include <map>
+#include <fstream>
+#include <string>
 
 // C librairy with no cpp equivalent
 #include <poll.h>
@@ -43,14 +46,9 @@ namespace irc {
 			std::string		password;
 			const char*		port;
 			int				server_socket;
-			// TODO .conf file and recuperate each corresponding data
-			std::string		name; // NOTE max 63 characters
-			std::string		adminloc1; //RPL 257
-			std::string 	adminloc2; //RPL 258
-			std::string		adminemail; //RPL 259
-			std::string		motd;
-			std::string		version;
 
+			// TODO .conf file and recuperate each corresponding data
+			std::map<std::string, std::string>	conf;
 
 			Server ();
 			Server (const Server& other);
@@ -60,6 +58,7 @@ namespace irc {
 			Server (std::string password, const char* port);
 			~Server ();
 
+			int	readConfFile ();
 			int	initServer ();
 			int	runServer ();
 
