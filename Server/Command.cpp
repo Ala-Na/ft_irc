@@ -39,7 +39,7 @@ std::string	Command::getWord () {
 void	Command::goToExecution () {
 	// TODO delete unimplemented functions
 	int nbr_cmd = 29;
-	void (Command::*pmf[nbr_cmd]) = {&Command::intOper, &Command::intJoin, \
+	void (Command::*pmf[nbr_cmd])() = {&Command::intOper, &Command::intJoin, \
 		&Command::intTopic, &Command::intMode, &Command::intPart, \
 		&Command::intNames, &Command::intList, &Command::intInvite, \
 		&Command::intKick, &Command::intPrivmsg, &Command::intNotice, \
@@ -56,7 +56,7 @@ void	Command::goToExecution () {
 
 	for (int i = 0; i < nbr_cmd; i++) {
 		if (!this->prefix.compare(msg[i])) {
-			this->*pmf[i]();
+			(this->*pmf[i])();
 			return ;
 		}
 	}
