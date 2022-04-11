@@ -1,4 +1,5 @@
 #include "Numerics.hpp"
+#include <cstdio>
 
 using namespace irc;
 
@@ -29,7 +30,20 @@ void	sendNumeric(int fd, std::string msg) {
 // 319 - No need
 /* 322 */ std::string	RplList (std::string channel, std::string visible, std::string topic) { return (" " + channel + " " + visible + " :" + topic); }
 /* 323 */ std::string	RplListEnd () { return (" :End of LIST"); }
-/* 324 */
+/* 324 */ std::string	RplChannelModeIs (std::string channel, std::string mode, std::string mode_params) { return (" " + channel + " " + mode + " " + mode_params); }
+/* 331 */ std::string	RplNoTopic (std::string channel) { return (" " + channel + " :No topic is set"); }
+/* 332 */ std::string	RplTopic (std::string channel, std::string topic) { return (" " + channel + " :" + topic); }
+/* 341 */ std::string	RplInviting (std::string nick, std::string channel) { return (" " + channel + " " + nick); }
+// 342 - No need
+/* 346 */ std::string	RplInviteList (std::string channel, std::string invitemask) { return (" " + channel + " " + invitemask); }
+/* 347 */ std::string	RplEndOfInviteList (std::string channel) { return (" " + channel + " :End of channel invite list"); }
+/* 348 */ std::string	RplExceptList (std::string channel, std::string exceptionmask) { return (" " + channel + " " + exceptionmask); }
+/* 349 */ std::string	RplEndOfExceptList (std::string channel) { return (" " + channel + " :End of channel invite list"); }
+/* 351 */ std::string	RplVersion (std::string server, std::string version, std::string debug, std::string comments) { return (" " + version + "." + debug + " " + server + " :" + comments); }
+/* 352 */ std::string	RplWhoReply (std::string server, std::string nick, std::string channel, std::string user, std::string host, )
+
+
+# TODO make SUMMON cmd to sent ERR_SUMMONDISABLED 
 
 // Examples :
 // 442 :openirc.snt.utwente.nl 442 lolilol #Cimitero :You're not on that channel
@@ -106,6 +120,15 @@ void	irc::numericReply(int num_nb, int fd, std::string server, \
 		case 323:
 			msg += RplListEnd();
 			break;
+		case 324:
+			msg += RplChannelModeIs(s_params[0], s_params[1], s_params[2]);
+			break;
+		case 331:
+			msg += RplNoTopic(s_params[0]);
+			break;
+		case 332:
+			msg += RplTopic(s_params[0], s_params[1]);
+			break;
 		default :
 			// TODO set error
 			break;
@@ -131,4 +154,7 @@ int main() {
 	irc::numericReply(318, 1, "server", "nick", 0);
 	irc::numericReply(322, 1, "server", "nick", 3, "channel", "visible", "topic");
 	irc::numericReply(323, 1, "server", "nick", 0);
+	irc::numericReply(324, 1, "server", "nick", 3, "channel", "modes", "params");
+	irc::numericReply(331, 1, "server", "nick", 1, "channel");
+	irc::numericReply(332, 1, "server", "nick", 2, "channel", "topic");
 }
