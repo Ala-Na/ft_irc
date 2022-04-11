@@ -126,6 +126,21 @@ void	irc::numericReply(int num_nb, int fd, std::string server, \
 		case 20:
 			msg += RplProcessConnection();
 			break;
+		case 221:
+			msg += RplUModeIs(s_params[0]);
+			break;
+		case 256:
+			msg += RplAdminMe(server);
+			break;
+		case 257:
+			msg += RplAdminLocOne(s_params[0]);
+			break;
+		case 258:
+			msg += RplAdminLocTwo(s_params[0]);
+			break;
+		case 259:
+			msg += RplAdminEmail(s_params[0]);
+			break;
 		case 301:
 			msg += RplAway(s_params[0], s_params[1]);
 			break;
@@ -189,6 +204,39 @@ void	irc::numericReply(int num_nb, int fd, std::string server, \
 		case 352:
 			msg += RplWhoReply(server, nick, s_params[0], s_params[1], s_params[2], s_params[3], s_params[4], s_params[5]);
 			break;
+		case 353:
+			msg += RplNamReply(s_params[0], s_params[1], s_params[2]);
+			break;
+		case 366:
+			msg += RplEndOfNames(s_params[0]);
+			break;
+		case 367:
+			msg += RplBanList(s_params[0], s_params[1]);
+			break;
+		case 368:
+			msg += RplEndOfBanList(s_params[0]);
+			break;
+		case 371:
+			msg += RplInfo(s_params[0]);
+			break;
+		case 372:
+			msg += RplMotd(s_params[0]);
+			break;
+		case 374:
+			msg += RplEndOfInfo();
+			break;
+		case 375:
+			msg += RplMotdStart(server);
+			break;
+		case 376:
+			msg += RplEndOfMotd();
+			break;
+		case 381:
+			msg += RplYourOper();
+			break;
+		case 391:
+			msg += RplTime(server, s_params[0]);
+			break;
 		default :
 			// TODO set error
 			break;
@@ -199,11 +247,16 @@ void	irc::numericReply(int num_nb, int fd, std::string server, \
 }
 
 int main() {
-	irc::numericReply(20, 1, "server", "*", 0);
 	irc::numericReply(1, 1, "server", "nick", 3, "user", "network", "host");
 	irc::numericReply(2, 1, "server", "nick", 1, "version");
 	irc::numericReply(3, 1, "server", "nick", 1, "date");
 	irc::numericReply(4, 1, "server", "nick", 4, "version", "mode user", "mode channel", "more");
+	irc::numericReply(20, 1, "server", "*", 0);
+	irc::numericReply(221, 1, "server", "nick", 1, "user modes");
+	irc::numericReply(256, 1, "server", "nick", 0);
+	irc::numericReply(257, 1, "server", "nick", 1, "adminloc1");
+	irc::numericReply(258, 1, "server", "nick", 1, "adminloc2");
+	irc::numericReply(259, 1, "server", "nick", 1, "adminemail");
 	irc::numericReply(301, 1, "server", "nick", 2, "from_dest", "Is away");
 	irc::numericReply(302, 1, "server", "nick", 1, "user=+/-host");
 	irc::numericReply(305, 1, "server", "nick", 0);
@@ -211,6 +264,7 @@ int main() {
 	irc::numericReply(311, 1, "server", "nick", 4, "nick2", "user", "host", "real_name");
 	irc::numericReply(312, 1, "server", "nick", 1, "Infos about server");
 	irc::numericReply(313, 1, "server", "nick", 1, "nick2");
+	irc::numericReply(315, 1, "server", "nick", 1, "searched");
 	irc::numericReply(318, 1, "server", "nick", 0);
 	irc::numericReply(322, 1, "server", "nick", 3, "channel", "visible", "topic");
 	irc::numericReply(323, 1, "server", "nick", 0);
@@ -224,4 +278,15 @@ int main() {
 	irc::numericReply(349, 1, "server", "nick", 1, "channel");	 
 	irc::numericReply(351, 1, "server", "nick", 3, "version", "debug", "comments");
 	irc::numericReply(352, 1, "server", "nick", 6, "channel", "user", "host", "more", "hopcount", "real name");
+	irc::numericReply(353, 1, "server", "nick", 3, "type", "channel", "nicks");
+	irc::numericReply(366, 1, "server", "nick", 1, "channel");
+	irc::numericReply(367, 1, "server", "nick", 2, "channel", "mask");
+	irc::numericReply(368, 1, "server", "nick", 1, "channel");
+	irc::numericReply(371, 1, "server", "nick", 1, "infos");
+	irc::numericReply(372, 1, "server", "nick", 1, "line");
+	irc::numericReply(374, 1, "server", "nick", 0);
+	irc::numericReply(375, 1, "server", "nick", 0);
+	irc::numericReply(376, 1, "server", "nick", 0);
+	irc::numericReply(381, 1, "server", "nick", 0);
+	irc::numericReply(391, 1, "server", "nick", 1, "time");
 }
