@@ -78,6 +78,9 @@ void	sendNumeric(int fd, std::string msg) {
 // 392 to 395 - No need
 
 /* ERROR REPLIES */
+/* 401 */ std::string	ErrNoSuchNick (std::string nick) { return (" " + nick + " :No suck nick/channel"); }
+/* 402 */ std::string	ErrNoSuchServer (std::string server_name) { return (" " + server_name + " :No such server"); }
+/* 403 */ std::string	ErrNoSuchChannel (std::string channel_name) { return (" " + channel_name + " :No such channel"); }
 
 // TODO make SUMMON cmd to sent ERR_SUMMONDISABLED 
 
