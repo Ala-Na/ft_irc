@@ -12,12 +12,27 @@ void	sendNumeric(int fd, std::string msg) {
 	write(fd, msg.c_str(), msg.size());
 }
 
+/* COMMAND RESPONSES */
+
 /* 001 */ std::string	RplWelcome (std::string server, std::string nick, std::string network, std::string user, std::string host) { return (" :Welcome to the " + network + " Network, " + nick + "!" + user + "@" + host); }
 /* 002 */ std::string	RplYourHost (std::string server, std::string version) { return (" :Your host is " + server + ", running version " + version);}
 /* 003 */ std::string	RplCreated (std::string creation) { return (" :This server was created " + creation); }
 /* 004 */ std::string	RplMyInfo (std::string server, std::string version, std::string u_modes, std::string c_modes, std::string supp_c_modes) { return (" " + server + " " + version + " " + u_modes + " " + c_modes + " " + supp_c_modes); }
 /* 005 */ std::string	RplBounce (std::string server, std::string port) { return (" : Try server " + server + ", port " + port); }
 /* 020 - Not in RFC, but used in irssi */ std::string	RplProcessConnection () { return (" :Please wait while we process your connection."); }
+// 200 to 212 - No need
+// 219 - No need
+/* 221 */ std::string	RplUModeIs (std::string modes) { return (" " + modes); }
+// 234 - No need
+// 235 - No need
+// 242 - No need
+// 243 - No need
+// 251 to 255 - No need
+/* 256 */ std::string	RplAdminMe (std::string server) { return (" " + server + " :Administrative info"); }
+/* 257 */ std::string	RplAdminLocOne (std::string adminloc1) { return (" :" + adminloc1); }
+/* 258 */ std::string	RplAdminLocTwo (std::string adminloc2) { return (" :" + adminloc2); }
+/* 259 */ std::string	RplAdminEmail (std::string adminemail) { return (" :" + adminemail); }
+// 261 to 263 - No need
 /* 301 */ std::string	RplAway (std::string dest_nick, std::string away_msg) { return (" " + dest_nick + " :" + away_msg); }
 /* 302 */ std::string	RplUserhost (std::string replies) { return (" :" + replies); }
 /* 305 */ std::string	RplUnaway () { return (" :You are no longer marked as being away"); }
@@ -56,7 +71,13 @@ void	sendNumeric(int fd, std::string msg) {
 /* 374 */ std::string	RplEndOfInfo () { return (" :End of INFO list"); }
 /* 375 */ std::string	RplMotdStart (std::string server) { return (" :- " + server + "Massage of the day -"); }
 /* 376 */ std::string	RplEndOfMotd () { return (" :End of MOTD command"); }
+/* 381 */ std::string	RplYourOper () { return ( " :You are now an IRC operator"); }
+// 382 - No need
+// 383 - No need
+/* 391 */ std::string	RplTime (std::string server, std::string time) { return (" " + server + " :" + time); }
+// 392 to 395 - No need
 
+/* ERROR REPLIES */
 
 // TODO make SUMMON cmd to sent ERR_SUMMONDISABLED 
 
