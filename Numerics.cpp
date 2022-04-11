@@ -115,6 +115,7 @@ void	irc::numericReply(int num_nb, int fd, std::string server, \
 			break;
 		case 315:
 			msg += RplEndOfWho(s_params[0]);
+			break;
 		case 318:
 			msg += RplEndOfWhoIs();
 			break;
@@ -132,6 +133,27 @@ void	irc::numericReply(int num_nb, int fd, std::string server, \
 			break;
 		case 332:
 			msg += RplTopic(s_params[0], s_params[1]);
+			break;
+		case 341:
+			msg += RplInviting(nick, s_params[0]);
+			break;
+		case 346:
+			msg += RplInviteList(s_params[0], s_params[1]);
+			break;
+		case 347:
+			msg += RplEndOfInviteList(s_params[0]);
+			break;
+		case 348:
+			msg += RplExceptList(s_params[0], s_params[1]);
+			break;
+		case 349:
+			msg += RplEndOfExceptList(s_params[0]);
+			break;
+		case 351:
+			msg += RplVersion(server, s_params[0], s_params[1], s_params[2]);
+			break;
+		case 352:
+			msg += RplWhoReply(server, nick, s_params[0], s_params[1], s_params[2], s_params[3], s_params[4], s_params[5]);
 			break;
 		default :
 			// TODO set error
@@ -161,4 +183,11 @@ int main() {
 	irc::numericReply(324, 1, "server", "nick", 3, "channel", "modes", "params");
 	irc::numericReply(331, 1, "server", "nick", 1, "channel");
 	irc::numericReply(332, 1, "server", "nick", 2, "channel", "topic");
+	irc::numericReply(341, 1, "server", "nick", 1, "channel");
+	irc::numericReply(346, 1, "server", "nick", 2, "channel", "invitemask");
+	irc::numericReply(347, 1, "server", "nick", 1, "channel");
+	irc::numericReply(348, 1, "server", "nick", 2, "channel", "exceptionmask");
+	irc::numericReply(349, 1, "server", "nick", 1, "channel");	 
+	irc::numericReply(351, 1, "server", "nick", 3, "version", "debug", "comments");
+	irc::numericReply(352, 1, "server", "nick", )
 }
