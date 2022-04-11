@@ -406,10 +406,45 @@ void	irc::numericReply(int num_nb, User* user, std::vector<std::string>& s_param
 		case 502:
 			msg += irc::ErrUsersDontMatch();
 			break;
+		case 324:
+			msg += RplChannelModeIs(s_params[0], s_params[1], s_params[2]);
+			break;
+		case 331:
+			msg += RplNoTopic(s_params[0]);
+			break;
+		case 332:
+			msg += RplTopic(s_params[0], s_params[1]);
+			break;
 		default :
 			msg += irc::ErrUnknownCommand(s_num_nb);
 			break;
 	}
 	msg += END;
+<<<<<<< HEAD
 	irc::sendNumeric(fd, msg);
+=======
+	sendNumeric(fd, msg);
+
+}
+
+int main() {
+	irc::numericReply(20, 1, "server", "*", 0);
+	irc::numericReply(1, 1, "server", "nick", 3, "user", "network", "host");
+	irc::numericReply(2, 1, "server", "nick", 1, "version");
+	irc::numericReply(3, 1, "server", "nick", 1, "date");
+	irc::numericReply(4, 1, "server", "nick", 4, "version", "mode user", "mode channel", "more");
+	irc::numericReply(301, 1, "server", "nick", 2, "from_dest", "Is away");
+	irc::numericReply(302, 1, "server", "nick", 1, "user=+/-host");
+	irc::numericReply(305, 1, "server", "nick", 0);
+	irc::numericReply(306, 1, "server", "nick", 0);
+	irc::numericReply(311, 1, "server", "nick", 4, "nick2", "user", "host", "real_name");
+	irc::numericReply(312, 1, "server", "nick", 1, "Infos about server");
+	irc::numericReply(313, 1, "server", "nick", 1, "nick2");
+	irc::numericReply(318, 1, "server", "nick", 0);
+	irc::numericReply(322, 1, "server", "nick", 3, "channel", "visible", "topic");
+	irc::numericReply(323, 1, "server", "nick", 0);
+	irc::numericReply(324, 1, "server", "nick", 3, "channel", "modes", "params");
+	irc::numericReply(331, 1, "server", "nick", 1, "channel");
+	irc::numericReply(332, 1, "server", "nick", 2, "channel", "topic");
+>>>>>>> be4c78f (more numerics)
 }
