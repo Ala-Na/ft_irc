@@ -3,10 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   User.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
+<<<<<<< HEAD
 /*   By: cboutier <cboutier@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/04 09:41:08 by cboutier          #+#    #+#             */
 /*   Updated: 2022/04/11 14:54:17 by cboutier         ###   ########.fr       */
+=======
+/*   By: anadege <anadege@student.42.fr>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2022/04/04 09:41:08 by cboutier          #+#    #+#             */
+/*   Updated: 2022/04/13 11:59:52 by anadege          ###   ########.fr       */
+>>>>>>> d5e4fcb (Add files via upload)
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +21,7 @@
 
 using namespace irc;
 
+<<<<<<< HEAD
 int	there_is_no_usr(char c, std::string str)
 {
 	int	i;
@@ -52,18 +60,23 @@ std::vector<std::string>	split_usr(std::string text, std::string space_delimiter
 	return (words);
 }
 
+=======
+>>>>>>> d5e4fcb (Add files via upload)
 User::User(int fd, struct sockaddr_in address)
 : _fd(fd)
 {
 	std::string	msg = "Please wait while we are connecting you...";
 	send(fd, &msg, msg.size(), MSG_DONTWAIT);
 	_address = address;
+<<<<<<< HEAD
 	userModes.a = false;		// user is flagged as away;
 	userModes.i = false;		// marks a users as invisible; hides you if someone does a /WHO or /NAMES outside the channel
 	userModes.w = false;		// user receives wallops; Used by IRC operators, WALLOPS is a command utilized to send messages on an IRC network. WALLOPS messages are for broadcasting network information and its status to following users.
 	userModes.r = false;		// restricted user connection;
 	userModes.o = false;		// operator flag;
 	userModes.O = false;
+=======
+>>>>>>> d5e4fcb (Add files via upload)
 }
 
 User::User(User const &src)
@@ -104,11 +117,14 @@ std::string	User::getHostname()
 	return (_hostname);
 }
 
+<<<<<<< HEAD
 std::vector<std::string>	User::getParams()
 {
 	return (_params);
 }
 
+=======
+>>>>>>> d5e4fcb (Add files via upload)
 std::string User::getAwayMessage()
 {
 	return (_away_message);
@@ -124,11 +140,14 @@ std::vector<std::string> User::getChannels()
 	return (_channels);
 }
 
+<<<<<<< HEAD
 sockaddr_in	User::getAddr()
 {
 	return (_address);
 }
 
+=======
+>>>>>>> d5e4fcb (Add files via upload)
 int	User::getNbOfChannels()
 {
 	std::vector<std::string>::iterator it = _channels.begin();
@@ -227,7 +246,11 @@ void	User::privmsg(User usr, std::string msg) // pov de la pax qui recoit le msg
 	// send(this->_fd, &msg, msg.size());
 }
 
+<<<<<<< HEAD
 void	User::notice(std::string msg)
+=======
+void	User::notice(User usr, std::string msg)
+>>>>>>> d5e4fcb (Add files via upload)
 {
 	sendMessage(this->_fd, msg);
 	// send(this->_fd, &msg, msg.size());
@@ -278,7 +301,11 @@ Server *	User::getServer()
 void	User::quit(void)
 {
 	// std::vector<std::string>::iterator it = _channels.begin();
+<<<<<<< HEAD
 	unsigned long int i = 0;
+=======
+	int i = 0;
+>>>>>>> d5e4fcb (Add files via upload)
 	while (i < _channels.size())
 	{
 		Channel *chan = getServer()->getChannelByName(_channels[i]);
@@ -287,8 +314,12 @@ void	User::quit(void)
 	}
 }
 
+<<<<<<< HEAD
 // void	User::part(std::vector<std::string> params)
 void	User::part()
+=======
+void	User::part(std::vector<std::string> params)
+>>>>>>> d5e4fcb (Add files via upload)
 {
 	std::vector<std::string>::iterator it1 = _params.begin();
 	while (it1 != _params.end())
@@ -333,15 +364,24 @@ void	User::mode(std::vector<std::string> params)
 		if (it[0][0] == '+')
 		{
 			if (it[0][1] == 'i')
+<<<<<<< HEAD
 				userModes.i = true;
 			if (it[0][1] == 'w')
 				userModes.w = true;
 			if (it[0][1] == 'r')
 				userModes.r = true;
+=======
+				User::userModes.i = true;
+			if (it[0][1] == 'w')
+				User::userModes.w = true;
+			if (it[0][1] == 'r')
+				User::userModes.r = true;
+>>>>>>> d5e4fcb (Add files via upload)
 		}
 		else if (it[0][0] == '-')
 		{
 			if (it[0][1] == 'i')
+<<<<<<< HEAD
 				userModes.i = false;
 			if (it[0][1] == 'w')
 				userModes.w = false;
@@ -351,6 +391,17 @@ void	User::mode(std::vector<std::string> params)
 				userModes.o = false;
 			if (it[0][1] == 'O')
 				userModes.O = false;
+=======
+				User::userModes.i = false;
+			if (it[0][1] == 'w')
+				User::userModes.w = false;
+			if (it[0][1] == 'r')
+				User::userModes.r = false;
+			if (it[0][1] == 'o')
+				User::userModes.o = false;
+			if (it[0][1] == 'O')
+				User::userModes.O = false;
+>>>>>>> d5e4fcb (Add files via upload)
 		}
 		it++;
 	}
@@ -360,7 +411,11 @@ void	User::user_cmd(std::string params)
 {
 	std::vector<std::string>	param;
 
+<<<<<<< HEAD
 	param = split_usr(params, " ");
+=======
+	param = irc::split(params, " ");
+>>>>>>> d5e4fcb (Add files via upload)
 	if (param.size() != 4)
 		// send ERR NEEDMOREPARAMS 461
 	// TODO: Check if user is already registered, if yes, send ERR ALREADYREGISTERED
@@ -381,6 +436,7 @@ void	User::user_cmd(std::string params)
 	// 	std::cout << i << ": " << param[i] << '\n';
 }
 
+<<<<<<< HEAD
 bool	User::operator==(User const &rhs) const
 {
 	if (this->_nickname == rhs._nickname
@@ -396,3 +452,5 @@ bool	User::operator!=(User const &rhs) const
 	return (!(*this == rhs));
 }
 
+=======
+>>>>>>> d5e4fcb (Add files via upload)

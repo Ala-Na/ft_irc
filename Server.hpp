@@ -6,6 +6,12 @@
 #include <iostream>
 #include <cstring>
 #include <ctime>
+<<<<<<< HEAD
+=======
+#include <map>
+#include <fstream>
+#include <string>
+>>>>>>> d5e4fcb (Add files via upload)
 
 // C library with no cpp equivalent
 #include <poll.h>
@@ -18,7 +24,11 @@
 #include <fcntl.h>
 #include <stdlib.h>
 
+<<<<<<< HEAD
 // TODO modify following path
+=======
+#include "Utilitary.hpp"
+>>>>>>> d5e4fcb (Add files via upload)
 #include "User.hpp"
 #include "Channel.hpp"
 #include "Command.hpp"
@@ -40,11 +50,15 @@ namespace irc {
 			std::vector<User *>			operators;
 			std::vector<Channel *>		channels;
 			std::vector<std::string>	datas;
+<<<<<<< HEAD
 			bool						running;
+=======
+>>>>>>> d5e4fcb (Add files via upload)
 
 			std::string		password;
 			const char*		port;
 			int				server_socket;
+<<<<<<< HEAD
 			// TODO .conf file and recuperate each corresponding data
 			std::string		name; // NOTE max 63 characters
 			std::string		adminloc1; //RPL 257
@@ -53,6 +67,10 @@ namespace irc {
 			std::string		motd;
 			std::string		version;
 
+=======
+
+			std::map<std::string, std::string>	conf;
+>>>>>>> d5e4fcb (Add files via upload)
 
 			Server ();
 			Server (const Server& other);
@@ -63,6 +81,11 @@ namespace irc {
 			~Server ();
 
 			int			initServer ();
+<<<<<<< HEAD
+=======
+			int			readConfFile ();
+			int			checkConf ();
+>>>>>>> d5e4fcb (Add files via upload)
 			int			runServer ();
 
 			void		addSocketToPoll (int socket_fd);
@@ -86,7 +109,11 @@ namespace irc {
 
 			Server&		getServer ();
 
+<<<<<<< HEAD
 			User*		getSpecificUser (unsigned long user_nb);
+=======
+			User*		getSpecificUser (int user_nb);
+>>>>>>> d5e4fcb (Add files via upload)
 			Channel*	getChannelByName (std::string name);
 			// User*		getUserByName (std::string name);
 
@@ -97,6 +124,7 @@ namespace irc {
 			std::string	getMotd();
 			std::vector<User *>	getServOp();
 			std::vector<User *>	getServUsers();
+<<<<<<< HEAD
 
 			void	intWallops();
 
@@ -104,3 +132,9 @@ namespace irc {
 };
 
 #endif
+=======
+	};
+};
+
+#endif
+>>>>>>> d5e4fcb (Add files via upload)

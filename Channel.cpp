@@ -132,7 +132,11 @@ std::string	Channel::getChanNameAndTopic()
 
 User *Channel::getUserFromUsername(std::string username)
 {
+<<<<<<< HEAD
 	unsigned long i;
+=======
+	int i;
+>>>>>>> d5e4fcb (Add files via upload)
 
 	i = 0;
 	while (i < vec_chan_users.size())
@@ -144,7 +148,11 @@ User *Channel::getUserFromUsername(std::string username)
 	return (NULL);
 };
 
+<<<<<<< HEAD
 int	there_is_no_chan(char c, std::string str)
+=======
+int	there_is_no(char c, std::string str)
+>>>>>>> d5e4fcb (Add files via upload)
 {
 	int	i;
 
@@ -182,7 +190,11 @@ int	Channel::setChanName(std::string original_name)	// first character & % + !, 
 	name = ft_toupper_str(original_name);
 	if ((name[0] == '&' || name[0] == '#' || name[0] == '+' || name[0] == '!')
 		&& name.length() <= 50
+<<<<<<< HEAD
 		&& there_is_no_chan(' ', name) && there_is_no_chan(',', name) && there_is_no_chan(':', name))
+=======
+		&& there_is_no(' ', name) && there_is_no(',', name) && there_is_no(':', name))
+>>>>>>> d5e4fcb (Add files via upload)
 	{
 		chan_name = original_name;
 		if (name[0] == '!')
@@ -209,7 +221,11 @@ int	Channel::setChanName(std::string original_name)	// first character & % + !, 
 		std::cerr << "Name of channel cannot be longer than 50 characters\n";
 		return (3);
 	}
+<<<<<<< HEAD
 	else if (there_is_no_chan(' ', name) == 0 || there_is_no_chan(',', name) == 0 || there_is_no_chan(':', name) == 0)
+=======
+	else if (there_is_no(' ', name) == 0 || there_is_no(',', name) == 0 || there_is_no(':', name) == 0)
+>>>>>>> d5e4fcb (Add files via upload)
 	{
 		std::cerr << "Name of channel cannot contain spaces, comas or colons\n";
 		return (4);
@@ -224,7 +240,11 @@ void	Channel::setChanPassword(std::string password)
 
 int	Channel::isOperator(User & user)
 {
+<<<<<<< HEAD
 	unsigned long	i;
+=======
+	int	i;
+>>>>>>> d5e4fcb (Add files via upload)
 
 	i = 0;
 	while (i < vec_chan_operators.size())
@@ -238,7 +258,11 @@ int	Channel::isOperator(User & user)
 
 void	Channel::setChanTopic(std::string topic, User & user_who_changes)
 {
+<<<<<<< HEAD
 	if (there_is_no_chan('t', chan_mode) || (there_is_no_chan('t', chan_mode) == 0 && isOperator(user_who_changes)))
+=======
+	if (there_is_no('t', chan_mode) || (there_is_no('t', chan_mode) == 0 && isOperator(user_who_changes)))
+>>>>>>> d5e4fcb (Add files via upload)
 		chan_topic = topic;
 };
 
@@ -275,7 +299,11 @@ void	Channel::setVecChanBannedUsers(std::vector<User> vec_banned_users)
 
 int	Channel::userIsInChanFromUsername(std::string username_to_search)
 {
+<<<<<<< HEAD
 	unsigned long i;
+=======
+	int i;
+>>>>>>> d5e4fcb (Add files via upload)
 
 	i = 0;
 	while (i < vec_chan_users.size())
@@ -289,7 +317,11 @@ int	Channel::userIsInChanFromUsername(std::string username_to_search)
 
 int	Channel::userIsInChanFromNickname(std::string nickname_to_search)
 {
+<<<<<<< HEAD
 	unsigned long i;
+=======
+	int i;
+>>>>>>> d5e4fcb (Add files via upload)
 
 	i = 0;
 	while (i < vec_chan_users.size())
@@ -303,7 +335,11 @@ int	Channel::userIsInChanFromNickname(std::string nickname_to_search)
 
 int	Channel::userIsBannedFromChan(std::string username_to_search)
 {
+<<<<<<< HEAD
 	unsigned long i;
+=======
+	int i;
+>>>>>>> d5e4fcb (Add files via upload)
 
 	i = 0;
 	while (i < vec_chan_banned_users.size())
@@ -325,7 +361,11 @@ int	Channel::receivingAnInvitation(User & user_inviting, User & user_invited)
 	std::string	message;
 	int			ret;
 
+<<<<<<< HEAD
 	if (there_is_no_chan('i', chan_mode) == 0 && isOperator(user_inviting) == 0)
+=======
+	if (there_is_no('i', chan_mode) == 0 && isOperator(user_inviting) == 0)
+>>>>>>> d5e4fcb (Add files via upload)
 	{
 		message = "Only an operator can invite on channel " + chan_name;
 		ret = send(user_inviting.getFd(), &message, message.size(), MSG_DONTWAIT);	// flag since Linux 2.2 (https://linux.die.net/man/2/send)
@@ -355,9 +395,15 @@ int	Channel::receivingAnInvitation(User & user_inviting, User & user_invited)
 
 int Channel::listAllUsersInChan(User & user_asking)
 {
+<<<<<<< HEAD
 	unsigned long	i;
 	int				ret;
 	std::string		name;
+=======
+	int			i;
+	int			ret;
+	std::string	name;
+>>>>>>> d5e4fcb (Add files via upload)
 
 	i = 0;
 	while (i < vec_chan_users.size())
@@ -380,8 +426,13 @@ int Channel::listAllUsersInChan(User & user_asking)
 
 int	Channel::writeToAllChanUsers(std::string sentence_to_send)
 {
+<<<<<<< HEAD
 	unsigned long	i;
 	int				ret;
+=======
+	int	i;
+	int	ret;
+>>>>>>> d5e4fcb (Add files via upload)
 
 	i = 0;
 	while (i < vec_chan_users.size())
@@ -400,7 +451,11 @@ int	Channel::writeToAllChanUsers(std::string sentence_to_send)
 int Channel::addUser(User & user_to_add)
 {
 	std::vector<User>::iterator	found;
+<<<<<<< HEAD
 	unsigned long				i;
+=======
+	int							i;
+>>>>>>> d5e4fcb (Add files via upload)
 	std::string					user_added;
 	int							ret;
 
@@ -519,7 +574,11 @@ int Channel::addBannedUser(User & user_to_ban)
 {
 	std::vector<User>::iterator	found;
 	std::string					user_banned;
+<<<<<<< HEAD
 	// int							ret;
+=======
+	int							ret;
+>>>>>>> d5e4fcb (Add files via upload)
 
 	found = std::find(vec_chan_banned_users.begin(), vec_chan_banned_users.end(), user_to_ban);
 	if (found != vec_chan_banned_users.end())

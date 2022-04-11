@@ -67,6 +67,7 @@ void	Command::goToExecution () {
 		}
 	};
 	// TODO send error unknown code 421 if not found
+<<<<<<< HEAD
 }
 
 // Intermediate Commands
@@ -337,13 +338,249 @@ void	Command::intWallops()
 
 //OLY
 std::string left_trim(const std::string &s, std::string to_remove)
+=======
+	}
+	// Intermediate Commands
+	void	Command::intUser()
+	{
+		user->user_cmd(getParam());
+	}
+
+	void	Command::intNick()
+	{
+		std::string param = getParam();
+		// if (param.size() == 0)
+			// return ERRNONICKNAMEGIVEN 431 ":No nickname given"
+		// if (param.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890-_{}[]\\`|") != std::string::npos)
+			// return ERRONEUSNICKNAME 432 "<nick> :Erroneus nickname"
+		// TODO : check if the session is still unregistered
+		// if unregistered, create new user object
+
+		std::string nickname;
+		size_t pos = param.find("!");
+		if (pos != std::string::npos)
+		{
+			nickname = param.substr(1, pos - 1);
+		}
+		std::string	new_nickname;
+		size_t	pos2 = param.find("NICK") + 5;
+		new_nickname = param.substr(pos2);
+		user->setNickname(new_nickname);
+	//    ERR_NICKNAMEINUSE
+	// 	ERR_NICKCOLLISION
+	//     ERR_UNAVAILRESOURCE
+	// 	ERR_RESTRICTED
+	}
+
+	void	Command::intUserMode()
+	{
+		std::string param = getParam();
+		std::vector<std::string>	params;
+
+		User	usr;
+		params = irc::irc::split(param, " ");
+		// need to select the right user in the channel
+		user->mode(params);
+		/*
+		221    RPL_UMODEIS
+			  "<user mode string>"
+
+		 - To answer a query about a client's own mode,
+		   RPL_UMODEIS is sent back.
+		*/
+	}
+
+	void	Command::intWhoIs()
+	{
+		std::string param = getParam();
+
+		if (param.size() == 0)
+			// return ERR_NONICKNAMEGIVEN 431 ":No nickname given"
+		// check if user exists in the channel
+		if (user)
+			user->whois(*user);
+		// check numeric replies
+	}
+
+	void	Command::intUserhost()
+	{
+		std::string param = getParam();
+		std::vector<std::string> params;
+
+		std::string	reply;
+		params = irc::split(param, " ");
+		// if (params.size() == 0)
+			// return ERR_NEEDMOREPARAMS 461
+		int		i = 0;
+		while (i < params.size())
+		{
+			reply.append(user->getNickname());
+			if (user->userModes.o)
+				reply.append("*");
+			reply.append("=");
+			if (user->userModes.a)
+				reply.append("-");
+			else
+				reply.append("+");
+			reply.append(user->getHostname());
+			if (params.size() > 1)
+				reply.append(" ");
+			// User::whois(usr);
+			i++;
+		}
+	}
+
+	void	Command::intAway()
+	{
+		std::string param = getParam();
+		user->away(param);
+	}
+
+	void	Command::intPrivMsg()
+	{
+		std::string username;
+		std::string nickname;
+		std::string hostname;
+		std::string server_str;
+		std::string msg;
+
+		std::string param = getParam();
+
+		size_t position1 = param.find("@");
+		size_t position2 = param.find("%");
+		size_t dif = position1 < position2 ? position1 : position2;
+		username = param.substr(0, dif);
+		size_t pos1 = param.find("!");
+		if (pos1 != std::string::npos)
+		{
+			size_t pos2 = param.find("@");
+			size_t pos3 = param.find("%");
+			if (pos3 != std::string::npos)
+				username = param.substr(pos1 + 1,(pos3 - pos1) - 1);
+			else
+				username = param.substr(pos1 + 1,(pos2 - pos1) - 1);
+			nickname = param.substr(0, pos1);
+		}
+		size_t pos4 = param.find("@");
+		if (pos4 != std::string::npos)
+		{
+			size_t pos5 = param.find("%");
+			if (pos5 != std::string::npos)
+			{
+				hostname = param.substr(pos5 + 1, pos4 - pos5 - 1);
+				server_str = param.substr(pos4 + 1, param.find(" ") - pos4 - 1);
+			}
+			else
+			{
+				hostname = param.substr(pos4 + 1, param.find(" ") - pos4 - 1);
+			}
+		}
+		size_t pos6 = param.find("%");
+		if (pos6 != std::string::npos && pos4 == std::string::npos)
+		{
+			hostname = param.substr(pos6 + 1, param.find(" ") - pos6 - 1);
+		}
+
+		size_t pos7 = param.find(":");
+		if (pos7 != std::string::npos)
+			msg = param.substr(pos7 + 1);
+
+		User	*recipient;
+		if (username.size() > 0)
+			recipient = server.getUserByUsername(username);
+		user->privmsg(*recipient, msg);
+		// recipient.setNickname(nickname);
+		// recipient.setUsername(username);
+		// recipient.setHostname(hostname);
+	}
+
+	void	Command::intNotice()
+	{
+		std::string username;
+		std::string nickname;
+		std::string hostname;
+		std::string server_str;
+		std::string msg;
+
+		std::string param = getParam();
+
+		size_t position1 = param.find("@");
+		size_t position2 = param.find("%");
+		size_t dif = position1 < position2 ? position1 : position2;
+		username = param.substr(0, dif);
+		size_t pos1 = param.find("!");
+		if (pos1 != std::string::npos)
+		{
+			size_t pos2 = param.find("@");
+			size_t pos3 = param.find("%");
+			if (pos3 != std::string::npos)
+				username = param.substr(pos1 + 1,(pos3 - pos1) - 1);
+			else
+				username = param.substr(pos1 + 1,(pos2 - pos1) - 1);
+			nickname = param.substr(0, pos1);
+		}
+		size_t pos4 = param.find("@");
+		if (pos4 != std::string::npos)
+		{
+			size_t pos5 = param.find("%");
+			if (pos5 != std::string::npos)
+			{
+				hostname = param.substr(pos5 + 1, pos4 - pos5 - 1);
+				server_str = param.substr(pos4 + 1, param.find(" ") - pos4 - 1);
+			}
+			else
+			{
+				hostname = param.substr(pos4 + 1, param.find(" ") - pos4 - 1);
+			}
+		}
+		size_t pos6 = param.find("%");
+		if (pos6 != std::string::npos && pos4 == std::string::npos)
+		{
+			hostname = param.substr(pos6 + 1, param.find(" ") - pos6 - 1);
+		}
+
+		size_t pos7 = param.find(":");
+		if (pos7 != std::string::npos)
+			msg = param.substr(pos7 + 1);
+
+		User	*recipient;
+		if (username.size() > 0)
+			recipient = server.getUserByUsername(username);
+			// recipient = Channel::getUserFromUsername(username);
+		user->notice(*recipient, msg);
+		recipient->setNickname(nickname);
+		recipient->setUsername(username);
+		recipient->setHostname(hostname);
+	}
+
+	void	intWallops(std::string param)
+	{
+		std::vector<User>	users = getVecChanUsers();
+		// if (users.size() < 1)
+			// return ERR_NEEDMOREPARAMS 461
+		std::vector<User>::iterator	it = users.begin();
+		while (it != users.end())
+		{
+			if (it->userModes.w)
+				send(it->getFd(), &param, param.size(), MSG_DONTWAIT);
+			it++;
+		}
+	}
+
+	//OLY
+	std::string left_trim(const std::string &s, std::string to_remove)
+>>>>>>> d5e4fcb (Add files via upload)
 {
 	size_t start = s.find_first_not_of(to_remove);
 	if (start == std::string::npos)
 		return (NULL);
 	return (s.substr(start));
 }
+<<<<<<< HEAD
 
+=======
+ 
+>>>>>>> d5e4fcb (Add files via upload)
 std::string right_trim(const std::string &s, std::string to_remove)
 {
 	size_t end = s.find_last_not_of(to_remove);
@@ -351,7 +588,11 @@ std::string right_trim(const std::string &s, std::string to_remove)
 		return (NULL);
 	return (s.substr(0, end + 1));
 }
+<<<<<<< HEAD
 
+=======
+ 
+>>>>>>> d5e4fcb (Add files via upload)
 std::string trim(const std::string &s, std::string to_remove)
 {
 	return (right_trim(left_trim(s, to_remove), to_remove));
@@ -369,14 +610,24 @@ void Command::intJoin()
 	std::vector<std::string>	vec_keys;
 	std::string                 name;
 	std::string                 key;
+<<<<<<< HEAD
 	unsigned long				i;
+=======
+	int                         i;
+>>>>>>> d5e4fcb (Add files via upload)
 	Channel                     *chan_found;
 	std::string                 message;
 	ssize_t                         ret;
 
+<<<<<<< HEAD
 	vec = split_cmd(param, " ");
 	vec_chan_names = split_cmd(vec[0], ",");
 	vec_keys = split_cmd(vec[1], ",");
+=======
+	vec = irc::split(param, " ");
+	vec_chan_names = irc::split(vec[0], ",");
+	vec_keys = irc::split(vec[1], ",");
+>>>>>>> d5e4fcb (Add files via upload)
 	if (vec_chan_names.size() == 1 && vec_keys.size() == 0 && vec_chan_names[0] == "0")    // JOIN 0
 	{
 		intQuit();
@@ -458,7 +709,11 @@ void Command::intJoin()
 			i++;
 			continue ;              // proceed to the other requests to join
 		}
+<<<<<<< HEAD
 		if (there_is_no_cmd('i', chan_found->getChanMode()) == 0)   // ERR_INVITEONLYCHAN
+=======
+		if (there_is_no('i', chan_found->getChanMode()) == 0)   // ERR_INVITEONLYCHAN
+>>>>>>> d5e4fcb (Add files via upload)
 		{
 			message = "ERR_INVITEONLYCHAN\n";
 			ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
@@ -532,13 +787,21 @@ void Command::intInvite()
 	std::vector<std::string>	vec;
 	std::string                 nickname;
 	std::string                 name;
+<<<<<<< HEAD
 	// int                         i;
+=======
+	int                         i;
+>>>>>>> d5e4fcb (Add files via upload)
 	Channel                     *chan_found;
 	std::string                 message;
 	int                         ret;
 	User *                      user_asked;
 
+<<<<<<< HEAD
 	vec = split_cmd(param, " ");
+=======
+	vec = irc::split(param, " ");
+>>>>>>> d5e4fcb (Add files via upload)
 	if (vec.size() < 2)  // ERR_NEEDMOREPARAMS
 	{
 		ret = send(user->getFd(), "ERR_NEEDMOREPARAMS\n", 18, MSG_DONTWAIT);
@@ -578,7 +841,11 @@ void Command::intInvite()
 		}
 		return ;
 	}
+<<<<<<< HEAD
 	if (there_is_no_cmd('i', chan_found->getChanMode()) == 0 && chan_found->isOperator(*user) == 0)  // ERR_CHANOPRIVSNEEDED
+=======
+	if (there_is_no('i', chan_found->getChanMode()) == 0 && chan_found->isOperator(*user) == 0)  // ERR_CHANOPRIVSNEEDED
+>>>>>>> d5e4fcb (Add files via upload)
 	{
 		message = "ERR_CHANOPRIVSNEEDED\n";
 		ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
@@ -610,12 +877,21 @@ void Command::intOper()
 	std::vector<std::string>	vec;
 	std::string                 name;
 	std::string                 key;
+<<<<<<< HEAD
 	// int                         i;
 	// Channel                     *chan_found;
 	std::string                 message;
 	int                         ret;
 
 	vec = split_cmd(param, " ");
+=======
+	int                         i;
+	Channel                     *chan_found;
+	std::string                 message;
+	int                         ret;
+
+	vec = irc::split(param, " ");
+>>>>>>> d5e4fcb (Add files via upload)
 	if (vec.size() < 2)  // ERR_NEEDMOREPARAMS
 	{
 		ret = send(user->getFd(), "ERR_NEEDMOREPARAMS\n", 19, MSG_DONTWAIT);
@@ -657,12 +933,21 @@ void Command::intPart()
 	std::vector<std::string>	vec_chan_names;
 	std::string					name;
 	std::string                 message;
+<<<<<<< HEAD
 	unsigned long				i;
 	Channel                     *chan_found;
 	int                         ret;
 
 	vec = split_cmd(param, ":");
 	vec_chan_names = split_cmd(vec[0], ",");
+=======
+	int                         i;
+	Channel                     *chan_found;
+	int                         ret;
+
+	vec = irc::split(param, ":");
+	vec_chan_names = irc::split(vec[0], ",");
+>>>>>>> d5e4fcb (Add files via upload)
 	if (vec_chan_names.size() == 0)  // ERR_NEEDMOREPARAMS
 	{
 		message = "ERR_NEEDMOREPARAMS\n";
@@ -724,7 +1009,11 @@ void Command::intPart()
 void    Command::intQuit()
 {
 	std::string                 message;
+<<<<<<< HEAD
 	unsigned long				i;
+=======
+	int                         i;
+>>>>>>> d5e4fcb (Add files via upload)
 	std::vector<std::string>    vec_chan_names;
 	Channel                     *chan_found;
 	std::string                 name;
@@ -749,7 +1038,11 @@ void    Command::intNames()
 {
 	std::vector<std::string>	vec_chan_names;
 	std::string                 name;
+<<<<<<< HEAD
 	unsigned long				i;
+=======
+	int                         i;
+>>>>>>> d5e4fcb (Add files via upload)
 	Channel                     *chan_found;
 
 	if (param.empty())
@@ -765,7 +1058,11 @@ void    Command::intNames()
 	}
 	else
 	{
+<<<<<<< HEAD
 		vec_chan_names = split_cmd(param, ",");
+=======
+		vec_chan_names = irc::split(param, ",");
+>>>>>>> d5e4fcb (Add files via upload)
 		i = 0;
 		while (i < vec_chan_names.size())
 		{
@@ -792,7 +1089,11 @@ void Command::intList()
 {
 	std::vector<std::string>	vec_chan_names;
 	std::string                 name;
+<<<<<<< HEAD
 	unsigned long				i;
+=======
+	int                         i;
+>>>>>>> d5e4fcb (Add files via upload)
 	Channel                     *chan_found;
 	int                         ret;
 	std::string					message;
@@ -810,7 +1111,11 @@ void Command::intList()
 	}
 	else
 	{
+<<<<<<< HEAD
 		vec_chan_names = split_cmd(param, ",");
+=======
+		vec_chan_names = irc::split(param, ",");
+>>>>>>> d5e4fcb (Add files via upload)
 		i = 0;
 		while (i < vec_chan_names.size())
 		{
@@ -825,7 +1130,10 @@ void Command::intList()
 			{
 				message = "Invalid channel name\n";
 				ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
+<<<<<<< HEAD
 				if (ret == -1)
+=======
+>>>>>>> d5e4fcb (Add files via upload)
 				{
 					std::cerr << "Could not send message\n";
 					return ;
@@ -847,11 +1155,19 @@ void Command::intKick()
 	std::string                 message;
 	std::string                 name;
 	std::string                 user_str;
+<<<<<<< HEAD
 	unsigned long				i;
 	Channel                     *chan_found;
 	int                         ret;
 
 	vec = split_cmd(param, " ");
+=======
+	int                         i;
+	Channel                     *chan_found;
+	int                         ret;
+
+	vec = irc::split(param, " ");
+>>>>>>> d5e4fcb (Add files via upload)
 	if (vec.size() < 2)      // ERR_NEEDMOREPARAMS
 	{
 		message = "ERR_NEEDMOREPARAMS\n";
@@ -863,8 +1179,13 @@ void Command::intKick()
 		}
 		return ;
 	}
+<<<<<<< HEAD
 	vec_chan_names = split_cmd(vec[0], ",");
 	vec_usernames = split_cmd(vec[1], ",");
+=======
+	vec_chan_names = irc::split(vec[0], ",");
+	vec_usernames = irc::split(vec[1], ",");
+>>>>>>> d5e4fcb (Add files via upload)
 	if (vec[2].size() > 0)
 		message = vec[2];
 	if (vec_chan_names.size() == 0 ||
@@ -927,7 +1248,11 @@ void Command::intTopic()
 	std::string 	            name;
 	std::string                 new_topic;
 	std::string                 message;
+<<<<<<< HEAD
 	// int                         i;
+=======
+	int                         i;
+>>>>>>> d5e4fcb (Add files via upload)
 	Channel                     *chan_found;
 	int                         ret;
 
@@ -944,7 +1269,11 @@ void Command::intTopic()
 	}
 	if (param[param.size() - 1] == ':')
 		param += " ";
+<<<<<<< HEAD
 	vec = split_cmd(param, ":");
+=======
+	vec = irc::split(param, ":");
+>>>>>>> d5e4fcb (Add files via upload)
 	name = vec[0];
 	if (name[0] != '&' && name[0] != '#' && name[0] != '+' && name[0] !=  '!')
 		name.insert(0, "#");
@@ -966,7 +1295,11 @@ void Command::intTopic()
 		new_topic = vec[1];
 	else
 		new_topic = "";
+<<<<<<< HEAD
 	if (there_is_no_cmd(':', param))    // RPL_TOPIC
+=======
+	if (there_is_no(':', param))    // RPL_TOPIC
+>>>>>>> d5e4fcb (Add files via upload)
 	{
 		message = chan_found->getChanTopic();
 		ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
@@ -977,7 +1310,11 @@ void Command::intTopic()
 		}
 		return ;
 	}
+<<<<<<< HEAD
 	if (there_is_no_cmd('t', chan_found->getChanMode()) == 0 && chan_found->isOperator(*user) == 0) // ERR_CHANOPRIVSNEEDED
+=======
+	if (there_is_no('t', chan_found->getChanMode()) == 0 && chan_found->isOperator(*user) == 0) // ERR_CHANOPRIVSNEEDED
+>>>>>>> d5e4fcb (Add files via upload)
 	{
 		message = "ERR_CHANOPRIVSNEEDED";
 		ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
@@ -1022,7 +1359,11 @@ void Command::intMotd()
 {
 	int ret;
 	std::string motd = server.getMotd();
+<<<<<<< HEAD
 
+=======
+	
+>>>>>>> d5e4fcb (Add files via upload)
 	if (motd.size() == 0)
 	{
 		ret = send(user->getFd(), "", 0, MSG_DONTWAIT);
@@ -1043,7 +1384,11 @@ void Command::intMotd()
 
 int	Command::isServerOperator(User & user)
 {
+<<<<<<< HEAD
 	unsigned long	i;
+=======
+	int	i;
+>>>>>>> d5e4fcb (Add files via upload)
 
 	i = 0;
 	std::vector<User *>			operators = server.getServOp();
@@ -1067,7 +1412,11 @@ void Command::intKill()
 	User *                      user_to_kill;
 	std::vector<User *>::iterator	found;
 
+<<<<<<< HEAD
 	vec = split_cmd(param, " ");
+=======
+	vec = irc::split(param, " ");
+>>>>>>> d5e4fcb (Add files via upload)
 	if (vec.size() < 2)      // ERR_NEEDMOREPARAMS
 	{
 		message = "ERR_NEEDMOREPARAMS\n";
@@ -1114,10 +1463,17 @@ void Command::intKill()
 	users.erase(found);
 	// close socket ??
 	return ;
+<<<<<<< HEAD
 }	
 
 int 	HasInvalidMode(std::string letters)
 {	
+=======
+}
+
+int HasInvalidMode(std::string letters)
+{
+>>>>>>> d5e4fcb (Add files via upload)
 	int i;
 
 	i = 0;
@@ -1129,10 +1485,17 @@ int 	HasInvalidMode(std::string letters)
 		i++;
 	}
 	return (0);
+<<<<<<< HEAD
 }	
 
 void	 Command::intMode()
 {	
+=======
+}
+
+void Command::intChannelMode()
+{
+>>>>>>> d5e4fcb (Add files via upload)
 	std::vector<std::string>	vec;
 	std::string             	name;
 	std::string             	mode;
@@ -1143,6 +1506,7 @@ void	 Command::intMode()
 	Channel *                   chan_found;
 	User *                      user_found;
 
+<<<<<<< HEAD
 	vec = split_cmd(param, " ");
 	user->mode(vec);
 	/*
@@ -1152,6 +1516,9 @@ void	 Command::intMode()
 		- To answer a query about a client's own mode,
 		RPL_UMODEIS is sent back.
 	*/
+=======
+	vec = irc::split(param, " ");
+>>>>>>> d5e4fcb (Add files via upload)
 	if (vec.size() < 2)      // ERR_NEEDMOREPARAMS
 	{
 		message = "ERR_NEEDMOREPARAMS\n";
@@ -1186,7 +1553,11 @@ void	 Command::intMode()
 	if (vec.size() > 2)
 		arg = vec[2];
 	chan_found->addMode(letters);
+<<<<<<< HEAD
 	if (there_is_no_cmd('k', letters) == 0 && vec.size() == 3)
+=======
+	if (there_is_no('k', letters) == 0 && vec.size() == 3)
+>>>>>>> d5e4fcb (Add files via upload)
 	{
 		if (mode[0] == '-' && arg == chan_found->getChanPassword())
 			chan_found->setChanPassword("");
@@ -1204,14 +1575,22 @@ void	 Command::intMode()
 		else if (mode[0] == '+')
 			chan_found->setChanPassword(arg);
 	}
+<<<<<<< HEAD
 	if (there_is_no_cmd('l', letters) == 0)
+=======
+	if (there_is_no('l', letters) == 0)
+>>>>>>> d5e4fcb (Add files via upload)
 	{
 		if (mode[0] == '-' && vec.size() == 2)
 			chan_found->setMaxNbUsersInChan(100);
 		else if (mode[0] == '+')
 			chan_found->setMaxNbUsersInChan(std::atoi(arg.c_str()));
 	}
+<<<<<<< HEAD
 	if (there_is_no_cmd('o', letters) == 0 && vec.size() == 3)
+=======
+	if (there_is_no('o', letters) == 0 && vec.size() == 3)
+>>>>>>> d5e4fcb (Add files via upload)
 	{
 		user_found = server.getUserByUsername(arg);
 		if (user_found == NULL)         // ERR_USERNOTINCHANNEL
@@ -1230,7 +1609,11 @@ void	 Command::intMode()
 		else if (mode[0] == '+')
 			chan_found->addOperator(*user_found);
 	}
+<<<<<<< HEAD
 	if (there_is_no_cmd('O', letters) == 0 && vec.size() == 2)
+=======
+	if (there_is_no('O', letters) == 0 && vec.size() == 2)
+>>>>>>> d5e4fcb (Add files via upload)
 	{
 		message = chan_found->getChanCreator();
 		ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
@@ -1243,6 +1626,7 @@ void	 Command::intMode()
 	}
 }
 
+<<<<<<< HEAD
 void		Command::intPass()
 {
 
@@ -1283,3 +1667,5 @@ void		Command::intAdmin()
 
 }
 
+=======
+>>>>>>> d5e4fcb (Add files via upload)

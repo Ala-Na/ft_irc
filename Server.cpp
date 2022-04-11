@@ -2,15 +2,23 @@
 
 using namespace irc;
 
+<<<<<<< HEAD
 // TODO check name validity
 Server::Server(std::string password, const char* port) : password(password), port(port), \
 	name("In Real unControl - An ft_irc server")
 {
+=======
+Server::Server(std::string password, const char* port) : password(password), port(port) {
+>>>>>>> d5e4fcb (Add files via upload)
 	std::cout << "Initializating server..." << std::endl;
 	this->users = std::vector<User *>();
 	this->channels = std::vector<Channel *>();
 	this->pfds = std::vector<pollfd>();
+<<<<<<< HEAD
 	// TODO recuperate info from .conf file
+=======
+	this->conf = std::map<std::string, std::string>();
+>>>>>>> d5e4fcb (Add files via upload)
 }
 
 Server::~Server() {
@@ -20,6 +28,74 @@ Server::~Server() {
 	}
 }
 
+<<<<<<< HEAD
+=======
+int	Server::readConfFile() {
+	std::ifstream	in;
+	int				res = 0;
+	std::string		line;
+	std::string		key;
+	std::string		value = "";
+    ssize_t         found;
+
+	in.open("./ft_irc.conf", std::ifstream::in);
+	if (!in.good()) {
+		std::cerr << "Can't open configuration file" << std::endl;
+		std::cerr << "Please check that ./ft_irc.conf is present in Server folder" << std::endl; 
+		return (-1);
+	}
+	while (!in.eof() && in.good()) {
+        value = "";
+		std::getline(in, line);
+        if ((found = line.find_first_not_of(' ')) != std::string::npos) {
+        	line.erase(0, found);
+		}
+        if (line.empty() || line[found] == '#') {
+            continue;
+        } else if ((found = line.find("=\"")) == std::string::npos) {
+			std::cerr << "Should be under format key=\"value\"" << std::endl;
+			res = -1;
+			break;
+		}
+		key = line.substr(0, found);
+		line.erase(0, found + 2);
+		while ((found = line.find('"')) == std::string::npos) {
+			value.append(line);
+			std::getline(in, line);
+			value.append(" ");
+		}
+		value += line.substr(0, found);
+		line.erase(0, found + 1);
+		if (!line.empty()) {
+			std::cerr << "Error in configuration file" << std::endl;
+			std::cerr << "key=\"value\" should be followed by a line return" << std::endl;
+			res = -1;
+			break;
+		}
+		this->conf.insert(std::make_pair(key, value));
+	}
+	if (!in.eof()) {
+		std::cerr << "Error while reading configuration file" << std::endl;
+		res = -1;
+	}
+	in.close();
+	return res;
+}
+
+int	Server::checkConf() {
+	if (this->conf.count("name") == 0 || this->conf.count("version") == 0
+		|| this->conf.count("adminloc1") == 0 || this->conf.count("adminemail") == 0) {
+		std::cerr << "Missing at least one non-optionnal configuration parameter" << std::endl;
+		return (-1);
+	}
+	if ((this->conf.find("name")->second).size() > 63) {
+		std::cerr << "Server name should be under 63 characters (please, modify .conf file)" << std::endl;
+		return (-1);
+	}
+	return 0;
+}
+
+>>>>>>> d5e4fcb (Add files via upload)
 int	Server::initServer() {
 	struct addrinfo	hints;
 	struct addrinfo	*ai;
@@ -28,6 +104,13 @@ int	Server::initServer() {
 	int	opt = 1;
 	int res;
 
+<<<<<<< HEAD
+=======
+	if (this->readConfFile() == -1 || this->checkConf() == -1) {
+		return (-1);
+	}
+
+>>>>>>> d5e4fcb (Add files via upload)
 	std::memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
@@ -118,7 +201,11 @@ void	Server::createUser() {
 	this->datas.push_back("");
 }
 
+<<<<<<< HEAD
 void	Server::deleteUser (User* user) {
+=======
+void	Server::deleteUser(User* user) {
+>>>>>>> d5e4fcb (Add files via upload)
 	for (std::vector<User *>::iterator it1 = this->users.begin(); \
 			it1 != this->users.end(); it1++) {
 		if ((*it1) == user) {
@@ -138,7 +225,11 @@ void	Server::deleteUser (User* user) {
 
 int	Server::isServOp(User & user)
 {
+<<<<<<< HEAD
 	unsigned long	i;
+=======
+	int	i;
+>>>>>>> d5e4fcb (Add files via upload)
 
 	i = 0;
 	while (i < operators.size())
@@ -155,7 +246,10 @@ Channel*	Server::createChannel(std::string name) {
 	this->channels.push_back(new Channel(this, name));
 	return this->channels.back();
 }
+<<<<<<< HEAD
 // TODO create channel method which could be called by channel
+=======
+>>>>>>> d5e4fcb (Add files via upload)
 
 void	Server::receiveDatas() {
 	char		buf[SERV_BUF_SIZE + 1];
@@ -201,26 +295,41 @@ Server&	Server::getServer() {
 }
 
 // Here, user_nb is from 0 to max - 1.
+<<<<<<< HEAD
 User*	Server::getSpecificUser(unsigned long user_nb) {
+=======
+User*	Server::getSpecificUser(int user_nb) {
+>>>>>>> d5e4fcb (Add files via upload)
 	if (user_nb < this->users.size())
 		return this->users[user_nb];
 	return NULL;
 }
 
 Channel*	Server::getChannelByName(std::string name) {
+<<<<<<< HEAD
 	for (std::vector<Channel *>::iterator it = this->channels.begin();
+=======
+	for (std::vector<Channel *>::iterator it = this->channels.begin(); \
+>>>>>>> d5e4fcb (Add files via upload)
 		it != this->channels.end(); it++)
 	{
 		// TODO
 		// Check if (*it)->getname() == name;
 		// If true, return channel;
+<<<<<<< HEAD
 		(void)name;
+=======
+>>>>>>> d5e4fcb (Add files via upload)
 	}
 	return NULL;
 }
 
 // User*	Server::getUserByName(std::string name) const {
+<<<<<<< HEAD
 // 	for (std::vector<User *>::iterator it = this->users.begin();
+=======
+// 	for (std::vector<User *>::iterator it = this->users.begin(); \
+>>>>>>> d5e4fcb (Add files via upload)
 // 		it != this->users.end(); it++)
 // 	{
 // 		// TODO
@@ -232,7 +341,11 @@ Channel*	Server::getChannelByName(std::string name) {
 
 User *  Server::getUserByUsername(std::string name)
 {
+<<<<<<< HEAD
 	unsigned long i;
+=======
+	int i;
+>>>>>>> d5e4fcb (Add files via upload)
 
 	i = 0;
 	while (i < users.size())
@@ -246,7 +359,11 @@ User *  Server::getUserByUsername(std::string name)
 
 User * Server::getUserByNick(std::string nick)
 {
+<<<<<<< HEAD
 	unsigned long i;
+=======
+	int i;
+>>>>>>> d5e4fcb (Add files via upload)
 
 	i = 0;
 	while (i < users.size())
@@ -274,7 +391,11 @@ void	Server::checkPassword(User* user, std::string parameters) {
 
 void	Server::listChannels (User* user) {
 	int fd = user->getFd();
+<<<<<<< HEAD
 	(void)fd;
+=======
+
+>>>>>>> d5e4fcb (Add files via upload)
 	// Maybe send 321 and 323 from intList ?
 	// Send RPL_liststart 321
 	for (std::vector<Channel *>::iterator it = this->channels.begin(); it != this->channels.end(); it++) {
@@ -285,6 +406,7 @@ void	Server::listChannels (User* user) {
 	// Send RPL_LISTEND 323
 }
 
+<<<<<<< HEAD
 int	there_is_no_server(char c, std::string str)
 {
 	int	i;
@@ -328,6 +450,12 @@ void	Server::getMotdFile(User* user, std::string parameters) {
 	(void)fd;
 
 	// TODO use split of channel_management branch
+=======
+void	Server::getMotdFile(User* user, std::string parameters) {
+	int fd = user->getFd();
+
+	// TODO use irc::split of channel_management branch
+>>>>>>> d5e4fcb (Add files via upload)
 	if (!parameters.empty() && parameters.compare(this->name)) {
 		// Send ERR_NOSUCHSERVER 402
 		return ;
@@ -336,7 +464,11 @@ void	Server::getMotdFile(User* user, std::string parameters) {
 		return ;
 	}
 	// Send RPL_MOTDSTART 375
+<<<<<<< HEAD
 	std::vector<std::string> lines = split_server(motd, "\n");
+=======
+	std::vector<std::string> lines = irc::split(motd, "\n");
+>>>>>>> d5e4fcb (Add files via upload)
 	for (std::vector<std::string>::iterator it = lines.begin(); it != lines.end(); it++) {
 		// Send RPL_MOTD 372 with (*it) 
 	}
@@ -345,7 +477,10 @@ void	Server::getMotdFile(User* user, std::string parameters) {
 
 void	Server::retrieveTime(User* user, std::string parameters) {
 	int fd = user->getFd();
+<<<<<<< HEAD
 	(void)fd;
+=======
+>>>>>>> d5e4fcb (Add files via upload)
 
 	if (!parameters.empty() && parameters.compare(this->name)) {
 		// Send ERR_NOSUCHSERVER 402
@@ -359,7 +494,10 @@ void	Server::retrieveTime(User* user, std::string parameters) {
 
 void	Server::retrieveVersion(User* user, std::string parameters) {
 	int fd = user->getFd();
+<<<<<<< HEAD
 	(void)fd;
+=======
+>>>>>>> d5e4fcb (Add files via upload)
 
 	if (!parameters.empty() && parameters.compare(this->name)) {
 		// Send ERR_NOSUCHSERVER 402
@@ -370,7 +508,10 @@ void	Server::retrieveVersion(User* user, std::string parameters) {
 
 void	Server::getAdmin(User* user, std::string parameters) {
 	int fd = user->getFd();
+<<<<<<< HEAD
 	(void)fd;
+=======
+>>>>>>> d5e4fcb (Add files via upload)
 
 	if (!parameters.empty() && parameters.compare(this->name)) {
 		// Send ERR_NOSUCHSERVER 402
