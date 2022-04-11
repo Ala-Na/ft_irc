@@ -72,7 +72,16 @@ int	Server::readConfFile () {
 }
 
 int	checkConf () {
-
+	if (this->conf.count("name") == 0 || this->conf.count("version") == 0
+		|| this->conf.count("adminloc1") == 0 || this->conf.count("adminemail") == 0) {
+		std::cerr << "Missing at least one non-optionnal configuration parameter" << std::endl;
+		return (-1);
+	}
+	if ((this->conf.find("name")->second).size() > 63) {
+		std::cerr << "Server name should be under 63 characters (please, modify .conf file)" << std::endl;
+		return (-1);
+	}
+	return 0;
 }
 
 int	Server::initServer () {
