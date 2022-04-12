@@ -8,11 +8,13 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
+// TODO include Server.hpp and User.hpp
 
 namespace irc {
-	// No special need of class ?
-	void	numericReply (int numeric_nb, int fd, std::string server, \
-		std::string nick, int param_nb, ...);
+	class Server;
+	class User;
+
+	void	numericReply (int num_nb, User* user, std::vector<std::string> s_params);
 
 };
 
