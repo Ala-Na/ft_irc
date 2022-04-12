@@ -81,12 +81,12 @@ namespace irc
 
 				The flag 's' is obsolete but MAY still be used.
 			*/
-			bool		a = false;		// user is flagged as away;
-			bool		i = false;		// marks a users as invisible; hides you if someone does a /WHO or /NAMES outside the channel
-			bool		w = false;		// user receives wallops; Used by IRC operators, WALLOPS is a command utilized to send messages on an IRC network. WALLOPS messages are for broadcasting network information and its status to following users.
-			bool		r = false;		// restricted user connection;
-			bool		o = false;		// operator flag;
-			bool		O = false;		// local operator flag;
+			bool		a;		// user is flagged as away;
+			bool		i;		// marks a users as invisible; hides you if someone does a /WHO or /NAMES outside the channel
+			bool		w;		// user receives wallops; Used by IRC operators, WALLOPS is a command utilized to send messages on an IRC network. WALLOPS messages are for broadcasting network information and its status to following users.
+			bool		r;		// restricted user connection;
+			bool		o;		// operator flag;
+			bool		O;		// local operator flag;
 			// bool s;			// marks a user for receipt of server notices.
 
 		};

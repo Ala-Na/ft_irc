@@ -58,6 +58,12 @@ User::User(int fd, struct sockaddr_in address)
 	std::string	msg = "Please wait while we are connecting you...";
 	send(fd, &msg, msg.size(), MSG_DONTWAIT);
 	_address = address;
+	userModes.a = false;		// user is flagged as away;
+	userModes.i = false;		// marks a users as invisible; hides you if someone does a /WHO or /NAMES outside the channel
+	userModes.w = false;		// user receives wallops; Used by IRC operators, WALLOPS is a command utilized to send messages on an IRC network. WALLOPS messages are for broadcasting network information and its status to following users.
+	userModes.r = false;		// restricted user connection;
+	userModes.o = false;		// operator flag;
+	userModes.O = false;
 }
 
 User::User(User const &src)
