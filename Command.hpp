@@ -42,39 +42,37 @@ namespace irc {
 			void		intOper();
 			void		intJoin();
 			void		intTopic();
-			void	intMode();
+			void		intMode();
 			void		intPart();
-			void	intNames();
+			void		intNames();
 			void		intList();
 			void		intInvite();
 			void		intKick();
-			void	intNotice();
+			void		intNotice();
 			void		intKill();
-			void	intQuit();
-			void	intWallops();
-			void	intPass();
-			void	intSquit();
+			void		intQuit();
+			void		intWallops();
+			void		intPass();
+			void		intSquit();
 			void		intMotd();
-			void	intTime();
+			void		intTime();
 			void		intVersion();
-			void	intPing();
-			void	intPong();
-			void	intError();
-			void	intWho();
-			void	intAdmin();
-
-			void	intUser();
-			void	intNick();
-			void	intUserMode();
-			void	intWhoIs();
-			void	intUserhost();
-			void	intAway();
-			void	intPrivMsg();
-			User	*getUser();
-
-			int		isServerOperator(User & user);
+			void		intPing();
+			void		intPong();
+			void		intError();
+			void		intWho();
+			void		intAdmin();
+			void		intUser();
+			void		intNick();
+			void		intUserMode();
+			void		intWhoIs();
+			void		intUserhost();
+			void		intAway();
+			void		intPrivMsg();
 			void		intChannelMode();
-
+			
+			User		*getUser();
+			int			isServerOperator(User & user);
 
 	};
 };
