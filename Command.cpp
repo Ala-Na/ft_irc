@@ -67,281 +67,283 @@ void	Command::goToExecution () {
 		}
 	};
 	// TODO send error unknown code 421 if not found
+}
+
+// Intermediate Commands
+void	Command::intUser()
+{
+	user->user_cmd(getParam());
+}
+
+void	Command::intNick()
+{
+	std::string param = getParam();
+	// if (param.size() == 0)
+		// return ERRNONICKNAMEGIVEN 431 ":No nickname given"
+	// if (param.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890-_{}[]\\`|") != std::string::npos)
+		// return ERRONEUSNICKNAME 432 "<nick> :Erroneus nickname"
+	// TODO : check if the session is still unregistered
+	// if unregistered, create new user object
+
+	std::string nickname;
+	size_t pos = param.find("!");
+	if (pos != std::string::npos)
+	{
+		nickname = param.substr(1, pos - 1);
 	}
-	// Intermediate Commands
-	void	Command::intUser()
+	std::string	new_nickname;
+	size_t	pos2 = param.find("NICK") + 5;
+	new_nickname = param.substr(pos2);
+	user->setNickname(new_nickname);
+//    ERR_NICKNAMEINUSE
+// 	ERR_NICKCOLLISION
+//     ERR_UNAVAILRESOURCE
+// 	ERR_RESTRICTED
+}
+
+int	there_is_no_cmd(char c, std::string str)
+{
+	int	i;
+
+	i = 0;
+	while (str[i])
 	{
-		user->user_cmd(getParam());
+		if (str[i] == c)
+			return (0);
+		i++;
 	}
+	return (1);
+};
 
-	void	Command::intNick()
+std::vector<std::string>	split_cmd(std::string text, std::string space_delimiter)
+{
+	std::vector<std::string> words;
+
+	size_t pos = 0;
+	while ((pos = text.find_first_of(space_delimiter)) != std::string::npos)
 	{
-		std::string param = getParam();
-		// if (param.size() == 0)
-			// return ERRNONICKNAMEGIVEN 431 ":No nickname given"
-		// if (param.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890-_{}[]\\`|") != std::string::npos)
-			// return ERRONEUSNICKNAME 432 "<nick> :Erroneus nickname"
-		// TODO : check if the session is still unregistered
-		// if unregistered, create new user object
-
-		std::string nickname;
-		size_t pos = param.find("!");
-		if (pos != std::string::npos)
+		std::cout << "substr: " << text.substr(0) << std::endl;
+		if (text[0] == ':')
 		{
-			nickname = param.substr(1, pos - 1);
+			words.push_back(text.substr(0));
+			return (words);
 		}
-		std::string	new_nickname;
-		size_t	pos2 = param.find("NICK") + 5;
-		new_nickname = param.substr(pos2);
-		user->setNickname(new_nickname);
-	//    ERR_NICKNAMEINUSE
-	// 	ERR_NICKCOLLISION
-	//     ERR_UNAVAILRESOURCE
-	// 	ERR_RESTRICTED
+		words.push_back(text.substr(0, pos));
+		int nbDelimiters = 0;
+		while (there_is_no_cmd(text[pos + nbDelimiters], space_delimiter) == 0)
+			nbDelimiters++;
+		text.erase(0, pos + nbDelimiters);
 	}
+	words.push_back(text.substr(0));
+	words.push_back("\0");
+	return (words);
+}
 
-	int	there_is_no(char c, std::string str)
+// void	Command::intUserMode()
+// {
+// 	std::string param = getParam();
+// 	std::vector<std::string>	params;
+
+// 	// User	usr;
+// 	params = split_cmd(param, " ");
+// 	// need to select the right user in the channel
+// 	user->mode(params);
+// 	/*
+// 	221    RPL_UMODEIS
+// 			"<user mode string>"
+
+// 		- To answer a query about a client's own mode,
+// 		RPL_UMODEIS is sent back.
+// 	*/
+// }
+
+void	Command::intWhoIs()
+{
+	std::string param = getParam();
+
+	if (param.size() == 0)
+		// return ERR_NONICKNAMEGIVEN 431 ":No nickname given"
+	// check if user exists in the channel
+	if (user)
+		user->whois(*user);
+	// check numeric replies
+}
+
+void	Command::intUserhost()
+{
+	std::string param = getParam();
+	std::vector<std::string> params;
+
+	std::string	reply;
+	params = split_cmd(param, " ");
+	// if (params.size() == 0)
+		// return ERR_NEEDMOREPARAMS 461
+	unsigned long		i = 0;
+	while (i < params.size())
 	{
-		int	i;
-
-		i = 0;
-		while (str[i])
-		{
-			if (str[i] == c)
-				return (0);
-			i++;
-		}
-		return (1);
-	};
-
-	std::vector<std::string>	split(std::string text, std::string space_delimiter)
-	{
-		std::vector<std::string> words;
-
-		size_t pos = 0;
-		while ((pos = text.find_first_of(space_delimiter)) != std::string::npos)
-		{
-			std::cout << "substr: " << text.substr(0) << std::endl;
-			if (text[0] == ':')
-			{
-				words.push_back(text.substr(0));
-				return (words);
-			}
-			words.push_back(text.substr(0, pos));
-			int nbDelimiters = 0;
-			while (there_is_no(text[pos + nbDelimiters], space_delimiter) == 0)
-				nbDelimiters++;
-			text.erase(0, pos + nbDelimiters);
-		}
-		words.push_back(text.substr(0));
-		words.push_back("\0");
-		return (words);
+		reply.append(user->getNickname());
+		if (user->userModes.o)
+			reply.append("*");
+		reply.append("=");
+		if (user->userModes.a)
+			reply.append("-");
+		else
+			reply.append("+");
+		reply.append(user->getHostname());
+		if (params.size() > 1)
+			reply.append(" ");
+		// User::whois(usr);
+		i++;
 	}
+}
 
-	void	Command::intUserMode()
+void	Command::intAway()
+{
+	std::string param = getParam();
+	user->away(param);
+}
+
+void	Command::intPrivMsg()
+{
+	std::string username;
+	std::string nickname;
+	std::string hostname;
+	std::string server_str;
+	std::string msg;
+
+	std::string param = getParam();
+
+	size_t position1 = param.find("@");
+	size_t position2 = param.find("%");
+	size_t dif = position1 < position2 ? position1 : position2;
+	username = param.substr(0, dif);
+	size_t pos1 = param.find("!");
+	if (pos1 != std::string::npos)
 	{
-		std::string param = getParam();
-		std::vector<std::string>	params;
-
-		User	usr;
-		params = split(param, " ");
-		// need to select the right user in the channel
-		user->mode(params);
-		/*
-		221    RPL_UMODEIS
-			  "<user mode string>"
-
-		 - To answer a query about a client's own mode,
-		   RPL_UMODEIS is sent back.
-		*/
+		size_t pos2 = param.find("@");
+		size_t pos3 = param.find("%");
+		if (pos3 != std::string::npos)
+			username = param.substr(pos1 + 1,(pos3 - pos1) - 1);
+		else
+			username = param.substr(pos1 + 1,(pos2 - pos1) - 1);
+		nickname = param.substr(0, pos1);
 	}
-
-	void	Command::intWhoIs()
+	size_t pos4 = param.find("@");
+	if (pos4 != std::string::npos)
 	{
-		std::string param = getParam();
-
-		if (param.size() == 0)
-			// return ERR_NONICKNAMEGIVEN 431 ":No nickname given"
-		// check if user exists in the channel
-		if (user)
-			user->whois(*user);
-		// check numeric replies
-	}
-
-	void	Command::intUserhost()
-	{
-		std::string param = getParam();
-		std::vector<std::string> params;
-
-		std::string	reply;
-		params = split(param, " ");
-		// if (params.size() == 0)
-			// return ERR_NEEDMOREPARAMS 461
-		int		i = 0;
-		while (i < params.size())
+		size_t pos5 = param.find("%");
+		if (pos5 != std::string::npos)
 		{
-			reply.append(user->getNickname());
-			if (user->userModes.o)
-				reply.append("*");
-			reply.append("=");
-			if (user->userModes.a)
-				reply.append("-");
-			else
-				reply.append("+");
-			reply.append(user->getHostname());
-			if (params.size() > 1)
-				reply.append(" ");
-			// User::whois(usr);
-			i++;
+			hostname = param.substr(pos5 + 1, pos4 - pos5 - 1);
+			server_str = param.substr(pos4 + 1, param.find(" ") - pos4 - 1);
 		}
-	}
-
-	void	Command::intAway()
-	{
-		std::string param = getParam();
-		user->away(param);
-	}
-
-	void	Command::intPrivMsg()
-	{
-		std::string username;
-		std::string nickname;
-		std::string hostname;
-		std::string server_str;
-		std::string msg;
-
-		std::string param = getParam();
-
-		size_t position1 = param.find("@");
-		size_t position2 = param.find("%");
-		size_t dif = position1 < position2 ? position1 : position2;
-		username = param.substr(0, dif);
-		size_t pos1 = param.find("!");
-		if (pos1 != std::string::npos)
+		else
 		{
-			size_t pos2 = param.find("@");
-			size_t pos3 = param.find("%");
-			if (pos3 != std::string::npos)
-				username = param.substr(pos1 + 1,(pos3 - pos1) - 1);
-			else
-				username = param.substr(pos1 + 1,(pos2 - pos1) - 1);
-			nickname = param.substr(0, pos1);
-		}
-		size_t pos4 = param.find("@");
-		if (pos4 != std::string::npos)
-		{
-			size_t pos5 = param.find("%");
-			if (pos5 != std::string::npos)
-			{
-				hostname = param.substr(pos5 + 1, pos4 - pos5 - 1);
-				server_str = param.substr(pos4 + 1, param.find(" ") - pos4 - 1);
-			}
-			else
-			{
-				hostname = param.substr(pos4 + 1, param.find(" ") - pos4 - 1);
-			}
-		}
-		size_t pos6 = param.find("%");
-		if (pos6 != std::string::npos && pos4 == std::string::npos)
-		{
-			hostname = param.substr(pos6 + 1, param.find(" ") - pos6 - 1);
-		}
-
-		size_t pos7 = param.find(":");
-		if (pos7 != std::string::npos)
-			msg = param.substr(pos7 + 1);
-
-		User	*recipient;
-		if (username.size() > 0)
-			recipient = server.getUserByUsername(username);
-		user->privmsg(*recipient, msg);
-		// recipient.setNickname(nickname);
-		// recipient.setUsername(username);
-		// recipient.setHostname(hostname);
-	}
-
-	void	Command::intNotice()
-	{
-		std::string username;
-		std::string nickname;
-		std::string hostname;
-		std::string server_str;
-		std::string msg;
-
-		std::string param = getParam();
-
-		size_t position1 = param.find("@");
-		size_t position2 = param.find("%");
-		size_t dif = position1 < position2 ? position1 : position2;
-		username = param.substr(0, dif);
-		size_t pos1 = param.find("!");
-		if (pos1 != std::string::npos)
-		{
-			size_t pos2 = param.find("@");
-			size_t pos3 = param.find("%");
-			if (pos3 != std::string::npos)
-				username = param.substr(pos1 + 1,(pos3 - pos1) - 1);
-			else
-				username = param.substr(pos1 + 1,(pos2 - pos1) - 1);
-			nickname = param.substr(0, pos1);
-		}
-		size_t pos4 = param.find("@");
-		if (pos4 != std::string::npos)
-		{
-			size_t pos5 = param.find("%");
-			if (pos5 != std::string::npos)
-			{
-				hostname = param.substr(pos5 + 1, pos4 - pos5 - 1);
-				server_str = param.substr(pos4 + 1, param.find(" ") - pos4 - 1);
-			}
-			else
-			{
-				hostname = param.substr(pos4 + 1, param.find(" ") - pos4 - 1);
-			}
-		}
-		size_t pos6 = param.find("%");
-		if (pos6 != std::string::npos && pos4 == std::string::npos)
-		{
-			hostname = param.substr(pos6 + 1, param.find(" ") - pos6 - 1);
-		}
-
-		size_t pos7 = param.find(":");
-		if (pos7 != std::string::npos)
-			msg = param.substr(pos7 + 1);
-
-		User	*recipient;
-		if (username.size() > 0)
-			recipient = server.getUserByUsername(username);
-			// recipient = Channel::getUserFromUsername(username);
-		user->notice(*recipient, msg);
-		recipient->setNickname(nickname);
-		recipient->setUsername(username);
-		recipient->setHostname(hostname);
-	}
-
-	void	intWallops(std::string param)
-	{
-		std::vector<User>	users = getVecChanUsers();
-		// if (users.size() < 1)
-			// return ERR_NEEDMOREPARAMS 461
-		std::vector<User>::iterator	it = users.begin();
-		while (it != users.end())
-		{
-			if (it->userModes.w)
-				send(it->getFd(), &param, param.size(), MSG_DONTWAIT);
-			it++;
+			hostname = param.substr(pos4 + 1, param.find(" ") - pos4 - 1);
 		}
 	}
+	size_t pos6 = param.find("%");
+	if (pos6 != std::string::npos && pos4 == std::string::npos)
+	{
+		hostname = param.substr(pos6 + 1, param.find(" ") - pos6 - 1);
+	}
 
-	//OLY
-	std::string left_trim(const std::string &s, std::string to_remove)
+	size_t pos7 = param.find(":");
+	if (pos7 != std::string::npos)
+		msg = param.substr(pos7 + 1);
+
+	User	*recipient;
+	if (username.size() > 0)
+		recipient = server.getUserByUsername(username);
+	user->privmsg(*recipient, msg);
+	// recipient.setNickname(nickname);
+	// recipient.setUsername(username);
+	// recipient.setHostname(hostname);
+}
+
+void	Command::intNotice()
+{
+	std::string username;
+	std::string nickname;
+	std::string hostname;
+	std::string server_str;
+	std::string msg;
+
+	std::string param = getParam();
+
+	size_t position1 = param.find("@");
+	size_t position2 = param.find("%");
+	size_t dif = position1 < position2 ? position1 : position2;
+	username = param.substr(0, dif);
+	size_t pos1 = param.find("!");
+	if (pos1 != std::string::npos)
+	{
+		size_t pos2 = param.find("@");
+		size_t pos3 = param.find("%");
+		if (pos3 != std::string::npos)
+			username = param.substr(pos1 + 1,(pos3 - pos1) - 1);
+		else
+			username = param.substr(pos1 + 1,(pos2 - pos1) - 1);
+		nickname = param.substr(0, pos1);
+	}
+	size_t pos4 = param.find("@");
+	if (pos4 != std::string::npos)
+	{
+		size_t pos5 = param.find("%");
+		if (pos5 != std::string::npos)
+		{
+			hostname = param.substr(pos5 + 1, pos4 - pos5 - 1);
+			server_str = param.substr(pos4 + 1, param.find(" ") - pos4 - 1);
+		}
+		else
+		{
+			hostname = param.substr(pos4 + 1, param.find(" ") - pos4 - 1);
+		}
+	}
+	size_t pos6 = param.find("%");
+	if (pos6 != std::string::npos && pos4 == std::string::npos)
+	{
+		hostname = param.substr(pos6 + 1, param.find(" ") - pos6 - 1);
+	}
+
+	size_t pos7 = param.find(":");
+	if (pos7 != std::string::npos)
+		msg = param.substr(pos7 + 1);
+
+	User	*recipient;
+	if (username.size() > 0)
+		recipient = server.getUserByUsername(username);
+		// recipient = Channel::getUserFromUsername(username);
+	user->notice(msg);
+	recipient->setNickname(nickname);
+	recipient->setUsername(username);
+	recipient->setHostname(hostname);
+}
+
+void	Command::intWallops()
+{
+	std::vector<User *>	users = server.getServUsers();
+	std::string			sentence = getParam();
+	// if (users.size() < 1)
+		// return ERR_NEEDMOREPARAMS 461
+	std::vector<User *>::iterator	it = users.begin();
+	while (it != users.end())
+	{
+		if ((*it)->userModes.w)
+			send((*it)->getFd(), &sentence, sentence.size(), MSG_DONTWAIT);
+		it++;
+	}
+}
+
+//OLY
+std::string left_trim(const std::string &s, std::string to_remove)
 {
 	size_t start = s.find_first_not_of(to_remove);
 	if (start == std::string::npos)
 		return (NULL);
 	return (s.substr(start));
 }
- 
+
 std::string right_trim(const std::string &s, std::string to_remove)
 {
 	size_t end = s.find_last_not_of(to_remove);
@@ -349,7 +351,7 @@ std::string right_trim(const std::string &s, std::string to_remove)
 		return (NULL);
 	return (s.substr(0, end + 1));
 }
- 
+
 std::string trim(const std::string &s, std::string to_remove)
 {
 	return (right_trim(left_trim(s, to_remove), to_remove));
@@ -367,14 +369,14 @@ void Command::intJoin()
 	std::vector<std::string>	vec_keys;
 	std::string                 name;
 	std::string                 key;
-	int                         i;
+	unsigned long				i;
 	Channel                     *chan_found;
 	std::string                 message;
 	ssize_t                         ret;
 
-	vec = split(param, " ");
-	vec_chan_names = split(vec[0], ",");
-	vec_keys = split(vec[1], ",");
+	vec = split_cmd(param, " ");
+	vec_chan_names = split_cmd(vec[0], ",");
+	vec_keys = split_cmd(vec[1], ",");
 	if (vec_chan_names.size() == 1 && vec_keys.size() == 0 && vec_chan_names[0] == "0")    // JOIN 0
 	{
 		intQuit();
@@ -456,7 +458,7 @@ void Command::intJoin()
 			i++;
 			continue ;              // proceed to the other requests to join
 		}
-		if (there_is_no('i', chan_found->getChanMode()) == 0)   // ERR_INVITEONLYCHAN
+		if (there_is_no_cmd('i', chan_found->getChanMode()) == 0)   // ERR_INVITEONLYCHAN
 		{
 			message = "ERR_INVITEONLYCHAN\n";
 			ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
@@ -530,13 +532,13 @@ void Command::intInvite()
 	std::vector<std::string>	vec;
 	std::string                 nickname;
 	std::string                 name;
-	int                         i;
+	// int                         i;
 	Channel                     *chan_found;
 	std::string                 message;
 	int                         ret;
 	User *                      user_asked;
 
-	vec = split(param, " ");
+	vec = split_cmd(param, " ");
 	if (vec.size() < 2)  // ERR_NEEDMOREPARAMS
 	{
 		ret = send(user->getFd(), "ERR_NEEDMOREPARAMS\n", 18, MSG_DONTWAIT);
@@ -576,7 +578,7 @@ void Command::intInvite()
 		}
 		return ;
 	}
-	if (there_is_no('i', chan_found->getChanMode()) == 0 && chan_found->isOperator(*user) == 0)  // ERR_CHANOPRIVSNEEDED
+	if (there_is_no_cmd('i', chan_found->getChanMode()) == 0 && chan_found->isOperator(*user) == 0)  // ERR_CHANOPRIVSNEEDED
 	{
 		message = "ERR_CHANOPRIVSNEEDED\n";
 		ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
@@ -608,12 +610,12 @@ void Command::intOper()
 	std::vector<std::string>	vec;
 	std::string                 name;
 	std::string                 key;
-	int                         i;
-	Channel                     *chan_found;
+	// int                         i;
+	// Channel                     *chan_found;
 	std::string                 message;
 	int                         ret;
 
-	vec = split(param, " ");
+	vec = split_cmd(param, " ");
 	if (vec.size() < 2)  // ERR_NEEDMOREPARAMS
 	{
 		ret = send(user->getFd(), "ERR_NEEDMOREPARAMS\n", 19, MSG_DONTWAIT);
@@ -655,12 +657,12 @@ void Command::intPart()
 	std::vector<std::string>	vec_chan_names;
 	std::string					name;
 	std::string                 message;
-	int                         i;
+	unsigned long				i;
 	Channel                     *chan_found;
 	int                         ret;
 
-	vec = split(param, ":");
-	vec_chan_names = split(vec[0], ",");
+	vec = split_cmd(param, ":");
+	vec_chan_names = split_cmd(vec[0], ",");
 	if (vec_chan_names.size() == 0)  // ERR_NEEDMOREPARAMS
 	{
 		message = "ERR_NEEDMOREPARAMS\n";
@@ -722,7 +724,7 @@ void Command::intPart()
 void    Command::intQuit()
 {
 	std::string                 message;
-	int                         i;
+	unsigned long				i;
 	std::vector<std::string>    vec_chan_names;
 	Channel                     *chan_found;
 	std::string                 name;
@@ -747,7 +749,7 @@ void    Command::intNames()
 {
 	std::vector<std::string>	vec_chan_names;
 	std::string                 name;
-	int                         i;
+	unsigned long				i;
 	Channel                     *chan_found;
 
 	if (param.empty())
@@ -763,7 +765,7 @@ void    Command::intNames()
 	}
 	else
 	{
-		vec_chan_names = split(param, ",");
+		vec_chan_names = split_cmd(param, ",");
 		i = 0;
 		while (i < vec_chan_names.size())
 		{
@@ -790,7 +792,7 @@ void Command::intList()
 {
 	std::vector<std::string>	vec_chan_names;
 	std::string                 name;
-	int                         i;
+	unsigned long				i;
 	Channel                     *chan_found;
 	int                         ret;
 	std::string					message;
@@ -808,7 +810,7 @@ void Command::intList()
 	}
 	else
 	{
-		vec_chan_names = split(param, ",");
+		vec_chan_names = split_cmd(param, ",");
 		i = 0;
 		while (i < vec_chan_names.size())
 		{
@@ -823,6 +825,7 @@ void Command::intList()
 			{
 				message = "Invalid channel name\n";
 				ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
+				if (ret == -1)
 				{
 					std::cerr << "Could not send message\n";
 					return ;
@@ -844,11 +847,11 @@ void Command::intKick()
 	std::string                 message;
 	std::string                 name;
 	std::string                 user_str;
-	int                         i;
+	unsigned long				i;
 	Channel                     *chan_found;
 	int                         ret;
 
-	vec = split(param, " ");
+	vec = split_cmd(param, " ");
 	if (vec.size() < 2)      // ERR_NEEDMOREPARAMS
 	{
 		message = "ERR_NEEDMOREPARAMS\n";
@@ -860,8 +863,8 @@ void Command::intKick()
 		}
 		return ;
 	}
-	vec_chan_names = split(vec[0], ",");
-	vec_usernames = split(vec[1], ",");
+	vec_chan_names = split_cmd(vec[0], ",");
+	vec_usernames = split_cmd(vec[1], ",");
 	if (vec[2].size() > 0)
 		message = vec[2];
 	if (vec_chan_names.size() == 0 ||
@@ -924,7 +927,7 @@ void Command::intTopic()
 	std::string 	            name;
 	std::string                 new_topic;
 	std::string                 message;
-	int                         i;
+	// int                         i;
 	Channel                     *chan_found;
 	int                         ret;
 
@@ -941,7 +944,7 @@ void Command::intTopic()
 	}
 	if (param[param.size() - 1] == ':')
 		param += " ";
-	vec = split(param, ":");
+	vec = split_cmd(param, ":");
 	name = vec[0];
 	if (name[0] != '&' && name[0] != '#' && name[0] != '+' && name[0] !=  '!')
 		name.insert(0, "#");
@@ -963,7 +966,7 @@ void Command::intTopic()
 		new_topic = vec[1];
 	else
 		new_topic = "";
-	if (there_is_no(':', param))    // RPL_TOPIC
+	if (there_is_no_cmd(':', param))    // RPL_TOPIC
 	{
 		message = chan_found->getChanTopic();
 		ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
@@ -974,7 +977,7 @@ void Command::intTopic()
 		}
 		return ;
 	}
-	if (there_is_no('t', chan_found->getChanMode()) == 0 && chan_found->isOperator(*user) == 0) // ERR_CHANOPRIVSNEEDED
+	if (there_is_no_cmd('t', chan_found->getChanMode()) == 0 && chan_found->isOperator(*user) == 0) // ERR_CHANOPRIVSNEEDED
 	{
 		message = "ERR_CHANOPRIVSNEEDED";
 		ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
@@ -1019,7 +1022,7 @@ void Command::intMotd()
 {
 	int ret;
 	std::string motd = server.getMotd();
-	
+
 	if (motd.size() == 0)
 	{
 		ret = send(user->getFd(), "", 0, MSG_DONTWAIT);
@@ -1040,7 +1043,7 @@ void Command::intMotd()
 
 int	Command::isServerOperator(User & user)
 {
-	int	i;
+	unsigned long	i;
 
 	i = 0;
 	std::vector<User *>			operators = server.getServOp();
@@ -1064,7 +1067,7 @@ void Command::intKill()
 	User *                      user_to_kill;
 	std::vector<User *>::iterator	found;
 
-	vec = split(param, " ");
+	vec = split_cmd(param, " ");
 	if (vec.size() < 2)      // ERR_NEEDMOREPARAMS
 	{
 		message = "ERR_NEEDMOREPARAMS\n";
@@ -1111,10 +1114,10 @@ void Command::intKill()
 	users.erase(found);
 	// close socket ??
 	return ;
-}
+}	
 
-int HasInvalidMode(std::string letters)
-{
+int 	HasInvalidMode(std::string letters)
+{	
 	int i;
 
 	i = 0;
@@ -1126,10 +1129,10 @@ int HasInvalidMode(std::string letters)
 		i++;
 	}
 	return (0);
-}
+}	
 
-void Command::intChannelMode()
-{
+void	 Command::intMode()
+{	
 	std::vector<std::string>	vec;
 	std::string             	name;
 	std::string             	mode;
@@ -1140,7 +1143,15 @@ void Command::intChannelMode()
 	Channel *                   chan_found;
 	User *                      user_found;
 
-	vec = split(param, " ");
+	vec = split_cmd(param, " ");
+	user->mode(vec);
+	/*
+	221    RPL_UMODEIS
+			"<user mode string>"
+
+		- To answer a query about a client's own mode,
+		RPL_UMODEIS is sent back.
+	*/
 	if (vec.size() < 2)      // ERR_NEEDMOREPARAMS
 	{
 		message = "ERR_NEEDMOREPARAMS\n";
@@ -1175,7 +1186,7 @@ void Command::intChannelMode()
 	if (vec.size() > 2)
 		arg = vec[2];
 	chan_found->addMode(letters);
-	if (there_is_no('k', letters) == 0 && vec.size() == 3)
+	if (there_is_no_cmd('k', letters) == 0 && vec.size() == 3)
 	{
 		if (mode[0] == '-' && arg == chan_found->getChanPassword())
 			chan_found->setChanPassword("");
@@ -1193,14 +1204,14 @@ void Command::intChannelMode()
 		else if (mode[0] == '+')
 			chan_found->setChanPassword(arg);
 	}
-	if (there_is_no('l', letters) == 0)
+	if (there_is_no_cmd('l', letters) == 0)
 	{
 		if (mode[0] == '-' && vec.size() == 2)
 			chan_found->setMaxNbUsersInChan(100);
 		else if (mode[0] == '+')
 			chan_found->setMaxNbUsersInChan(std::atoi(arg.c_str()));
 	}
-	if (there_is_no('o', letters) == 0 && vec.size() == 3)
+	if (there_is_no_cmd('o', letters) == 0 && vec.size() == 3)
 	{
 		user_found = server.getUserByUsername(arg);
 		if (user_found == NULL)         // ERR_USERNOTINCHANNEL
@@ -1219,7 +1230,7 @@ void Command::intChannelMode()
 		else if (mode[0] == '+')
 			chan_found->addOperator(*user_found);
 	}
-	if (there_is_no('O', letters) == 0 && vec.size() == 2)
+	if (there_is_no_cmd('O', letters) == 0 && vec.size() == 2)
 	{
 		message = chan_found->getChanCreator();
 		ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
@@ -1230,5 +1241,45 @@ void Command::intChannelMode()
 		}
 		return ;
 	}
+}
+
+void		Command::intPass()
+{
+
+}
+
+void		Command::intSquit()
+{
+
+}
+
+void		Command::intTime()
+{
+
+}
+
+void		Command::intPing()
+{
+
+}
+
+void		Command::intPong()
+{
+
+}
+
+void		Command::intError()
+{
+
+}
+
+void		Command::intWho()
+{
+
+}
+
+void		Command::intAdmin()
+{
+
 }
 

@@ -106,9 +106,12 @@ namespace irc
 			std::string getUsername();
 			std::string getRealName();
 			std::string getHostname();
+			std::vector<std::string> getParams();
 			std::string getAwayMessage();
 			int			getFd();
+			sockaddr_in	getAddr();
 			std::vector<std::string> getChannels();
+
 			int			getNbOfChannels();
 
 			// flags bool
@@ -135,15 +138,57 @@ namespace irc
 			void	nick(std::string nickname);
 			void	quit(std::vector<std::string> channels);
 			void	privmsg(User usr, std::string msg);
-			void	notice(User usr, std::string msg);
+			void	notice(std::string msg);
 			void	wallops(std::string msg);
 			void	away(std::string msg = "");
 			void	quit(void);
-			void	part(std::vector<std::string> params);
+			void	part();
+			// void	part(std::vector<std::string> params);
 			void	whois(User usr);
 			void	kick(std::string const &chan);
 			void	mode(std::vector<std::string> params);
+
+			bool	operator==(User const &rhs) const;
+			bool	operator!=(User const &rhs) const;
+
 	};
+
+	// template <class T>															// it == it2
+	// bool	operator==(const T & lhs, const T & rhs)
+	// {
+	// 	if (lhs.getServer() == rhs.getServer() && lhs.getNickname() == rhs.getNickname()
+	// 			&& lhs.getUsername() == rhs.getUsername() && lhs.getRealName() == rhs.getRealName()
+	// 			&& lhs.getHostname() == rhs.getHostname() && lhs.getChannels() == rhs.getChannels()
+	// 			&& lhs.getParams() == rhs.getParams() && lhs.getFd() == rhs.getFd()
+	// 			&& lhs.getAddr() == rhs.getAddr() && lhs.getAwayMessage() == rhs.getAwayMessage())
+	// 		return (1);
+	// 	return (0);
+	// };
+
+	// // Second versions are used to compare an iterator (T1) with a const iterator (T2)
+	// template <class T1, class T2>												// const it == it2 or it == const it2
+	// bool	operator==(const T1 & lhs, const T2 & rhs)
+	// {
+	// 	if (lhs.getServer() == rhs.getServer() && lhs.getNickname() == rhs.getNickname()
+	// 		&& lhs.getUsername() == rhs.getUsername() && lhs.getRealName() == rhs.getRealName()
+	// 		&& lhs.getHostname() == rhs.getHostname() && lhs.getChannels() == rhs.getChannels()
+	// 		&& lhs.getParams() == rhs.getParams() && lhs.getFd() == rhs.getFd()
+	// 		&& lhs.getAddr() == rhs.getAddr() && lhs.getAwayMessage() == rhs.getAwayMessage())
+	// 		return (1);
+	// 	return (0);
+	// };
+
+	// template <class T>															// it != it2
+	// bool	operator!=(const T & lhs, const T & rhs)
+	// {
+	// 	return (!(lhs == rhs));
+	// };
+
+	// template <class T1, class T2>												// const it != it2 or it != const it2
+	// bool	operator!=(const T1 & lhs, const T2 & rhs)
+	// {
+	// 	return (!(lhs == rhs));
+	// };
 }
 
 #endif

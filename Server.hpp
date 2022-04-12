@@ -40,6 +40,7 @@ namespace irc {
 			std::vector<User *>			operators;
 			std::vector<Channel *>		channels;
 			std::vector<std::string>	datas;
+			bool						running;
 
 			std::string		password;
 			const char*		port;
@@ -85,7 +86,7 @@ namespace irc {
 
 			Server&		getServer ();
 
-			User*		getSpecificUser (int user_nb);
+			User*		getSpecificUser (unsigned long user_nb);
 			Channel*	getChannelByName (std::string name);
 			// User*		getUserByName (std::string name);
 
@@ -96,6 +97,8 @@ namespace irc {
 			std::string	getMotd();
 			std::vector<User *>	getServOp();
 			std::vector<User *>	getServUsers();
+
+			void	intWallops();
 
 	};
 };

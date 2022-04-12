@@ -138,7 +138,7 @@ void	Server::deleteUser (User* user) {
 
 int	Server::isServOp(User & user)
 {
-	int	i;
+	unsigned long	i;
 
 	i = 0;
 	while (i < operators.size())
@@ -201,25 +201,26 @@ Server&	Server::getServer() {
 }
 
 // Here, user_nb is from 0 to max - 1.
-User*	Server::getSpecificUser(int user_nb) {
+User*	Server::getSpecificUser(unsigned long user_nb) {
 	if (user_nb < this->users.size())
 		return this->users[user_nb];
 	return NULL;
 }
 
 Channel*	Server::getChannelByName(std::string name) {
-	for (std::vector<Channel *>::iterator it = this->channels.begin(); \
+	for (std::vector<Channel *>::iterator it = this->channels.begin();
 		it != this->channels.end(); it++)
 	{
 		// TODO
 		// Check if (*it)->getname() == name;
 		// If true, return channel;
+		(void)name;
 	}
 	return NULL;
 }
 
 // User*	Server::getUserByName(std::string name) const {
-// 	for (std::vector<User *>::iterator it = this->users.begin(); \
+// 	for (std::vector<User *>::iterator it = this->users.begin();
 // 		it != this->users.end(); it++)
 // 	{
 // 		// TODO
@@ -231,7 +232,7 @@ Channel*	Server::getChannelByName(std::string name) {
 
 User *  Server::getUserByUsername(std::string name)
 {
-	int i;
+	unsigned long i;
 
 	i = 0;
 	while (i < users.size())
@@ -245,7 +246,7 @@ User *  Server::getUserByUsername(std::string name)
 
 User * Server::getUserByNick(std::string nick)
 {
-	int i;
+	unsigned long i;
 
 	i = 0;
 	while (i < users.size())
@@ -273,7 +274,7 @@ void	Server::checkPassword(User* user, std::string parameters) {
 
 void	Server::listChannels (User* user) {
 	int fd = user->getFd();
-
+	(void)fd;
 	// Maybe send 321 and 323 from intList ?
 	// Send RPL_liststart 321
 	for (std::vector<Channel *>::iterator it = this->channels.begin(); it != this->channels.end(); it++) {
@@ -284,7 +285,7 @@ void	Server::listChannels (User* user) {
 	// Send RPL_LISTEND 323
 }
 
-int	there_is_no(char c, std::string str)
+int	there_is_no_server(char c, std::string str)
 {
 	int	i;
 
@@ -298,7 +299,7 @@ int	there_is_no(char c, std::string str)
 	return (1);
 };
 
-std::vector<std::string>	split(std::string text, std::string space_delimiter)
+std::vector<std::string>	split_server(std::string text, std::string space_delimiter)
 {
 	std::vector<std::string> words;
 
@@ -313,7 +314,7 @@ std::vector<std::string>	split(std::string text, std::string space_delimiter)
 		}
 		words.push_back(text.substr(0, pos));
 		int nbDelimiters = 0;
-		while (there_is_no(text[pos + nbDelimiters], space_delimiter) == 0)
+		while (there_is_no_server(text[pos + nbDelimiters], space_delimiter) == 0)
 			nbDelimiters++;
 		text.erase(0, pos + nbDelimiters);
 	}
@@ -324,6 +325,7 @@ std::vector<std::string>	split(std::string text, std::string space_delimiter)
 
 void	Server::getMotdFile(User* user, std::string parameters) {
 	int fd = user->getFd();
+	(void)fd;
 
 	// TODO use split of channel_management branch
 	if (!parameters.empty() && parameters.compare(this->name)) {
@@ -334,7 +336,7 @@ void	Server::getMotdFile(User* user, std::string parameters) {
 		return ;
 	}
 	// Send RPL_MOTDSTART 375
-	std::vector<std::string> lines = split(motd, "\n");
+	std::vector<std::string> lines = split_server(motd, "\n");
 	for (std::vector<std::string>::iterator it = lines.begin(); it != lines.end(); it++) {
 		// Send RPL_MOTD 372 with (*it) 
 	}
@@ -343,6 +345,7 @@ void	Server::getMotdFile(User* user, std::string parameters) {
 
 void	Server::retrieveTime(User* user, std::string parameters) {
 	int fd = user->getFd();
+	(void)fd;
 
 	if (!parameters.empty() && parameters.compare(this->name)) {
 		// Send ERR_NOSUCHSERVER 402
@@ -356,6 +359,7 @@ void	Server::retrieveTime(User* user, std::string parameters) {
 
 void	Server::retrieveVersion(User* user, std::string parameters) {
 	int fd = user->getFd();
+	(void)fd;
 
 	if (!parameters.empty() && parameters.compare(this->name)) {
 		// Send ERR_NOSUCHSERVER 402
@@ -366,6 +370,7 @@ void	Server::retrieveVersion(User* user, std::string parameters) {
 
 void	Server::getAdmin(User* user, std::string parameters) {
 	int fd = user->getFd();
+	(void)fd;
 
 	if (!parameters.empty() && parameters.compare(this->name)) {
 		// Send ERR_NOSUCHSERVER 402

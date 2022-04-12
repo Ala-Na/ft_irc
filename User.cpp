@@ -14,7 +14,7 @@
 
 using namespace irc;
 
-int	there_is_no(char c, std::string str)
+int	there_is_no_usr(char c, std::string str)
 {
 	int	i;
 
@@ -28,7 +28,7 @@ int	there_is_no(char c, std::string str)
 	return (1);
 };
 
-std::vector<std::string>	split(std::string text, std::string space_delimiter)
+std::vector<std::string>	split_usr(std::string text, std::string space_delimiter)
 {
 	std::vector<std::string> words;
 
@@ -43,7 +43,7 @@ std::vector<std::string>	split(std::string text, std::string space_delimiter)
 		}
 		words.push_back(text.substr(0, pos));
 		int nbDelimiters = 0;
-		while (there_is_no(text[pos + nbDelimiters], space_delimiter) == 0)
+		while (there_is_no_usr(text[pos + nbDelimiters], space_delimiter) == 0)
 			nbDelimiters++;
 		text.erase(0, pos + nbDelimiters);
 	}
@@ -98,6 +98,11 @@ std::string	User::getHostname()
 	return (_hostname);
 }
 
+std::vector<std::string>	User::getParams()
+{
+	return (_params);
+}
+
 std::string User::getAwayMessage()
 {
 	return (_away_message);
@@ -111,6 +116,11 @@ int		User::getFd()
 std::vector<std::string> User::getChannels()
 {
 	return (_channels);
+}
+
+sockaddr_in	User::getAddr()
+{
+	return (_address);
 }
 
 int	User::getNbOfChannels()
@@ -211,7 +221,7 @@ void	User::privmsg(User usr, std::string msg) // pov de la pax qui recoit le msg
 	// send(this->_fd, &msg, msg.size());
 }
 
-void	User::notice(User usr, std::string msg)
+void	User::notice(std::string msg)
 {
 	sendMessage(this->_fd, msg);
 	// send(this->_fd, &msg, msg.size());
@@ -262,7 +272,7 @@ Server *	User::getServer()
 void	User::quit(void)
 {
 	// std::vector<std::string>::iterator it = _channels.begin();
-	int i = 0;
+	unsigned long int i = 0;
 	while (i < _channels.size())
 	{
 		Channel *chan = getServer()->getChannelByName(_channels[i]);
@@ -271,7 +281,8 @@ void	User::quit(void)
 	}
 }
 
-void	User::part(std::vector<std::string> params)
+// void	User::part(std::vector<std::string> params)
+void	User::part()
 {
 	std::vector<std::string>::iterator it1 = _params.begin();
 	while (it1 != _params.end())
@@ -316,24 +327,24 @@ void	User::mode(std::vector<std::string> params)
 		if (it[0][0] == '+')
 		{
 			if (it[0][1] == 'i')
-				User::userModes.i = true;
+				userModes.i = true;
 			if (it[0][1] == 'w')
-				User::userModes.w = true;
+				userModes.w = true;
 			if (it[0][1] == 'r')
-				User::userModes.r = true;
+				userModes.r = true;
 		}
 		else if (it[0][0] == '-')
 		{
 			if (it[0][1] == 'i')
-				User::userModes.i = false;
+				userModes.i = false;
 			if (it[0][1] == 'w')
-				User::userModes.w = false;
+				userModes.w = false;
 			if (it[0][1] == 'r')
-				User::userModes.r = false;
+				userModes.r = false;
 			if (it[0][1] == 'o')
-				User::userModes.o = false;
+				userModes.o = false;
 			if (it[0][1] == 'O')
-				User::userModes.O = false;
+				userModes.O = false;
 		}
 		it++;
 	}
@@ -343,7 +354,7 @@ void	User::user_cmd(std::string params)
 {
 	std::vector<std::string>	param;
 
-	param = split(params, " ");
+	param = split_usr(params, " ");
 	if (param.size() != 4)
 		// send ERR NEEDMOREPARAMS 461
 	// TODO: Check if user is already registered, if yes, send ERR ALREADYREGISTERED
@@ -362,5 +373,20 @@ void	User::user_cmd(std::string params)
 	// add ERR_ALREADY_REGISTERED
 	// for(int i = 0; i < param.size(); i++)
 	// 	std::cout << i << ": " << param[i] << '\n';
+}
+
+bool	User::operator==(User const &rhs) const
+{
+	if (this->_nickname == rhs._nickname
+			&& this->_username == rhs._username && this->_real_name == rhs._real_name
+			&& this->_hostname == rhs._hostname
+			&& this->_fd == rhs._fd)
+		return (1);
+	return (0);
+}
+
+bool	User::operator!=(User const &rhs) const
+{
+	return (!(*this == rhs));
 }
 
