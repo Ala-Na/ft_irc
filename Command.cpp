@@ -1,4 +1,5 @@
 #include "Command.hpp"
+#include "Numerics.hpp"
 
 using namespace irc;
 
@@ -51,15 +52,14 @@ void	Command::goToExecution () {
 		&Command::intKill, &Command::intQuit, &Command::intNick, \
 		&Command::intWhoIs, &Command::intAway, &Command::intWallops, \
 		&Command::intUserhost, &Command::intPass, &Command::intUser, \
-		&Command::intSquit, &Command::intMotd, &Command::intTime, \
-		&Command::intVersion, &Command::intPing, &Command::intPong, \
-		&Command::intError, &Command::intWho, &Command::intAdmin};
+		&Command::intSquit, &Command::intMotd, \
+		&Command::intError};
 	std::string msg[nbr_cmd] = {"OPER", "JOIN", "TOPIC", "MODE", "PART", "NAMES", \
 		"LIST", "INVITE", "KICK", "PRIVMSG", "NOTICE", "KILL", "QUIT", "NICK", \
 		"WHOIS", "AWAY", "WALLOPS", "USERHOST", "PASS", "USER", "SQUIT", \
-		"MOTD", "TIME", "VERSION", "PING", "PONG", "ERROR", "WHO", "ADMIN"};
+		"MOTD", "ERROR"};
 
-	for (int i = 0; i < nbr_cmd; i++) {
+	for (unsigned long i = 0; i < nbr_cmd; i++) {
 		if (!this->prefix.compare(msg[i])) {
 			(this->*pmf[i])();
 			// this->*pmf[i]();
@@ -67,7 +67,6 @@ void	Command::goToExecution () {
 		}
 	};
 	// TODO send error unknown code 421 if not found
-<<<<<<< HEAD
 }
 
 // Intermediate Commands
@@ -79,10 +78,13 @@ void	Command::intUser()
 void	Command::intNick()
 {
 	std::string param = getParam();
-	// if (param.size() == 0)
-		// return ERRNONICKNAMEGIVEN 431 ":No nickname given"
-	// if (param.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890-_{}[]\\`|") != std::string::npos)
-		// return ERRONEUSNICKNAME 432 "<nick> :Erroneus nickname"
+	std::vector<std::string> arg;
+	arg.push_back(param);
+
+	if (param.size() == 0)
+		irc::numericReply(431, user, arg);
+	if (param.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890-_{}[]\\`|") != std::string::npos)
+		irc::numericReply(432, user, arg);
 	// TODO : check if the session is still unregistered
 	// if unregistered, create new user object
 
@@ -104,7 +106,7 @@ void	Command::intNick()
 
 int	there_is_no_cmd(char c, std::string str)
 {
-	int	i;
+	unsigned long	i;
 
 	i = 0;
 	while (str[i])
@@ -161,25 +163,71 @@ std::vector<std::string>	split_cmd(std::string text, std::string space_delimiter
 void	Command::intWhoIs()
 {
 	std::string param = getParam();
+	std::vector<std::string>	arg;
+	unsigned long				i;
+	arg.push_back(user->getNickname());
+	arg.push_back(user->getUsername());
+	arg.push_back(user->getHostname());
+	arg.push_back(user->getRealName());
+
+	// ERR_NOSUCHSERVER    RPL_WHOISSERVER
+
 
 	if (param.size() == 0)
+		irc::numericReply(431, user, arg);
 		// return ERR_NONICKNAMEGIVEN 431 ":No nickname given"
 	// check if user exists in the channel
 	if (user)
 		user->whois(*user);
-	// check numeric replies
+	if (!user)
+		irc::numericReply(401, user, arg); // NOSUCHNICK
+	irc::numericReply(311, user, arg); // WHOISUSER
+	arg.clear();
+	arg.push_back(user->getNickname());
+	// get channels
+	std::vector<std::string> channels = user->getChannels();
+	std::string    chan_names = "";
+	i = 0;
+	while (i < channels.size())
+	{
+		chan_names += channels[i];
+		if (i < channels.size() - 1)
+			chan_names += ", ";
+		i++;
+	}
+	arg.push_back(chan_names);
+	irc::numericReply(319, user, arg); // WHOISCHANNELS
+
+	//whoisserver
+	arg.clear();
+	arg.push_back(user->getNickname());
+	arg.push_back(user->getAwayMessage());
+	arg.push_back(server.getName());
+	irc::numericReply(312, user, arg); // RPL_WHOISSERVER
+
+	if (user->userModes.a)
+		irc::numericReply(301, user, arg); // RPL_AWAY
+	if (user->userModes.o)
+		irc::numericReply(313, user, arg); // RPL_WHOISOPERATOR
+	irc::numericReply(318, user, arg); // RPL_ENDOFWHOIS
 }
 
 void	Command::intUserhost()
 {
 	std::string param = getParam();
-	std::vector<std::string> params;
+	std::vector<std::string>	params;
+	unsigned long				i;
 
 	std::string	reply;
 	params = split_cmd(param, " ");
-	// if (params.size() == 0)
-		// return ERR_NEEDMOREPARAMS 461
-	unsigned long		i = 0;
+	if (params.size() == 0)	// ERR_NEEDMOREPARAMS
+	{
+		std::vector<std::string> para;
+		params.push_back(prefix);
+		irc::numericReply(461, user, para);
+		return ;
+	}
+	i = 0;
 	while (i < params.size())
 	{
 		reply.append(user->getNickname());
@@ -196,12 +244,22 @@ void	Command::intUserhost()
 		// User::whois(usr);
 		i++;
 	}
+	std::vector<std::string> arg;
+	arg.push_back(reply);
+	irc::numericReply(302, user, arg);
+
 }
 
 void	Command::intAway()
 {
 	std::string param = getParam();
 	user->away(param);
+	std::vector<std::string> arg;
+	if (user->userModes.a)
+		irc::numericReply(306, user, arg); // NOWAWAY
+	else
+		irc::numericReply(305, user, arg); // UNAWAY
+
 }
 
 void	Command::intPrivMsg()
@@ -252,14 +310,33 @@ void	Command::intPrivMsg()
 	size_t pos7 = param.find(":");
 	if (pos7 != std::string::npos)
 		msg = param.substr(pos7 + 1);
-
-	User	*recipient;
+	std::vector<std::string> arg;
+	if (msg.size() == 0)
+		irc::numericReply(412, user, arg); // NOTEXTTOSEND
+	arg.push_back(user->getNickname());
+	if (username.size() == 0)
+		irc::numericReply(411, user, arg); // NORECIPIENT
+	arg.clear();
+	arg.push_back("PRIVMSG"); //command
+	User	*recipient = NULL;
 	if (username.size() > 0)
 		recipient = server.getUserByUsername(username);
+	if (!recipient)
+		irc::numericReply(401, user, arg); // NOSUCHNICK
+
 	user->privmsg(*recipient, msg);
-	// recipient.setNickname(nickname);
-	// recipient.setUsername(username);
-	// recipient.setHostname(hostname);
+	arg.clear();
+	arg.push_back(recipient->getNickname());
+	arg.push_back(recipient->getAwayMessage());
+	if (recipient->userModes.a)
+		irc::numericReply(301, user, arg); // RPL_AWAY
+
+	recipient->setNickname(nickname);
+	recipient->setUsername(username);
+	recipient->setHostname(hostname);
+
+	//    ERR_CANNOTSENDTOCHAN            ERR_NOTOPLEVEL
+		// ERR_WILDTOPLEVEL                ERR_TOOMANYTARGETS
 }
 
 void	Command::intNotice()
@@ -311,11 +388,27 @@ void	Command::intNotice()
 	if (pos7 != std::string::npos)
 		msg = param.substr(pos7 + 1);
 
-	User	*recipient;
+	std::vector<std::string> arg;
+	if (msg.size() == 0)
+		irc::numericReply(412, user, arg); // NOTEXTTOSEND
+	arg.push_back(user->getNickname());
+	if (username.size() == 0)
+		irc::numericReply(411, user, arg); // NORECIPIENT
+	arg.clear();
+	arg.push_back("PRIVMSG"); //command
+	User	*recipient = NULL;
 	if (username.size() > 0)
 		recipient = server.getUserByUsername(username);
 		// recipient = Channel::getUserFromUsername(username);
+	if (!recipient)
+		irc::numericReply(401, user, arg); // NOSUCHNICK
 	user->notice(msg);
+	arg.clear();
+	arg.push_back(recipient->getNickname());
+	arg.push_back(recipient->getAwayMessage());
+	if (recipient->userModes.a)
+		irc::numericReply(301, user, arg); // RPL_AWAY
+
 	recipient->setNickname(nickname);
 	recipient->setUsername(username);
 	recipient->setHostname(hostname);
@@ -325,8 +418,13 @@ void	Command::intWallops()
 {
 	std::vector<User *>	users = server.getServUsers();
 	std::string			sentence = getParam();
-	// if (users.size() < 1)
-		// return ERR_NEEDMOREPARAMS 461
+	if (users.size() < 1)	// ERR_NEEDMOREPARAMS
+	{
+		std::vector<std::string> params;
+		params.push_back(prefix);
+		irc::numericReply(461, user, params);
+		return ;
+	}
 	std::vector<User *>::iterator	it = users.begin();
 	while (it != users.end())
 	{
@@ -336,251 +434,14 @@ void	Command::intWallops()
 	}
 }
 
-//OLY
 std::string left_trim(const std::string &s, std::string to_remove)
-=======
-	}
-	// Intermediate Commands
-	void	Command::intUser()
-	{
-		user->user_cmd(getParam());
-	}
-
-	void	Command::intNick()
-	{
-		std::string param = getParam();
-		// if (param.size() == 0)
-			// return ERRNONICKNAMEGIVEN 431 ":No nickname given"
-		// if (param.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890-_{}[]\\`|") != std::string::npos)
-			// return ERRONEUSNICKNAME 432 "<nick> :Erroneus nickname"
-		// TODO : check if the session is still unregistered
-		// if unregistered, create new user object
-
-		std::string nickname;
-		size_t pos = param.find("!");
-		if (pos != std::string::npos)
-		{
-			nickname = param.substr(1, pos - 1);
-		}
-		std::string	new_nickname;
-		size_t	pos2 = param.find("NICK") + 5;
-		new_nickname = param.substr(pos2);
-		user->setNickname(new_nickname);
-	//    ERR_NICKNAMEINUSE
-	// 	ERR_NICKCOLLISION
-	//     ERR_UNAVAILRESOURCE
-	// 	ERR_RESTRICTED
-	}
-
-	void	Command::intUserMode()
-	{
-		std::string param = getParam();
-		std::vector<std::string>	params;
-
-		User	usr;
-		params = irc::irc::split(param, " ");
-		// need to select the right user in the channel
-		user->mode(params);
-		/*
-		221    RPL_UMODEIS
-			  "<user mode string>"
-
-		 - To answer a query about a client's own mode,
-		   RPL_UMODEIS is sent back.
-		*/
-	}
-
-	void	Command::intWhoIs()
-	{
-		std::string param = getParam();
-
-		if (param.size() == 0)
-			// return ERR_NONICKNAMEGIVEN 431 ":No nickname given"
-		// check if user exists in the channel
-		if (user)
-			user->whois(*user);
-		// check numeric replies
-	}
-
-	void	Command::intUserhost()
-	{
-		std::string param = getParam();
-		std::vector<std::string> params;
-
-		std::string	reply;
-		params = irc::split(param, " ");
-		// if (params.size() == 0)
-			// return ERR_NEEDMOREPARAMS 461
-		int		i = 0;
-		while (i < params.size())
-		{
-			reply.append(user->getNickname());
-			if (user->userModes.o)
-				reply.append("*");
-			reply.append("=");
-			if (user->userModes.a)
-				reply.append("-");
-			else
-				reply.append("+");
-			reply.append(user->getHostname());
-			if (params.size() > 1)
-				reply.append(" ");
-			// User::whois(usr);
-			i++;
-		}
-	}
-
-	void	Command::intAway()
-	{
-		std::string param = getParam();
-		user->away(param);
-	}
-
-	void	Command::intPrivMsg()
-	{
-		std::string username;
-		std::string nickname;
-		std::string hostname;
-		std::string server_str;
-		std::string msg;
-
-		std::string param = getParam();
-
-		size_t position1 = param.find("@");
-		size_t position2 = param.find("%");
-		size_t dif = position1 < position2 ? position1 : position2;
-		username = param.substr(0, dif);
-		size_t pos1 = param.find("!");
-		if (pos1 != std::string::npos)
-		{
-			size_t pos2 = param.find("@");
-			size_t pos3 = param.find("%");
-			if (pos3 != std::string::npos)
-				username = param.substr(pos1 + 1,(pos3 - pos1) - 1);
-			else
-				username = param.substr(pos1 + 1,(pos2 - pos1) - 1);
-			nickname = param.substr(0, pos1);
-		}
-		size_t pos4 = param.find("@");
-		if (pos4 != std::string::npos)
-		{
-			size_t pos5 = param.find("%");
-			if (pos5 != std::string::npos)
-			{
-				hostname = param.substr(pos5 + 1, pos4 - pos5 - 1);
-				server_str = param.substr(pos4 + 1, param.find(" ") - pos4 - 1);
-			}
-			else
-			{
-				hostname = param.substr(pos4 + 1, param.find(" ") - pos4 - 1);
-			}
-		}
-		size_t pos6 = param.find("%");
-		if (pos6 != std::string::npos && pos4 == std::string::npos)
-		{
-			hostname = param.substr(pos6 + 1, param.find(" ") - pos6 - 1);
-		}
-
-		size_t pos7 = param.find(":");
-		if (pos7 != std::string::npos)
-			msg = param.substr(pos7 + 1);
-
-		User	*recipient;
-		if (username.size() > 0)
-			recipient = server.getUserByUsername(username);
-		user->privmsg(*recipient, msg);
-		// recipient.setNickname(nickname);
-		// recipient.setUsername(username);
-		// recipient.setHostname(hostname);
-	}
-
-	void	Command::intNotice()
-	{
-		std::string username;
-		std::string nickname;
-		std::string hostname;
-		std::string server_str;
-		std::string msg;
-
-		std::string param = getParam();
-
-		size_t position1 = param.find("@");
-		size_t position2 = param.find("%");
-		size_t dif = position1 < position2 ? position1 : position2;
-		username = param.substr(0, dif);
-		size_t pos1 = param.find("!");
-		if (pos1 != std::string::npos)
-		{
-			size_t pos2 = param.find("@");
-			size_t pos3 = param.find("%");
-			if (pos3 != std::string::npos)
-				username = param.substr(pos1 + 1,(pos3 - pos1) - 1);
-			else
-				username = param.substr(pos1 + 1,(pos2 - pos1) - 1);
-			nickname = param.substr(0, pos1);
-		}
-		size_t pos4 = param.find("@");
-		if (pos4 != std::string::npos)
-		{
-			size_t pos5 = param.find("%");
-			if (pos5 != std::string::npos)
-			{
-				hostname = param.substr(pos5 + 1, pos4 - pos5 - 1);
-				server_str = param.substr(pos4 + 1, param.find(" ") - pos4 - 1);
-			}
-			else
-			{
-				hostname = param.substr(pos4 + 1, param.find(" ") - pos4 - 1);
-			}
-		}
-		size_t pos6 = param.find("%");
-		if (pos6 != std::string::npos && pos4 == std::string::npos)
-		{
-			hostname = param.substr(pos6 + 1, param.find(" ") - pos6 - 1);
-		}
-
-		size_t pos7 = param.find(":");
-		if (pos7 != std::string::npos)
-			msg = param.substr(pos7 + 1);
-
-		User	*recipient;
-		if (username.size() > 0)
-			recipient = server.getUserByUsername(username);
-			// recipient = Channel::getUserFromUsername(username);
-		user->notice(*recipient, msg);
-		recipient->setNickname(nickname);
-		recipient->setUsername(username);
-		recipient->setHostname(hostname);
-	}
-
-	void	intWallops(std::string param)
-	{
-		std::vector<User>	users = getVecChanUsers();
-		// if (users.size() < 1)
-			// return ERR_NEEDMOREPARAMS 461
-		std::vector<User>::iterator	it = users.begin();
-		while (it != users.end())
-		{
-			if (it->userModes.w)
-				send(it->getFd(), &param, param.size(), MSG_DONTWAIT);
-			it++;
-		}
-	}
-
-	//OLY
-	std::string left_trim(const std::string &s, std::string to_remove)
->>>>>>> d5e4fcb (Add files via upload)
 {
 	size_t start = s.find_first_not_of(to_remove);
 	if (start == std::string::npos)
 		return (NULL);
 	return (s.substr(start));
 }
-<<<<<<< HEAD
 
-=======
- 
->>>>>>> d5e4fcb (Add files via upload)
 std::string right_trim(const std::string &s, std::string to_remove)
 {
 	size_t end = s.find_last_not_of(to_remove);
@@ -588,11 +449,7 @@ std::string right_trim(const std::string &s, std::string to_remove)
 		return (NULL);
 	return (s.substr(0, end + 1));
 }
-<<<<<<< HEAD
 
-=======
- 
->>>>>>> d5e4fcb (Add files via upload)
 std::string trim(const std::string &s, std::string to_remove)
 {
 	return (right_trim(left_trim(s, to_remove), to_remove));
@@ -608,26 +465,20 @@ void Command::intJoin()
 	std::vector<std::string>	vec;
 	std::vector<std::string>	vec_chan_names;
 	std::vector<std::string>	vec_keys;
+	std::vector<std::string> 	params;
+	std::string					chan_names;
+	unsigned long				i;
 	std::string                 name;
 	std::string                 key;
-<<<<<<< HEAD
-	unsigned long				i;
-=======
-	int                         i;
->>>>>>> d5e4fcb (Add files via upload)
 	Channel                     *chan_found;
 	std::string                 message;
-	ssize_t                         ret;
+	ssize_t                     ret;
+	std::vector<User> 			users;
+	std::string 				nicks;
 
-<<<<<<< HEAD
 	vec = split_cmd(param, " ");
 	vec_chan_names = split_cmd(vec[0], ",");
 	vec_keys = split_cmd(vec[1], ",");
-=======
-	vec = irc::split(param, " ");
-	vec_chan_names = irc::split(vec[0], ",");
-	vec_keys = irc::split(vec[1], ",");
->>>>>>> d5e4fcb (Add files via upload)
 	if (vec_chan_names.size() == 1 && vec_keys.size() == 0 && vec_chan_names[0] == "0")    // JOIN 0
 	{
 		intQuit();
@@ -635,35 +486,29 @@ void Command::intJoin()
 	}
 	if (vec_chan_names.size() == 0)  // ERR_NEEDMOREPARAMS
 	{
-		message = "ERR_NEEDMOREPARAMS\n";
-		ret = send(getUser()->getFd(), &message, message.size(), MSG_DONTWAIT);
-		if (ret == -1)
-		{
-			std::cerr << "Could not send message\n";
-			return ;
-		}
+		params.push_back(prefix);
+		irc::numericReply(461, user, params);
 		return ;
 	}
-	if (vec_chan_names.size() < vec_keys.size())  // ERR_NEEDMOREPARAMS ?? // ERR_TOOMANYTARGETS ??
+	if (vec_chan_names.size() < vec_keys.size())  // ERR_NEEDMOREPARAMS
 	{
-		message = "ERR_NEEDMOREPARAMS // ERR_TOOMANYTARGETS\n"; // ?????
-		ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
-		if (ret == -1)
-		{
-			std::cerr << "Could not send message\n";
-			return ;
-		}
+		params.push_back(prefix);
+		irc::numericReply(461, user, params);
 		return ;
 	}
 	if (vec_chan_names.size() >= 10 || vec_chan_names.size() + user->getNbOfChannels() > 10)  // ERR_TOOMANYCHANNELS
 	{
-		message = "ERR_TOOMANYCHANNELS\n";
-		ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
-		if (ret == -1)
+		chan_names = "";
+		i = 0;
+		while (i < vec_chan_names.size())
 		{
-			std::cerr << "Could not send message\n";
-			return ;
+			chan_names += vec_chan_names[i];
+			if (i < vec_chan_names.size() - 1)
+				chan_names += ", ";
+			i++;
 		}
+		params.push_back(chan_names);
+		irc::numericReply(405, user, params);
 		return ;
 	}
 	i = 0;
@@ -679,7 +524,7 @@ void Command::intJoin()
 		if (name[0] != '&' && name[0] != '#' && name[0] != '+' && name[0] !=  '!')
 			name.insert(0, "#");
 		chan_found = server.getChannelByName(name);
-		if (chan_found == NULL)         // ERR_NOSUCHCHANNEL ??
+		if (chan_found == NULL)
 		{
 			chan_found = server.createChannel(name);
 			if (key.size() > 0)
@@ -687,188 +532,125 @@ void Command::intJoin()
 		}
 		if (chan_found->userIsBannedFromChan(user->getUsername()))    // ERR_BANNEDFROMCHAN
 		{
-			message = "ERR_BANNEDFROMCHAN\n";
-			ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
-			if (ret == -1)
-			{
-				std::cerr << "Could not send message\n";
-				return ;
-			}
+			params.push_back(vec_chan_names[i]);
+			irc::numericReply(474, user, params);
 			i++;
-			continue ;              // proceed to the other requests to join
+			continue ;
 		}
 		if (chan_found->getMaxNbUsersInChan() == chan_found->getNbUsersInChan())    // ERR_CHANNELISFULL
 		{
-			message = "ERR_CHANNELISFULL\n";
-			ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
-			if (ret == -1)
-			{
-				std::cerr << "Could not send message\n";
-				return ;
-			}
+			params.push_back(vec_chan_names[i]);
+			irc::numericReply(471, user, params);
 			i++;
-			continue ;              // proceed to the other requests to join
+			continue ;
 		}
-<<<<<<< HEAD
 		if (there_is_no_cmd('i', chan_found->getChanMode()) == 0)   // ERR_INVITEONLYCHAN
-=======
-		if (there_is_no('i', chan_found->getChanMode()) == 0)   // ERR_INVITEONLYCHAN
->>>>>>> d5e4fcb (Add files via upload)
 		{
-			message = "ERR_INVITEONLYCHAN\n";
-			ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
-			if (ret == -1)
-			{
-				std::cerr << "Could not send message\n";
-				return ;
-			}
+			params.push_back(vec_chan_names[i]);
+			irc::numericReply(473, user, params);
 			i++;
-			continue ;              // proceed to the other requests to join
+			continue ;
 		}
 		if (vec_keys[i] != chan_found->getChanPassword())   // ERR_BADCHANNELKEY
 		{
-			message = "ERR_BADCHANNELKEY\n";
-			ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
-			if (ret == -1)
-			{
-				std::cerr << "Could not send message\n";
-				return ;
-			}
+			params.push_back(vec_chan_names[i]);
+			irc::numericReply(475, user, params);
 			i++;
-			continue ;              // proceed to the other requests to join
+			continue ;
 		}
 		else
 		{
-			chan_found->addUser(*user);
-			message = chan_found->getChanNameAndTopic();    // RPL_TOPIC
-			ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
+			message = chan_found->getChanName() + ": channel joined\n";
+			ret = send(user->getFd(), &message, message.size(), 0);
 			if (ret == -1)
 			{
 				std::cerr << "Could not send message\n";
 				return ;
 			}
-			chan_found->listAllUsersInChan(*user);           // RPL_NAMREPLY
+			chan_found->addUser(*user);
+			params.push_back(chan_found->getChanName());
+			params.push_back(chan_found->getChanTopic());
+			irc::numericReply(332, user, params);
+			params.clear();
+			params.push_back("=");
+			params.push_back(chan_found->getChanName());
+			users = chan_found->getVecChanUsers();
+			nicks = "";
+			i = 0;
+			while (i < users.size())
+			{
+				nicks += users[i].getNickname();
+				if (i < users.size() - 1)
+					nicks += ", ";
+				i++;
+			}
+			params.push_back(nicks);
+			irc::numericReply(353, user, params);	// RPL_NAMREPLY           
 		}
 		i++;
 	}
 	return ;
 }
 
-// User *  Server::getUserByUsername(std::string name)
-// {
-// 	int i;
-
-// 	i = 0;
-// 	while (i < users.size())
-// 	{
-// 		if (users[i].getName() == name)
-// 			return (&users[i]);
-// 		i++;
-// 	}
-// 	return (NULL);
-// }
-
-// User * Server::getUserByNick(std::string nick)
-// {
-// 	int i;
-
-// 	i = 0;
-// 	while (i < users.size())
-// 	{
-// 		if (users[i].getNick() == nick)
-// 			return (&users[i]);
-// 		i++;
-// 	}
-// 	return (NULL);
-// }
-
 void Command::intInvite()
 {
 	std::vector<std::string>	vec;
 	std::string                 nickname;
-	std::string                 name;
-<<<<<<< HEAD
-	// int                         i;
-=======
-	int                         i;
->>>>>>> d5e4fcb (Add files via upload)
+	std::string                 chan_name;
 	Channel                     *chan_found;
-	std::string                 message;
-	int                         ret;
+	// int                         ret;
 	User *                      user_asked;
+	std::vector<std::string> 	params;
 
-<<<<<<< HEAD
 	vec = split_cmd(param, " ");
-=======
-	vec = irc::split(param, " ");
->>>>>>> d5e4fcb (Add files via upload)
 	if (vec.size() < 2)  // ERR_NEEDMOREPARAMS
 	{
-		ret = send(user->getFd(), "ERR_NEEDMOREPARAMS\n", 18, MSG_DONTWAIT);
-		if (ret == -1)
-		{
-			std::cerr << "Could not send message\n";
-			return ;
-		}
+		params.push_back(prefix);
+		irc::numericReply(461, user, params);
 		return ;
 	}
 	nickname = vec[0];
-	name = vec[1];
+	chan_name = vec[1];
 	chan_found = NULL;
-	if (name[0] != '&' && name[0] != '#' && name[0] != '+' && name[0] !=  '!')
-		name.insert(0, "#");
-	chan_found = server.getChannelByName(name);
+	if (chan_name[0] != '&' && chan_name[0] != '#' && chan_name[0] != '+' && chan_name[0] !=  '!')
+		chan_name.insert(0, "#");
+	chan_found = server.getChannelByName(chan_name);
 	user_asked = server.getUserByNick(nickname);
 	if (user_asked == NULL) // ERR_NOSUCHNICK
 	{
-		message = "ERR_NOSUCHNICK\n";
-		ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
-		if (ret == -1)
-		{
-			std::cerr << "Could not send message\n";
-			return ;
-		}
+		params.push_back(nickname);
+		irc::numericReply(401, user, params);
 		return ;
 	}
 	if (chan_found->userIsInChanFromUsername(user->getUsername()) == 0) // ERR_NOTONCHANNEL
 	{
-		message = "ERR_NOTONCHANNEL\n";
-		ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
-		if (ret == -1)
-		{
-			std::cerr << "Could not send message\n";
-			return ;
-		}
+		params.push_back(chan_name);
+		irc::numericReply(442, user, params);
 		return ;
 	}
-<<<<<<< HEAD
 	if (there_is_no_cmd('i', chan_found->getChanMode()) == 0 && chan_found->isOperator(*user) == 0)  // ERR_CHANOPRIVSNEEDED
-=======
-	if (there_is_no('i', chan_found->getChanMode()) == 0 && chan_found->isOperator(*user) == 0)  // ERR_CHANOPRIVSNEEDED
->>>>>>> d5e4fcb (Add files via upload)
 	{
-		message = "ERR_CHANOPRIVSNEEDED\n";
-		ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
-		if (ret == -1)
-		{
-			std::cerr << "Could not send message\n";
-			return ;
-		}
+		params.push_back(chan_name);
+		irc::numericReply(482, user, params);
 		return ;
 	}
-	if (chan_found->userIsInChanFromNickname(name)) // ERR_USERONCHANNEL
+	if (chan_found->userIsInChanFromNickname(nickname)) // ERR_USERONCHANNEL
 	{
-		message = "ERR_USERONCHANNEL\n";
-		ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
-		if (ret == -1)
-		{
-			std::cerr << "Could not send message\n";
-			return ;
-		}
+		params.push_back(nickname);
+		params.push_back(chan_name);
+		irc::numericReply(443, user, params);
 		return ;
 	}
 	chan_found->receivingAnInvitation(*user, *user_asked);    // RPL_INVITING
-	// RPL_AWAY ??
+	params.push_back(nickname);
+	params.push_back(chan_name);
+	irc::numericReply(341, user, params);
+	if (user_asked->isAway())	// RPL_AWAY
+	{
+		params.push_back(nickname);
+		params.push_back(user_asked->getAwayMessage());
+		irc::numericReply(301, user, params);
+	}
 	return ;
 }
 
@@ -877,51 +659,27 @@ void Command::intOper()
 	std::vector<std::string>	vec;
 	std::string                 name;
 	std::string                 key;
-<<<<<<< HEAD
-	// int                         i;
-	// Channel                     *chan_found;
-	std::string                 message;
-	int                         ret;
+	// int                         ret;
+	std::vector<std::string> 	params;
 
 	vec = split_cmd(param, " ");
-=======
-	int                         i;
-	Channel                     *chan_found;
-	std::string                 message;
-	int                         ret;
-
-	vec = irc::split(param, " ");
->>>>>>> d5e4fcb (Add files via upload)
 	if (vec.size() < 2)  // ERR_NEEDMOREPARAMS
 	{
-		ret = send(user->getFd(), "ERR_NEEDMOREPARAMS\n", 19, MSG_DONTWAIT);
-		if (ret == -1)
-		{
-			std::cerr << "Could not send message\n";
-			return ;
-		}
+		params.push_back(prefix);
+		irc::numericReply(461, user, params);
 		return ;
 	}
 	name = vec[0];
 	key = vec[1];
+	std::vector<std::string> arg;
 	if (key != server.getPass())    // ERR_PASSWDMISMATCH
 	{
-		ret = send(user->getFd(), "ERR_PASSWDMISMATCH\n", 19, MSG_DONTWAIT);
-		if (ret == -1)
-		{
-			std::cerr << "Could not send message\n";
-			return ;
-		}
+		irc::numericReply(464, user, arg);
 		return ;
 	}
 	if (user->isOperator())  // RPL_YOUREOPER
 	{
-		ret = send(user->getFd(), "RPL_YOUREOPER\n", 14, MSG_DONTWAIT);
-		if (ret == -1)
-		{
-			std::cerr << "Could not send message\n";
-			return ;
-		}
+		irc::numericReply(481, user, arg);
 		return ;
 	}
 	return ;
@@ -932,31 +690,16 @@ void Command::intPart()
 	std::vector<std::string>	vec;
 	std::vector<std::string>	vec_chan_names;
 	std::string					name;
-	std::string                 message;
-<<<<<<< HEAD
 	unsigned long				i;
 	Channel                     *chan_found;
-	int                         ret;
+	std::vector<std::string> 	params;
 
 	vec = split_cmd(param, ":");
 	vec_chan_names = split_cmd(vec[0], ",");
-=======
-	int                         i;
-	Channel                     *chan_found;
-	int                         ret;
-
-	vec = irc::split(param, ":");
-	vec_chan_names = irc::split(vec[0], ",");
->>>>>>> d5e4fcb (Add files via upload)
 	if (vec_chan_names.size() == 0)  // ERR_NEEDMOREPARAMS
 	{
-		message = "ERR_NEEDMOREPARAMS\n";
-		ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
-		if (ret == -1)
-		{
-			std::cerr << "Could not send message\n";
-			return ;
-		}
+		params.push_back(prefix);
+		irc::numericReply(461, user, params);
 		return ;
 	}
 	i = 0;
@@ -975,25 +718,15 @@ void Command::intPart()
 		chan_found = server.getChannelByName(name);
 		if (chan_found == NULL)     // ERR_NOSUCHCHANNEL
 		{
-			message = "ERR_NOSUCHCHANNEL\n";
-			ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
-			if (ret == -1)
-			{
-				std::cerr << "Could not send message\n";
-				return ;
-			}
+			params.push_back(name);
+			irc::numericReply(403, user, params);
 			i++;
 			continue ;
 		}
 		if (chan_found->userIsInChanFromUsername(user->getUsername()) == 0) // ERR_NOTONCHANNEL
 		{
-			message = "ERR_NOTONCHANNEL\n";
-			ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
-			if (ret == -1)
-			{
-				std::cerr << "Could not send message\n";
-				return ;
-			}
+			params.push_back(name);
+			irc::numericReply(442, user, params);
 			i++;
 			continue ;
 		}
@@ -1009,11 +742,7 @@ void Command::intPart()
 void    Command::intQuit()
 {
 	std::string                 message;
-<<<<<<< HEAD
 	unsigned long				i;
-=======
-	int                         i;
->>>>>>> d5e4fcb (Add files via upload)
 	std::vector<std::string>    vec_chan_names;
 	Channel                     *chan_found;
 	std::string                 name;
@@ -1038,11 +767,7 @@ void    Command::intNames()
 {
 	std::vector<std::string>	vec_chan_names;
 	std::string                 name;
-<<<<<<< HEAD
 	unsigned long				i;
-=======
-	int                         i;
->>>>>>> d5e4fcb (Add files via upload)
 	Channel                     *chan_found;
 
 	if (param.empty())
@@ -1058,11 +783,7 @@ void    Command::intNames()
 	}
 	else
 	{
-<<<<<<< HEAD
 		vec_chan_names = split_cmd(param, ",");
-=======
-		vec_chan_names = irc::split(param, ",");
->>>>>>> d5e4fcb (Add files via upload)
 		i = 0;
 		while (i < vec_chan_names.size())
 		{
@@ -1089,14 +810,8 @@ void Command::intList()
 {
 	std::vector<std::string>	vec_chan_names;
 	std::string                 name;
-<<<<<<< HEAD
 	unsigned long				i;
-=======
-	int                         i;
->>>>>>> d5e4fcb (Add files via upload)
 	Channel                     *chan_found;
-	int                         ret;
-	std::string					message;
 
 	if (param.empty())
 	{
@@ -1111,11 +826,7 @@ void Command::intList()
 	}
 	else
 	{
-<<<<<<< HEAD
 		vec_chan_names = split_cmd(param, ",");
-=======
-		vec_chan_names = irc::split(param, ",");
->>>>>>> d5e4fcb (Add files via upload)
 		i = 0;
 		while (i < vec_chan_names.size())
 		{
@@ -1127,18 +838,7 @@ void Command::intList()
 				name.insert(0, "#");
 			chan_found = server.getChannelByName(name);
 			if (chan_found == NULL)
-			{
-				message = "Invalid channel name\n";
-				ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
-<<<<<<< HEAD
-				if (ret == -1)
-=======
->>>>>>> d5e4fcb (Add files via upload)
-				{
-					std::cerr << "Could not send message\n";
-					return ;
-				}
-			}
+				return ;
 			else
 				chan_found->getChanNameAndTopic();
 			i++;
@@ -1155,50 +855,29 @@ void Command::intKick()
 	std::string                 message;
 	std::string                 name;
 	std::string                 user_str;
-<<<<<<< HEAD
 	unsigned long				i;
 	Channel                     *chan_found;
-	int                         ret;
+	std::vector<std::string>	params;
 
 	vec = split_cmd(param, " ");
-=======
-	int                         i;
-	Channel                     *chan_found;
-	int                         ret;
-
-	vec = irc::split(param, " ");
->>>>>>> d5e4fcb (Add files via upload)
 	if (vec.size() < 2)      // ERR_NEEDMOREPARAMS
 	{
-		message = "ERR_NEEDMOREPARAMS\n";
-		ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
-		if (ret == -1)
-		{
-			std::cerr << "Could not send message\n";
-			return ;
-		}
+		params.push_back(prefix);
+		irc::numericReply(461, user, params);
 		return ;
 	}
-<<<<<<< HEAD
 	vec_chan_names = split_cmd(vec[0], ",");
 	vec_usernames = split_cmd(vec[1], ",");
-=======
-	vec_chan_names = irc::split(vec[0], ",");
-	vec_usernames = irc::split(vec[1], ",");
->>>>>>> d5e4fcb (Add files via upload)
 	if (vec[2].size() > 0)
 		message = vec[2];
+	else
+		message = user->getNickname() + " has kicked you\n";
 	if (vec_chan_names.size() == 0 ||
 		vec_usernames.size() == 0 ||
 		(vec_chan_names.size() > 1 && vec_chan_names.size() != vec_usernames.size()))    // ERR_NEEDMOREPARAMS
 	{
-		message = "ERR_NEEDMOREPARAMS\n";
-		ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
-		if (ret == -1)                              
-		{
-			std::cerr << "Could not send message\n";
-			return ;
-		}
+		params.push_back(prefix);
+		irc::numericReply(461, user, params);
 		return ;
 	}
 	if (vec_chan_names.size() > 1)
@@ -1214,27 +893,20 @@ void Command::intKick()
 			chan_found = server.getChannelByName(name);
 			if (chan_found == NULL) // ERR_NOSUCHCHANNEL
 			{
-				ret = send(user->getFd(), "ERR_NOSUCHCHANNEL\n", 17, MSG_DONTWAIT);
-				if (ret == -1)
-				{
-					std::cerr << "Could not send message\n";
-					return ;
-				}
+				params.push_back(name);
+				irc::numericReply(403, user, params);
 			}
-			if (chan_found->userIsInChanFromUsername(user_str) == 0)         // ERR_USERNOTINCHANNEL
+			if (chan_found->userIsInChanFromUsername(user_str) == 0)	// ERR_USERNOTINCHANNEL
 			{
-				ret = send(user->getFd(), "ERR_USERNOTINCHANNEL\n", 21, MSG_DONTWAIT);
-				if (ret == -1)
-				{
-					std::cerr << "Could not send message\n";
-					return ;
-				}
+				params.push_back(user_str);
+				params.push_back(name);
+				irc::numericReply(441, user, params);
 				i++;
 				continue ;
 			}
 			else
 			{
-				chan_found->deleteUser(*(chan_found->getUserFromUsername(user_str)), "");
+				chan_found->deleteUser(*(chan_found->getUserFromUsername(user_str)), message);
 			}
 			i++;
 		}
@@ -1247,33 +919,19 @@ void Command::intTopic()
 	std::vector<std::string>	vec;
 	std::string 	            name;
 	std::string                 new_topic;
-	std::string                 message;
-<<<<<<< HEAD
-	// int                         i;
-=======
-	int                         i;
->>>>>>> d5e4fcb (Add files via upload)
 	Channel                     *chan_found;
-	int                         ret;
+	// int                         ret;
+	std::vector<std::string>	params;
 
 	if (param.size() == 0)  // ERR_NEEDMOREPARAMS
 	{
-		message = "ERR_NEEDMOREPARAMS";
-		ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
-		if (ret == -1)                              
-		{
-			std::cerr << "Could not send message\n";
-			return ;
-		}
+		params.push_back(prefix);
+		irc::numericReply(461, user, params);
 		return ;
 	}
 	if (param[param.size() - 1] == ':')
 		param += " ";
-<<<<<<< HEAD
 	vec = split_cmd(param, ":");
-=======
-	vec = irc::split(param, ":");
->>>>>>> d5e4fcb (Add files via upload)
 	name = vec[0];
 	if (name[0] != '&' && name[0] != '#' && name[0] != '+' && name[0] !=  '!')
 		name.insert(0, "#");
@@ -1282,47 +940,25 @@ void Command::intTopic()
 		return ;
 	if (chan_found->userIsInChanFromUsername(user->getUsername()) == 0)  // ERR_NOTONCHANNEL
 	{
-		message = "ERR_NOTONCHANNEL";
-		ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
-		if (ret == -1)                              
-		{
-			std::cerr << "Could not send message\n";
-			return ;
-		}
+		params.push_back(name);
+		irc::numericReply(442, user, params);
 		return ;
 	}
 	if (vec.size() > 1 && vec[1] != " ")
 		new_topic = vec[1];
 	else
 		new_topic = "";
-<<<<<<< HEAD
 	if (there_is_no_cmd(':', param))    // RPL_TOPIC
-=======
-	if (there_is_no(':', param))    // RPL_TOPIC
->>>>>>> d5e4fcb (Add files via upload)
 	{
-		message = chan_found->getChanTopic();
-		ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
-		if (ret == -1)                              
-		{
-			std::cerr << "Could not send message\n";
-			return ;
-		}
+		params.push_back(name);
+		params.push_back(chan_found->getChanTopic());
+		irc::numericReply(332, user, params);
 		return ;
 	}
-<<<<<<< HEAD
 	if (there_is_no_cmd('t', chan_found->getChanMode()) == 0 && chan_found->isOperator(*user) == 0) // ERR_CHANOPRIVSNEEDED
-=======
-	if (there_is_no('t', chan_found->getChanMode()) == 0 && chan_found->isOperator(*user) == 0) // ERR_CHANOPRIVSNEEDED
->>>>>>> d5e4fcb (Add files via upload)
 	{
-		message = "ERR_CHANOPRIVSNEEDED";
-		ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
-		if (ret == -1)                              
-		{
-			std::cerr << "Could not send message\n";
-			return ;
-		}
+		params.push_back(name);
+		irc::numericReply(482, user, params);
 		return ;
 	}
 	else
@@ -1330,48 +966,24 @@ void Command::intTopic()
 		chan_found->setChanTopic(new_topic, *user);
 		if (new_topic.size() == 0)      // RPL_NOTOPIC
 		{
-			message = "RPL_NOTOPIC";
-			ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
-			if (ret == -1)                              
-			{
-				std::cerr << "Could not send message\n";
-				return ;
-			}
+			params.push_back(name);
+			irc::numericReply(482, user, params);
 		}
-	}
-	return ;
-}
-
-void Command::intVersion()
-{
-	int ret;
-
-	ret = send(user->getFd(), server.getVersionAddr(), sizeof(*(server.getVersionAddr())), MSG_DONTWAIT);  // RPL_VERSION
-	if (ret == -1)
-	{
-		std::cerr << "Could not send message\n";
-		return ;
 	}
 	return ;
 }
 
 void Command::intMotd()
 {
-	int ret;
-	std::string motd = server.getMotd();
-<<<<<<< HEAD
+	int			ret;
+	std::string	motd;
 
-=======
-	
->>>>>>> d5e4fcb (Add files via upload)
+	motd = server.getMotd();
+	std::vector<std::string> arg;
 	if (motd.size() == 0)
 	{
-		ret = send(user->getFd(), "", 0, MSG_DONTWAIT);
-		if (ret == -1)
-		{
-			std::cerr << "Could not send message\n";
-			return ;
-		}
+		irc::numericReply(422, user, arg);		// ERR_NOMOTD
+		return ;
 	}
 	ret = send(user->getFd(), &motd, motd.size(), MSG_DONTWAIT);  // RPL_MOTDSTART RPL_MOTD RPL_ENDOFMOTD
 	if (ret == -1)
@@ -1384,14 +996,11 @@ void Command::intMotd()
 
 int	Command::isServerOperator(User & user)
 {
-<<<<<<< HEAD
 	unsigned long	i;
-=======
-	int	i;
->>>>>>> d5e4fcb (Add files via upload)
+	std::vector<User *>	operators;
 
 	i = 0;
-	std::vector<User *>			operators = server.getServOp();
+	operators = server.getServOp();
 
 	while (i < operators.size())
 	{
@@ -1404,53 +1013,33 @@ int	Command::isServerOperator(User & user)
 
 void Command::intKill()
 {
-	std::vector<std::string>	vec;
-	std::string             	nickname;
-	std::string             	comment;
-	std::string                 message;
-	int                         ret;
-	User *                      user_to_kill;
+	std::vector<std::string>		vec;
+	std::string             		nickname;
+	std::string             		comment;
+	// int                         	ret;
+	User *                      	user_to_kill;
 	std::vector<User *>::iterator	found;
+	std::vector<std::string> 		params;
 
-<<<<<<< HEAD
 	vec = split_cmd(param, " ");
-=======
-	vec = irc::split(param, " ");
->>>>>>> d5e4fcb (Add files via upload)
 	if (vec.size() < 2)      // ERR_NEEDMOREPARAMS
 	{
-		message = "ERR_NEEDMOREPARAMS\n";
-		ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
-		if (ret == -1)
-		{
-			std::cerr << "Could not send message\n";
-			return ;
-		}
+		params.push_back(prefix);
+		irc::numericReply(461, user, params);
 		return ;
 	}
 	nickname = vec[0];
 	comment = vec[1];
 	if (server.isServOp(*user) == 0)  // ERR_NOPRIVILEGES
 	{
-		message = "ERR_NOPRIVILEGES\n";
-		ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
-		if (ret == -1)
-		{
-			std::cerr << "Could not send message\n";
-			return ;
-		}
+		irc::numericReply(481, user, params);
 		return ;
 	}
 	user_to_kill = server.getUserByNick(nickname);
 	if (user_to_kill == NULL)  // ERR_NOSUCHNICK
 	{
-		message = "ERR_NOSUCHNICK\n";
-		ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
-		if (ret == -1)
-		{
-			std::cerr << "Could not send message\n";
-			return ;
-		}
+		params.push_back(nickname);
+		irc::numericReply(401, user, params);
 		return ;
 	}
 	std::vector<User *>	users = server.getServUsers();
@@ -1463,18 +1052,11 @@ void Command::intKill()
 	users.erase(found);
 	// close socket ??
 	return ;
-<<<<<<< HEAD
 }	
 
 int 	HasInvalidMode(std::string letters)
 {	
-=======
-}
-
-int HasInvalidMode(std::string letters)
-{
->>>>>>> d5e4fcb (Add files via upload)
-	int i;
+	unsigned long	i;
 
 	i = 0;
 	while (letters[i])
@@ -1485,17 +1067,10 @@ int HasInvalidMode(std::string letters)
 		i++;
 	}
 	return (0);
-<<<<<<< HEAD
 }	
 
 void	 Command::intMode()
 {	
-=======
-}
-
-void Command::intChannelMode()
-{
->>>>>>> d5e4fcb (Add files via upload)
 	std::vector<std::string>	vec;
 	std::string             	name;
 	std::string             	mode;
@@ -1505,8 +1080,8 @@ void Command::intChannelMode()
 	int                         ret;
 	Channel *                   chan_found;
 	User *                      user_found;
+	std::vector<std::string> 	params;
 
-<<<<<<< HEAD
 	vec = split_cmd(param, " ");
 	user->mode(vec);
 	/*
@@ -1516,18 +1091,10 @@ void Command::intChannelMode()
 		- To answer a query about a client's own mode,
 		RPL_UMODEIS is sent back.
 	*/
-=======
-	vec = irc::split(param, " ");
->>>>>>> d5e4fcb (Add files via upload)
 	if (vec.size() < 2)      // ERR_NEEDMOREPARAMS
 	{
-		message = "ERR_NEEDMOREPARAMS\n";
-		ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
-		if (ret == -1)
-		{
-			std::cerr << "Could not send message\n";
-			return ;
-		}
+		params.push_back(prefix);
+		irc::numericReply(461, user, params);
 		return ;
 	}
 	name = vec[0];
@@ -1540,68 +1107,43 @@ void Command::intChannelMode()
 	letters = trim(name, "-+");
 	if (HasInvalidMode(letters))     // ERR_UNKNOWNMODE
 	{
-		message = "ERR_UNKNOWNMODE\n";
-		ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
-		if (ret == -1)
-		{
-			std::cerr << "Could not send message\n";
-			return ;
-		}
+		params.push_back(letters);
+		params.push_back(name);
+		irc::numericReply(472, user, params);
 		return ;
 	}
 	arg = "";
 	if (vec.size() > 2)
 		arg = vec[2];
 	chan_found->addMode(letters);
-<<<<<<< HEAD
 	if (there_is_no_cmd('k', letters) == 0 && vec.size() == 3)
-=======
-	if (there_is_no('k', letters) == 0 && vec.size() == 3)
->>>>>>> d5e4fcb (Add files via upload)
 	{
 		if (mode[0] == '-' && arg == chan_found->getChanPassword())
 			chan_found->setChanPassword("");
 		else if (mode[0] == '-' && arg != chan_found->getChanPassword())    // ERR_KEYSET
 		{
-			message = "ERR_KEYSET\n";
-			ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
-			if (ret == -1)
-			{
-				std::cerr << "Could not send message\n";
-				return ;
-			}
+			params.push_back(name);
+			irc::numericReply(467, user, params);
 			return ;
 		}
 		else if (mode[0] == '+')
 			chan_found->setChanPassword(arg);
 	}
-<<<<<<< HEAD
 	if (there_is_no_cmd('l', letters) == 0)
-=======
-	if (there_is_no('l', letters) == 0)
->>>>>>> d5e4fcb (Add files via upload)
 	{
 		if (mode[0] == '-' && vec.size() == 2)
 			chan_found->setMaxNbUsersInChan(100);
 		else if (mode[0] == '+')
 			chan_found->setMaxNbUsersInChan(std::atoi(arg.c_str()));
 	}
-<<<<<<< HEAD
 	if (there_is_no_cmd('o', letters) == 0 && vec.size() == 3)
-=======
-	if (there_is_no('o', letters) == 0 && vec.size() == 3)
->>>>>>> d5e4fcb (Add files via upload)
 	{
 		user_found = server.getUserByUsername(arg);
 		if (user_found == NULL)         // ERR_USERNOTINCHANNEL
 		{
-			message = "ERR_USERNOTINCHANNEL\n";
-			ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
-			if (ret == -1)
-			{
-				std::cerr << "Could not send message\n";
-				return ;
-			}
+			params.push_back(arg);
+			params.push_back(name);
+			irc::numericReply(441, user, params);
 			return ;
 		}
 		if (mode[0] == '-')
@@ -1609,11 +1151,7 @@ void Command::intChannelMode()
 		else if (mode[0] == '+')
 			chan_found->addOperator(*user_found);
 	}
-<<<<<<< HEAD
 	if (there_is_no_cmd('O', letters) == 0 && vec.size() == 2)
-=======
-	if (there_is_no('O', letters) == 0 && vec.size() == 2)
->>>>>>> d5e4fcb (Add files via upload)
 	{
 		message = chan_found->getChanCreator();
 		ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
@@ -1626,7 +1164,6 @@ void Command::intChannelMode()
 	}
 }
 
-<<<<<<< HEAD
 void		Command::intPass()
 {
 
@@ -1634,38 +1171,45 @@ void		Command::intPass()
 
 void		Command::intSquit()
 {
+	std::vector<std::string>	vec;
+	std::string					serv_name;
+	std::string					comment;
+	std::vector<std::string>	params;
 
+	vec = split_cmd(param, " ");
+	if (vec.size() < 2)      // ERR_NEEDMOREPARAMS
+	{
+		params.push_back(prefix);
+		irc::numericReply(461, user, params);
+		return ;
+	}
+	std::vector<std::string> arg;
+	if (server.isServOp(*user) == 0)  // ERR_NOPRIVILEGES
+	{
+		irc::numericReply(481, user, arg);
+		return ;
+	}
+	serv_name = vec[0];
+	comment = vec[1];
+	if (serv_name != server.getName())  // ERR_NOSUCHSERVER
+	{
+		params.push_back(serv_name);
+		irc::numericReply(402, user, params);
+	}
+	// close connection ?????
 }
 
-void		Command::intTime()
-{
-
-}
-
-void		Command::intPing()
-{
-
-}
-
-void		Command::intPong()
-{
-
-}
-
+// The ERROR message is also used before terminating a client
+//    connection.
+/*
+   When a server sends a received ERROR message to its operators, the
+   message SHOULD be encapsulated inside a NOTICE message, indicating
+   that the client was not responsible for the error.
+*/
 void		Command::intError()
 {
-
+	std::vector<std::string> msg;
+	msg.push_back("The client was not responsible for the error.");
+	user->setParams(msg);
+	intNotice();
 }
-
-void		Command::intWho()
-{
-
-}
-
-void		Command::intAdmin()
-{
-
-}
-
-=======
->>>>>>> d5e4fcb (Add files via upload)

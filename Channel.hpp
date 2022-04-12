@@ -27,11 +27,7 @@ namespace irc
 			std::string			chan_topic;
 			std::string			chan_mode;
 			std::vector<User>	vec_chan_users;
-<<<<<<< HEAD
 			unsigned long		max_nb_users_in_chan;
-=======
-			int					max_nb_users_in_chan;
->>>>>>> d5e4fcb (Add files via upload)
 			std::vector<User>	vec_chan_operators;		// @
 			std::string			chan_creator;
 			std::vector<User>	vec_chan_banned_users;

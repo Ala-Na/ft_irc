@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   User.hpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: cboutier <cboutier@student.42.fr>          +#+  +:+       +#+        */
+/*   By: anadege <anadege@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/31 11:14:35 by cboutier          #+#    #+#             */
-/*   Updated: 2022/04/11 14:54:25 by cboutier         ###   ########.fr       */
+/*   Updated: 2022/04/13 17:29:16 by anadege          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,21 +81,12 @@ namespace irc
 
 				The flag 's' is obsolete but MAY still be used.
 			*/
-<<<<<<< HEAD
 			bool		a;		// user is flagged as away;
 			bool		i;		// marks a users as invisible; hides you if someone does a /WHO or /NAMES outside the channel
 			bool		w;		// user receives wallops; Used by IRC operators, WALLOPS is a command utilized to send messages on an IRC network. WALLOPS messages are for broadcasting network information and its status to following users.
 			bool		r;		// restricted user connection;
 			bool		o;		// operator flag;
 			bool		O;		// local operator flag;
-=======
-			bool		a = false;		// user is flagged as away;
-			bool		i = false;		// marks a users as invisible; hides you if someone does a /WHO or /NAMES outside the channel
-			bool		w = false;		// user receives wallops; Used by IRC operators, WALLOPS is a command utilized to send messages on an IRC network. WALLOPS messages are for broadcasting network information and its status to following users.
-			bool		r = false;		// restricted user connection;
-			bool		o = false;		// operator flag;
-			bool		O = false;		// local operator flag;
->>>>>>> d5e4fcb (Add files via upload)
 			// bool s;			// marks a user for receipt of server notices.
 
 		};
@@ -115,18 +106,12 @@ namespace irc
 			std::string getUsername();
 			std::string getRealName();
 			std::string getHostname();
-<<<<<<< HEAD
 			std::vector<std::string> getParams();
 			std::string getAwayMessage();
 			int			getFd();
 			sockaddr_in	getAddr();
 			std::vector<std::string> getChannels();
 
-=======
-			std::string getAwayMessage();
-			int			getFd();
-			std::vector<std::string> getChannels();
->>>>>>> d5e4fcb (Add files via upload)
 			int			getNbOfChannels();
 
 			// flags bool
@@ -142,6 +127,7 @@ namespace irc
 			void	setRealName(std::string real_name);
 			void	setHostname(std::string hostname);
 			void	setAwayMessage(std::string msg);
+			void	setParams(std::vector<std::string> params);
 
 			void	sendMessage(int fd, std::string msg);
 
@@ -153,7 +139,6 @@ namespace irc
 			void	nick(std::string nickname);
 			void	quit(std::vector<std::string> channels);
 			void	privmsg(User usr, std::string msg);
-<<<<<<< HEAD
 			void	notice(std::string msg);
 			void	wallops(std::string msg);
 			void	away(std::string msg = "");
@@ -205,17 +190,6 @@ namespace irc
 	// {
 	// 	return (!(lhs == rhs));
 	// };
-=======
-			void	notice(User usr, std::string msg);
-			void	wallops(std::string msg);
-			void	away(std::string msg = "");
-			void	quit(void);
-			void	part(std::vector<std::string> params);
-			void	whois(User usr);
-			void	kick(std::string const &chan);
-			void	mode(std::vector<std::string> params);
-	};
->>>>>>> d5e4fcb (Add files via upload)
 }
 
 #endif
