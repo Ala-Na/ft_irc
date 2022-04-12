@@ -5,21 +5,21 @@ using namespace irc;
 
 #define END "\r\n"
 
-// TODO check bytes_send and maybe close connection if error ?
-// TODO uncomment send and comment erase write
 void	sendNumeric(int fd, std::string msg) {
-	//int bytes_send = send(fd, msg.c_str(), msg.size(), 0);
-	write(fd, msg.c_str(), msg.size());
+	int bytes_send = send(fd, msg.c_str(), msg.size(), 0);
+	if (bytes_send < msg.size()) {
+		std::cerr << "Error while sending message to fd = " << fd << std::endl;
+		// TODO close connection
+	}
 }
 
 /* COMMAND RESPONSES */
 
-/* 001 */ std::string	RplWelcome (std::string server, std::string nick, std::string network, std::string user, std::string host) { return (" :Welcome to the " + network + " Network, " + nick + "!" + user + "@" + host); }
+/* 001 */ std::string	RplWelcome (std::string nick, std::string user, std::string host) { return (" :Welcome to the Internet Relay Network, " + nick + "!" + user + "@" + host); }
 /* 002 */ std::string	RplYourHost (std::string server, std::string version) { return (" :Your host is " + server + ", running version " + version);}
 /* 003 */ std::string	RplCreated (std::string creation) { return (" :This server was created " + creation); }
-/* 004 */ std::string	RplMyInfo (std::string server, std::string version, std::string u_modes, std::string c_modes, std::string supp_c_modes) { return (" " + server + " " + version + " " + u_modes + " " + c_modes + " " + supp_c_modes); }
-/* 005 */ std::string	RplBounce (std::string server, std::string port) { return (" : Try server " + server + ", port " + port); }
-/* 020 - Not in RFC, but used in irssi */ std::string	RplProcessConnection () { return (" :Please wait while we process your connection."); }
+/* 004 */ std::string	RplMyInfo (std::string server, std::string version, std::string u_modes, std::string c_modes) { return (" " + server + " " + version + " " + u_modes + " " + c_modes); }
+// 005 - No need
 // 200 to 212 - No need
 // 219 - No need
 /* 221 */ std::string	RplUModeIs (std::string modes) { return (" " + modes); }
@@ -35,19 +35,20 @@ void	sendNumeric(int fd, std::string msg) {
 // 261 to 263 - No need
 /* 301 */ std::string	RplAway (std::string dest_nick, std::string away_msg) { return (" " + dest_nick + " :" + away_msg); }
 /* 302 */ std::string	RplUserhost (std::string replies) { return (" :" + replies); }
+/* 303 */ std::string	RplIson (std::string nicks_presents) { return (" :" + nicks_presents); }
 /* 305 */ std::string	RplUnaway () { return (" :You are no longer marked as being away"); }
 /* 306 */ std::string	RplNowAway () { return (" : You have been marked as being away"); }
 /* 311 */ std::string	RplWhoIsUser (std::string w_nick, std::string w_user, std::string w_host, std::string w_real) { return (" " + w_nick + " " + w_user + " " + w_host + " * :" + w_real); }
-/* 312 */ std::string	RplWhoIsServer (std::string server, std::string infos) { return (" " + server + " :" + infos); };
+/* 312 */ std::string	RplWhoIsServer (std::string server, std::string server_nick, std::string infos) { return (" " + server_nick + " " + server + " :" + infos); };
 /* 313 */ std::string	RplWhoIsOperator (std::string o_nick) { return (" " + o_nick + " :is an IRC operator"); }
 /* 315 */ std::string	RplEndOfWho (std::string name_searched) { return (" " + name_searched + " :End of WHO list"); }
 // 317 - No need
 /* 318 */ std::string	RplEndOfWhoIs () { return (" :End of WHOIS list"); }
-// 319 - No need
+/* 319 */ std::string	RplWhoIsChannels (std::string w_nick, std::string w_list_channels_and_op) { return (" " + w_nick + " :" + w_list_channels_and_op); } 
 /* 322 */ std::string	RplList (std::string channel, std::string visible, std::string topic) { return (" " + channel + " " + visible + " :" + topic); }
 /* 323 */ std::string	RplListEnd () { return (" :End of LIST"); }
 /* 324 */ std::string	RplChannelModeIs (std::string channel, std::string mode, std::string mode_params) { return (" " + channel + " " + mode + " " + mode_params); }
-/* 331 */ std::string	RplNoTopic (std::string channel) { return (" " + channel + " :No topic is set"); }
+/* 331 */ std::string	RplNoTopic (std::string channel) { return (" " + channel + " :No topic is set"); }	
 /* 332 */ std::string	RplTopic (std::string channel, std::string topic) { return (" " + channel + " :" + topic); }
 /* 341 */ std::string	RplInviting (std::string nick, std::string channel) { return (" " + channel + " " + nick); }
 // 342 - No need
@@ -58,7 +59,7 @@ void	sendNumeric(int fd, std::string msg) {
 /* 351 */ std::string	RplVersion (std::string server, std::string version, std::string debug, std::string comments) { return (" " + version + "." + debug + " " + server + " :" + comments); }
 /* 352 */ std::string	RplWhoReply (std::string server, std::string nick, std::string channel, std::string user, std::string host, std::string more, std::string hopcount, std::string real_name) { return (" " + channel + " " + user + " " + host + " " + server + " " + nick + " " + more + " :" + hopcount + " " +  real_name); }
 // Explanation for 352 : http://chi.cs.uchicago.edu/chirc/assignment3.html
-/* 353 */ std::string	RplNamReply (std::string type_chan, std::string channel, std::string nicks) { return (" " + type_chan + " " + channel + nicks); }
+/* 353 */ std::string	RplNamReply (std::string type_chan, std::string channel, std::string nicks) { return (" " + type_chan + " " + channel + " :" + nicks); }
 // nicks must contains each nicks of the users presents in the channel with either nothing/@/+ as prefix (@ = operator of channel, +=authorization to speak in moderated channel)
 // 364 - No need
 // 365 - No need
@@ -81,22 +82,66 @@ void	sendNumeric(int fd, std::string msg) {
 /* 401 */ std::string	ErrNoSuchNick (std::string nick) { return (" " + nick + " :No suck nick/channel"); }
 /* 402 */ std::string	ErrNoSuchServer (std::string server_name) { return (" " + server_name + " :No such server"); }
 /* 403 */ std::string	ErrNoSuchChannel (std::string channel_name) { return (" " + channel_name + " :No such channel"); }
+/* 404 */ std::string	ErrCannotSendToChan (std::string channel_name) { return (" " + channel_name + " :No such channel"); }
+/* 405 */ std::string	ErrTooManyChannels (std::string channel_name) { return (" " + channel_name + " :You have joined too many channels"); }
+// 406 - No need
+// 407 - NEED MORE INFOS
+// 408 - No nedd
+/* 409 */ std::string	ErrNoOrigin () { return (" :No origin specified"); }
+/* 411 */ std::string	ErrNoRecipient (std::string command) { return (" : No recicipent given (" + command + ")"); }
+/* 412 */ std::string	ErrNoTextToSend () { return (" : NO text to send"); }
+/* 413 */ std::string	ErrNoTopLevel (std::string mask) { return (" " + mask + " :No toplevel domain specified"); }
+/* 414 */ std::string	ErrWildTopLevel (std::string mask) { return (" " + mask + " :Wildcard in toplevel domain"); }
+/* 415 */ std::string	ErrBadMask (std::string mask) { return (" " + mask + " :Bad Server/host mask"); }
+/* 421 */ std::string	ErrUnknownCommand (std::string command) { return (" " +  command + "  :Unknown command"); }
+/* 422 */ std::string	ErrNoMotd () { return (" : MOTD File is missing"); }
+/* 423 */ std::string	ErrNoAdminInfo (std::string server) { return (" " + server + " : No administrative info available"); }
+/* 424 */ std::string	ErrFileError (std::string file_op, std::string file) { return (" : File error doing " + file_op + " on " + file); }
+/* 431 */ std::string	ErrNoNicknameGiven () { return ( " :No nickname given"); }
+/* 432 */ std::string	ErrErroneusNickname (std::string nick) { return (" " + nick + " :Erroneous nickname"); }
+/* 433 */ std::string	ErrNicknameInUse (std::string nick) { return (" " + nick + " :Nickname is already in use"); }
+// 436 - No need
+// 437 - No need
+/* 441 */ std::string	ErrUserNotInChannel (std::string nick, std::string channel) { return (" " + nick + " " + channel +" : They aren't on that channel"); }
+/* 442 */ std::string	ErrNotOnChannel (std::string channel) { return (" " + channel + " :You're not on that channel"); }
+/* 443 */ std::string	ErrUserOnChannel (std::string user, std::string channel) { return (" " + user + " " + channel +" :is already on channel"); }
+/* 444 */ std::string	ErrNoLogin (std::string user) { return (" " + user + " :Not logged in"); }
+/* 445 */ std::string	ErrSummonDisabled () { return (" :SUMMON has been disabled"); }
+/* 446 */ std::string	ErrUsersDisabled () { return (" :USERS has be disabled"); }
+/* 451 */ std::string	ErrNotRegistered () { return (" :You have not registered"); }
+/* 461 */ std::string	ErrNeedMoreParams (std::string command) { return (" " + command + " :Not enough parameters"); }
+/* 462 */ std::string	ErrAlreadyRegistered () { return (" :Unauthorized command (already registered)"); }
+// 463 - No need
+/* 464 */ std::string	ErrPasswordMismatch () { return (" : Password incorrect"); }
+// 465 - No need
+// 466 - No need
+/* 467 */ std::string	ErrKeySet (std::string channel) { return (" " + channel + " :Channel key already set"); }
+/* 471 */ std::string	ErrChannelIsFull (std::string channel) { return (" " + channel + " :Cannot join channel (+l)"); }
+/* 472 */ std::string	ErrUnknownMode (std::string letter, std::string channel) { return (" " + letter + " :is unknown mode char to me for " + channel); }
+/* 473 */ std::string	ErrInviteOnlyChan (std::string channel) { return (" " + channel + " :Cannot join channel (+i)"); }
+/* 474 */ std::string	ErrBannedFromChan (std::string channel) { return (" " + channel + " :Cannot join channel (+b)"); }
+/* 475 */ std::string	ErrBadChannelKey (std::string channel) { return (" " + channel + " :Cannot join channel (+k)"); }
+/* 476 */ std::string	ErrBadChanMask (std::string channel) { return (" " + channel + " :Bad Channel Mask"); }
+/* 477 */ std::string	ErrNoChanModes (std::string channel) { return (" " + channel + " :Channel doesn't support mode"); }
+/* 478 */ std::string	ErrBanListFull (std::string channel, std::string letter) { return (" " + channel + " " + letter + " :Channel list is full"); }
+/* 481 */ std::string	ErrNoPrivileges () { return (" : Permission Denied- You're not an IRC operator"); }
+/* 482 */ std::string	ErrChanNoPrivsNeeded (std::string channel) { return (" " + channel + " :You're not channel operator"); }
+/* 483 */ std::string	ErrCantKillServer () { return (" :You can't kill a server"); }
+/* 484 */ std::string	ErrRestricted () { return (" :Your connection is restricted!"); }
+// 485 - No need
+/* 491 */ std::string	ErrNoOperHost () { return (" :No O-lines for your host"); }
+/* 501 */ std::string	ErrUModeUnknownFlag () { return (" :Unknown MODE flag"); }
+/* 502 */ std::string	ErrUsersDontMatch () { return (" :Cannot change mode for tohers users"); }
 
-// TODO make SUMMON cmd to sent ERR_SUMMONDISABLED 
 
-// Examples :
-// 442 :openirc.snt.utwente.nl 442 lolilol #Cimitero :You're not on that channel
-// 474 :openirc.snt.utwente.nl 474 lolilol #Cimitero :Cannot join channel (+b)
-
-
-// TODO check that server_name is in (...) for function where it's needed
 // For user parameter :
-void	irc::numericReply(int num_nb, int fd, std::string server, \
-	std::string nick, int param_nb, ...) {
-	va_list						params;
-	std::vector<std::string>	s_params;
+void	irc::numericReply(int num_nb, User* user, std::vector<std::string> s_params) {
 	std::string					msg;
 	char		 				s_num_nb[4];
+	// TODO maybe modify following functions calls
+	int							fd = user->getFd();
+	std::string					nick = user->getNickname();
+	std::string					server = user->getServer()->getName();
 
 	if (nick.empty()) {
 		nick += "*";
@@ -105,15 +150,9 @@ void	irc::numericReply(int num_nb, int fd, std::string server, \
 	sprintf(s_num_nb, "%.3d", num_nb);
 	msg = ":" + server + " " + s_num_nb + " " + nick;
 
-	va_start(params, param_nb);
-	for	(int i = 0; i < param_nb; i++) {
-		std::string curr = va_arg(params, char*);
-		s_params.push_back(curr);
-	}
 	switch (num_nb) {
-		// TODO make system for non obligatory arguments or missing arguments
 		case 1:
-			msg += RplWelcome(server, nick, s_params[0], s_params[1], s_params[2]);
+			msg += RplWelcome(nick, s_params[0], s_params[1]);
 			break;
 		case 2:
 			msg += RplYourHost(server, s_params[0]);
@@ -122,12 +161,7 @@ void	irc::numericReply(int num_nb, int fd, std::string server, \
 			msg += RplCreated(s_params[0]);
 			break;
 		case 4:
-			msg += RplMyInfo(server, s_params[0], s_params[1], s_params[2], s_params[3]);
-			break;
-		case 5:
-			msg += RplBounce(server, s_params[0]);
-		case 20:
-			msg += RplProcessConnection();
+			msg += RplMyInfo(server, s_params[0], s_params[1], s_params[2]);
 			break;
 		case 221:
 			msg += RplUModeIs(s_params[0]);
@@ -160,7 +194,7 @@ void	irc::numericReply(int num_nb, int fd, std::string server, \
 			msg += RplWhoIsUser(s_params[0], s_params[1], s_params[2], s_params[3]);
 			break;
 		case 312:
-			msg += RplWhoIsServer(server, s_params[0]);
+			msg += RplWhoIsServer(server, s_params[0], s_params[1]);
 			break;
 		case 313:
 			msg += RplWhoIsOperator(s_params[0]);
@@ -240,56 +274,142 @@ void	irc::numericReply(int num_nb, int fd, std::string server, \
 		case 391:
 			msg += RplTime(server, s_params[0]);
 			break;
+		case 401:
+			msg += ErrNoSuchNick(s_params[0]);
+			break;
+		case 402:
+			msg += ErrNoSuchServer(s_params[0]);
+			break;
+		case 403:
+			msg += ErrNoSuchChannel(s_params[0]);
+			break;
+		case 404:
+			msg += ErrCannotSendToChan(s_params[0]);
+			break;
+		case 405:
+			msg += ErrTooManyChannels(s_params[0]);
+			break;
+		case 409:
+			msg += ErrNoOrigin();
+			break;
+		case 411:
+			msg += ErrNoRecipient(s_params[0]);
+			break;
+		case 412:
+			msg += ErrNoTextToSend();
+			break;
+		case 413:
+			msg += ErrNoTopLevel(s_params[0]);
+			break;
+		case 414:
+			msg += ErrWildTopLevel(s_params[0]);
+			break;
+		case 415:
+			msg += ErrBadMask(s_params[0]);
+			break;
+		case 421:
+			msg += ErrUnknownCommand(s_params[0]);
+			break;
+		case 422:
+			msg += ErrNoMotd();
+			break;
+		case 423:
+			msg += ErrNoAdminInfo(server);
+			break;
+		case 424:
+			msg += ErrFileError(s_params[0], s_params[1]);
+			break;
+		case 431:
+			msg += ErrNoNicknameGiven();
+			break;
+		case 432:
+			msg += ErrErroneusNickname(s_params[0]);
+			break;
+		case 433:
+			msg += ErrNicknameInUse(s_params[0]);
+			break;
+		case 441:
+			msg += ErrUserNotInChannel(nick, s_params[0]);
+			break;
+		case 442:
+			msg += ErrNotOnChannel(s_params[0]);
+			break;	
+		case 443:
+			msg += ErrUserOnChannel(s_params[0], s_params[1]);
+			break;
+		case 444:
+			msg += ErrNoLogin(s_params[0]);
+			break;
+		case 445:
+			msg += ErrSummonDisabled();
+			break;
+		case 446:
+			msg += ErrUsersDisabled();
+			break;
+		case 451:
+			msg += ErrNotRegistered();
+			break;
+		case 461:
+			msg += ErrNeedMoreParams(s_params[0]);
+			break;
+		case 462:
+			msg += ErrAlreadyRegistered();
+			break;
+		case 464:
+			msg += ErrPasswordMismatch();
+			break;
+		case 467:
+			msg += ErrKeySet(s_params[0]);
+			break;
+		case 471:
+			msg += ErrChannelIsFull(s_params[0]);
+			break;
+		case 472:
+			msg += ErrUnknownMode(s_params[0], s_params[1]);
+			break;
+		case 473:
+			msg += ErrInviteOnlyChan(s_params[0]);
+			break;
+		case 474:
+			msg += ErrBannedFromChan(s_params[0]);
+			break;
+		case 475:
+			msg += ErrBadChannelKey(s_params[0]);
+			break;
+		case 476:
+			msg += ErrBadChanMask(s_params[0]);
+			break;
+		case 477:
+			msg += ErrNoChanModes(s_params[0]);
+			break;
+		case 478:
+			msg += ErrBanListFull(s_params[0], s_params[1]);
+			break;
+		case 481:
+			msg += ErrNoPrivileges();
+			break;
+		case 482:
+			msg += ErrChanNoPrivsNeeded(s_params[0]);
+			break;
+		case 483:
+			msg += ErrCantKillServer();
+			break;
+		case 484:
+			msg += ErrRestricted();
+			break;
+		case 491:
+			msg += ErrNoOperHost();
+			break;
+		case 501:
+			msg += ErrUModeUnknownFlag();
+			break;
+		case 502:
+			msg += ErrUsersDontMatch();
+			break;
 		default :
-			// TODO set error
+			msg += ErrUnknownCommand(s_num_nb);
 			break;
 	}
 	msg += END;
 	sendNumeric(fd, msg);
-
-}
-
-int main() {
-	irc::numericReply(1, 1, "server", "nick", 3, "user", "network", "host");
-	irc::numericReply(2, 1, "server", "nick", 1, "version");
-	irc::numericReply(3, 1, "server", "nick", 1, "date");
-	irc::numericReply(4, 1, "server", "nick", 4, "version", "mode user", "mode channel", "more");
-	irc::numericReply(20, 1, "server", "*", 0);
-	irc::numericReply(221, 1, "server", "nick", 1, "user modes");
-	irc::numericReply(256, 1, "server", "nick", 0);
-	irc::numericReply(257, 1, "server", "nick", 1, "adminloc1");
-	irc::numericReply(258, 1, "server", "nick", 1, "adminloc2");
-	irc::numericReply(259, 1, "server", "nick", 1, "adminemail");
-	irc::numericReply(301, 1, "server", "nick", 2, "from_dest", "Is away");
-	irc::numericReply(302, 1, "server", "nick", 1, "user=+/-host");
-	irc::numericReply(305, 1, "server", "nick", 0);
-	irc::numericReply(306, 1, "server", "nick", 0);
-	irc::numericReply(311, 1, "server", "nick", 4, "nick2", "user", "host", "real_name");
-	irc::numericReply(312, 1, "server", "nick", 1, "Infos about server");
-	irc::numericReply(313, 1, "server", "nick", 1, "nick2");
-	irc::numericReply(315, 1, "server", "nick", 1, "searched");
-	irc::numericReply(318, 1, "server", "nick", 0);
-	irc::numericReply(322, 1, "server", "nick", 3, "channel", "visible", "topic");
-	irc::numericReply(323, 1, "server", "nick", 0);
-	irc::numericReply(324, 1, "server", "nick", 3, "channel", "modes", "params");
-	irc::numericReply(331, 1, "server", "nick", 1, "channel");
-	irc::numericReply(332, 1, "server", "nick", 2, "channel", "topic");
-	irc::numericReply(341, 1, "server", "nick", 1, "channel");
-	irc::numericReply(346, 1, "server", "nick", 2, "channel", "invitemask");
-	irc::numericReply(347, 1, "server", "nick", 1, "channel");
-	irc::numericReply(348, 1, "server", "nick", 2, "channel", "exceptionmask");
-	irc::numericReply(349, 1, "server", "nick", 1, "channel");	 
-	irc::numericReply(351, 1, "server", "nick", 3, "version", "debug", "comments");
-	irc::numericReply(352, 1, "server", "nick", 6, "channel", "user", "host", "more", "hopcount", "real name");
-	irc::numericReply(353, 1, "server", "nick", 3, "type", "channel", "nicks");
-	irc::numericReply(366, 1, "server", "nick", 1, "channel");
-	irc::numericReply(367, 1, "server", "nick", 2, "channel", "mask");
-	irc::numericReply(368, 1, "server", "nick", 1, "channel");
-	irc::numericReply(371, 1, "server", "nick", 1, "infos");
-	irc::numericReply(372, 1, "server", "nick", 1, "line");
-	irc::numericReply(374, 1, "server", "nick", 0);
-	irc::numericReply(375, 1, "server", "nick", 0);
-	irc::numericReply(376, 1, "server", "nick", 0);
-	irc::numericReply(381, 1, "server", "nick", 0);
-	irc::numericReply(391, 1, "server", "nick", 1, "time");
 }
