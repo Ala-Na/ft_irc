@@ -150,7 +150,6 @@ void	irc::numericReply(int num_nb, User* user, std::vector<std::string>& s_param
 	msg = ":" + server + " " + s_num_nb + " " + nick;
 
 	switch (num_nb) {
-		// TODO make system for non obligatory arguments or missing arguments
 		case 1:
 			msg += irc::RplWelcome(nick, s_params[0], s_params[1]);
 			break;
@@ -178,21 +177,6 @@ void	irc::numericReply(int num_nb, User* user, std::vector<std::string>& s_param
 		case 259:
 			msg += irc::RplAdminEmail(s_params[0]);
 			break;
-		case 221:
-			msg += RplUModeIs(s_params[0]);
-			break;
-		case 256:
-			msg += RplAdminMe(server);
-			break;
-		case 257:
-			msg += RplAdminLocOne(s_params[0]);
-			break;
-		case 258:
-			msg += RplAdminLocTwo(s_params[0]);
-			break;
-		case 259:
-			msg += RplAdminEmail(s_params[0]);
-			break;
 		case 301:
 			msg += irc::RplAway(s_params[0], s_params[1]);
 			break;
@@ -217,11 +201,11 @@ void	irc::numericReply(int num_nb, User* user, std::vector<std::string>& s_param
 		case 315:
 			msg += irc::RplEndOfWho(s_params[0]);
 			break;
-		case 315:
-			msg += RplEndOfWho(s_params[0]);
-			break;
 		case 318:
 			msg += irc::RplEndOfWhoIs();
+			break;
+		case 319:
+			msg += irc::RplWhoIsChannels(s_params[0], s_params[1]);
 			break;
 		case 322:
 			msg += irc::RplList(s_params[0], s_params[1], s_params[2]);
@@ -423,69 +407,6 @@ void	irc::numericReply(int num_nb, User* user, std::vector<std::string>& s_param
 			break;
 		case 502:
 			msg += irc::ErrUsersDontMatch();
-			break;
-		case 324:
-			msg += RplChannelModeIs(s_params[0], s_params[1], s_params[2]);
-			break;
-		case 331:
-			msg += RplNoTopic(s_params[0]);
-			break;
-		case 332:
-			msg += RplTopic(s_params[0], s_params[1]);
-			break;
-		case 341:
-			msg += RplInviting(nick, s_params[0]);
-			break;
-		case 346:
-			msg += RplInviteList(s_params[0], s_params[1]);
-			break;
-		case 347:
-			msg += RplEndOfInviteList(s_params[0]);
-			break;
-		case 348:
-			msg += RplExceptList(s_params[0], s_params[1]);
-			break;
-		case 349:
-			msg += RplEndOfExceptList(s_params[0]);
-			break;
-		case 351:
-			msg += RplVersion(server, s_params[0], s_params[1], s_params[2]);
-			break;
-		case 352:
-			msg += RplWhoReply(server, nick, s_params[0], s_params[1], s_params[2], s_params[3], s_params[4], s_params[5]);
-			break;
-		case 353:
-			msg += RplNamReply(s_params[0], s_params[1], s_params[2]);
-			break;
-		case 366:
-			msg += RplEndOfNames(s_params[0]);
-			break;
-		case 367:
-			msg += RplBanList(s_params[0], s_params[1]);
-			break;
-		case 368:
-			msg += RplEndOfBanList(s_params[0]);
-			break;
-		case 371:
-			msg += RplInfo(s_params[0]);
-			break;
-		case 372:
-			msg += RplMotd(s_params[0]);
-			break;
-		case 374:
-			msg += RplEndOfInfo();
-			break;
-		case 375:
-			msg += RplMotdStart(server);
-			break;
-		case 376:
-			msg += RplEndOfMotd();
-			break;
-		case 381:
-			msg += RplYourOper();
-			break;
-		case 391:
-			msg += RplTime(server, s_params[0]);
 			break;
 		default :
 			msg += irc::ErrUnknownCommand(s_num_nb);
