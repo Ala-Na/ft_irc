@@ -24,7 +24,7 @@ void	Command::parseCommand () {
 		this->prefix = first_word;
 	}
 	std::cout << this->prefix << std::endl;
-	std::transform(this->prefix.begin(), this->prefix.end(), this->prefix.begin(), ::toupper);
+	ft_toupper_str(this->prefix);
 	this->param = this->content;
 	std::cout << this->param << std::endl;
 	this->goToExecution();
@@ -104,51 +104,13 @@ void	Command::intNick()
 // 	ERR_RESTRICTED
 }
 
-int	there_is_no_cmd(char c, std::string str)
-{
-	unsigned long	i;
-
-	i = 0;
-	while (str[i])
-	{
-		if (str[i] == c)
-			return (0);
-		i++;
-	}
-	return (1);
-};
-
-std::vector<std::string>	split_cmd(std::string text, std::string space_delimiter)
-{
-	std::vector<std::string> words;
-
-	size_t pos = 0;
-	while ((pos = text.find_first_of(space_delimiter)) != std::string::npos)
-	{
-		std::cout << "substr: " << text.substr(0) << std::endl;
-		if (text[0] == ':')
-		{
-			words.push_back(text.substr(0));
-			return (words);
-		}
-		words.push_back(text.substr(0, pos));
-		int nbDelimiters = 0;
-		while (there_is_no_cmd(text[pos + nbDelimiters], space_delimiter) == 0)
-			nbDelimiters++;
-		text.erase(0, pos + nbDelimiters);
-	}
-	words.push_back(text.substr(0));
-	words.push_back("\0");
-	return (words);
-}
-
 // void	Command::intUserMode()
 // {
 // 	std::string param = getParam();
 // 	std::vector<std::string>	params;
 
 // 	// User	usr;
-// 	params = split_cmd(param, " ");
+// 	params = irc::split(param, " ");
 // 	// need to select the right user in the channel
 // 	user->mode(params);
 // 	/*
@@ -219,15 +181,10 @@ void	Command::intUserhost()
 	unsigned long				i;
 
 	std::string	reply;
-	params = split_cmd(param, " ");
-	if (params.size() == 0)	// ERR_NEEDMOREPARAMS
-	{
-		std::vector<std::string> para;
-		params.push_back(prefix);
-		irc::numericReply(461, user, para);
-		return ;
-	}
-	i = 0;
+	params = irc::split(param, " ");
+	// if (params.size() == 0)
+		// return ERR_NEEDMOREPARAMS 461
+	unsigned long		i = 0;
 	while (i < params.size())
 	{
 		reply.append(user->getNickname());
@@ -476,9 +433,9 @@ void Command::intJoin()
 	std::vector<User> 			users;
 	std::string 				nicks;
 
-	vec = split_cmd(param, " ");
-	vec_chan_names = split_cmd(vec[0], ",");
-	vec_keys = split_cmd(vec[1], ",");
+	vec = irc::split(param, " ");
+	vec_chan_names = irc::split(vec[0], ",");
+	vec_keys = irc::split(vec[1], ",");
 	if (vec_chan_names.size() == 1 && vec_keys.size() == 0 && vec_chan_names[0] == "0")    // JOIN 0
 	{
 		intQuit();
@@ -544,7 +501,7 @@ void Command::intJoin()
 			i++;
 			continue ;
 		}
-		if (there_is_no_cmd('i', chan_found->getChanMode()) == 0)   // ERR_INVITEONLYCHAN
+		if (irc::there_is_no('i', chan_found->getChanMode()) == 0)   // ERR_INVITEONLYCHAN
 		{
 			params.push_back(vec_chan_names[i]);
 			irc::numericReply(473, user, params);
@@ -602,7 +559,7 @@ void Command::intInvite()
 	User *                      user_asked;
 	std::vector<std::string> 	params;
 
-	vec = split_cmd(param, " ");
+	vec = irc::split(param, " ");
 	if (vec.size() < 2)  // ERR_NEEDMOREPARAMS
 	{
 		params.push_back(prefix);
@@ -628,7 +585,7 @@ void Command::intInvite()
 		irc::numericReply(442, user, params);
 		return ;
 	}
-	if (there_is_no_cmd('i', chan_found->getChanMode()) == 0 && chan_found->isOperator(*user) == 0)  // ERR_CHANOPRIVSNEEDED
+	if (irc::there_is_no('i', chan_found->getChanMode()) == 0 && chan_found->isOperator(*user) == 0)  // ERR_CHANOPRIVSNEEDED
 	{
 		params.push_back(chan_name);
 		irc::numericReply(482, user, params);
@@ -662,7 +619,7 @@ void Command::intOper()
 	// int                         ret;
 	std::vector<std::string> 	params;
 
-	vec = split_cmd(param, " ");
+	vec = irc::split(param, " ");
 	if (vec.size() < 2)  // ERR_NEEDMOREPARAMS
 	{
 		params.push_back(prefix);
@@ -694,8 +651,8 @@ void Command::intPart()
 	Channel                     *chan_found;
 	std::vector<std::string> 	params;
 
-	vec = split_cmd(param, ":");
-	vec_chan_names = split_cmd(vec[0], ",");
+	vec = irc::split(param, ":");
+	vec_chan_names = irc::split(vec[0], ",");
 	if (vec_chan_names.size() == 0)  // ERR_NEEDMOREPARAMS
 	{
 		params.push_back(prefix);
@@ -783,7 +740,7 @@ void    Command::intNames()
 	}
 	else
 	{
-		vec_chan_names = split_cmd(param, ",");
+		vec_chan_names = irc::split(param, ",");
 		i = 0;
 		while (i < vec_chan_names.size())
 		{
@@ -826,7 +783,7 @@ void Command::intList()
 	}
 	else
 	{
-		vec_chan_names = split_cmd(param, ",");
+		vec_chan_names = irc::split(param, ",");
 		i = 0;
 		while (i < vec_chan_names.size())
 		{
@@ -859,15 +816,15 @@ void Command::intKick()
 	Channel                     *chan_found;
 	std::vector<std::string>	params;
 
-	vec = split_cmd(param, " ");
+	vec = irc::split(param, " ");
 	if (vec.size() < 2)      // ERR_NEEDMOREPARAMS
 	{
 		params.push_back(prefix);
 		irc::numericReply(461, user, params);
 		return ;
 	}
-	vec_chan_names = split_cmd(vec[0], ",");
-	vec_usernames = split_cmd(vec[1], ",");
+	vec_chan_names = irc::split(vec[0], ",");
+	vec_usernames = irc::split(vec[1], ",");
 	if (vec[2].size() > 0)
 		message = vec[2];
 	else
@@ -931,7 +888,7 @@ void Command::intTopic()
 	}
 	if (param[param.size() - 1] == ':')
 		param += " ";
-	vec = split_cmd(param, ":");
+	vec = irc::split(param, ":");
 	name = vec[0];
 	if (name[0] != '&' && name[0] != '#' && name[0] != '+' && name[0] !=  '!')
 		name.insert(0, "#");
@@ -948,14 +905,14 @@ void Command::intTopic()
 		new_topic = vec[1];
 	else
 		new_topic = "";
-	if (there_is_no_cmd(':', param))    // RPL_TOPIC
+	if (irc::there_is_no(':', param))    // RPL_TOPIC
 	{
 		params.push_back(name);
 		params.push_back(chan_found->getChanTopic());
 		irc::numericReply(332, user, params);
 		return ;
 	}
-	if (there_is_no_cmd('t', chan_found->getChanMode()) == 0 && chan_found->isOperator(*user) == 0) // ERR_CHANOPRIVSNEEDED
+	if (irc::there_is_no('t', chan_found->getChanMode()) == 0 && chan_found->isOperator(*user) == 0) // ERR_CHANOPRIVSNEEDED
 	{
 		params.push_back(name);
 		irc::numericReply(482, user, params);
@@ -1021,7 +978,7 @@ void Command::intKill()
 	std::vector<User *>::iterator	found;
 	std::vector<std::string> 		params;
 
-	vec = split_cmd(param, " ");
+	vec = irc::split(param, " ");
 	if (vec.size() < 2)      // ERR_NEEDMOREPARAMS
 	{
 		params.push_back(prefix);
@@ -1082,7 +1039,7 @@ void	 Command::intMode()
 	User *                      user_found;
 	std::vector<std::string> 	params;
 
-	vec = split_cmd(param, " ");
+	vec = irc::split(param, " ");
 	user->mode(vec);
 	/*
 	221    RPL_UMODEIS
@@ -1116,7 +1073,7 @@ void	 Command::intMode()
 	if (vec.size() > 2)
 		arg = vec[2];
 	chan_found->addMode(letters);
-	if (there_is_no_cmd('k', letters) == 0 && vec.size() == 3)
+	if (irc::there_is_no('k', letters) == 0 && vec.size() == 3)
 	{
 		if (mode[0] == '-' && arg == chan_found->getChanPassword())
 			chan_found->setChanPassword("");
@@ -1129,14 +1086,14 @@ void	 Command::intMode()
 		else if (mode[0] == '+')
 			chan_found->setChanPassword(arg);
 	}
-	if (there_is_no_cmd('l', letters) == 0)
+	if (irc::there_is_no('l', letters) == 0)
 	{
 		if (mode[0] == '-' && vec.size() == 2)
 			chan_found->setMaxNbUsersInChan(100);
 		else if (mode[0] == '+')
 			chan_found->setMaxNbUsersInChan(std::atoi(arg.c_str()));
 	}
-	if (there_is_no_cmd('o', letters) == 0 && vec.size() == 3)
+	if (irc::there_is_no('o', letters) == 0 && vec.size() == 3)
 	{
 		user_found = server.getUserByUsername(arg);
 		if (user_found == NULL)         // ERR_USERNOTINCHANNEL
@@ -1151,7 +1108,7 @@ void	 Command::intMode()
 		else if (mode[0] == '+')
 			chan_found->addOperator(*user_found);
 	}
-	if (there_is_no_cmd('O', letters) == 0 && vec.size() == 2)
+	if (irc::there_is_no('O', letters) == 0 && vec.size() == 2)
 	{
 		message = chan_found->getChanCreator();
 		ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);

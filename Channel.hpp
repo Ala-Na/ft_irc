@@ -9,6 +9,7 @@
 # include <vector>
 # include "Server.hpp"
 # include "User.hpp"
+# include "Utilitary.hpp"
 # include <sys/types.h>
 # include <sys/socket.h>
 

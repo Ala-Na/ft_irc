@@ -5,7 +5,7 @@ using namespace irc;
 
 #define END "\r\n"
 
-void	sendNumeric(int fd, std::string msg) {
+void	irc::sendNumeric(int fd, std::string msg) {
 	int bytes_send = send(fd, msg.c_str(), msg.size(), 0);
 	if (bytes_send < msg.size()) {
 		std::cerr << "Error while sending message to fd = " << fd << std::endl;
@@ -411,5 +411,5 @@ void	irc::numericReply(int num_nb, User* user, std::vector<std::string>& s_param
 			break;
 	}
 	msg += END;
-	sendNumeric(fd, msg);
+	irc::sendNumeric(fd, msg);
 }

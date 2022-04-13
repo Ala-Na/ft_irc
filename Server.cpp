@@ -20,6 +20,71 @@ Server::~Server() {
 	}
 }
 
+int	Server::readConfFile() {
+	std::ifstream	in;
+	int				res = 0;
+	std::string		line;
+	std::string		key;
+	std::string		value = "";
+    size_t			found;
+
+	in.open("./ft_irc.conf", std::ifstream::in);
+	if (!in.good()) {
+		std::cerr << "Can't open configuration file" << std::endl;
+		std::cerr << "Please check that ./ft_irc.conf is present in Server folder" << std::endl; 
+		return (-1);
+	}
+	while (!in.eof() && in.good()) {
+        value = "";
+		std::getline(in, line);
+        if ((found = line.find_first_not_of(' ')) != std::string::npos) {
+        	line.erase(0, found);
+		}
+        if (line.empty() || line[found] == '#') {
+            continue;
+        } else if ((found = line.find("=\"")) == std::string::npos) {
+			std::cerr << "Should be under format key=\"value\"" << std::endl;
+			res = -1;
+			break;
+		}
+		key = line.substr(0, found);
+		line.erase(0, found + 2);
+		while ((found = line.find('"')) == std::string::npos) {
+			value.append(line);
+			std::getline(in, line);
+			value.append(" ");
+		}
+		value += line.substr(0, found);
+		line.erase(0, found + 1);
+		if (!line.empty()) {
+			std::cerr << "Error in configuration file" << std::endl;
+			std::cerr << "key=\"value\" should be followed by a line return" << std::endl;
+			res = -1;
+			break;
+		}
+		this->conf.insert(std::make_pair(key, value));
+	}
+	if (!in.eof()) {
+		std::cerr << "Error while reading configuration file" << std::endl;
+		res = -1;
+	}
+	in.close();
+	return res;
+}
+
+int	Server::checkConf() {
+	if (this->conf.count("name") == 0 || this->conf.count("version") == 0
+		|| this->conf.count("adminloc1") == 0 || this->conf.count("adminemail") == 0) {
+		std::cerr << "Missing at least one non-optionnal configuration parameter" << std::endl;
+		return (-1);
+	}
+	if ((this->conf.find("name")->second).size() > 63) {
+		std::cerr << "Server name should be under 63 characters (please, modify .conf file)" << std::endl;
+		return (-1);
+	}
+	return 0;
+}
+
 int	Server::initServer() {
 	struct addrinfo	hints;
 	struct addrinfo	*ai;
@@ -290,58 +355,25 @@ void	Server::listChannels (User* user) {
 	// Send RPL_LISTEND 323
 }
 
-int	there_is_no_server(char c, std::string str)
-{
-	int	i;
-
-	i = 0;
-	while (str[i])
-	{
-		if (str[i] == c)
-			return (0);
-		i++;
-	}
-	return (1);
-};
-
-std::vector<std::string>	split_server(std::string text, std::string space_delimiter)
-{
-	std::vector<std::string> words;
-
-	size_t pos = 0;
-	while ((pos = text.find_first_of(space_delimiter)) != std::string::npos)
-	{
-		std::cout << "substr: " << text.substr(0) << std::endl;
-		if (text[0] == ':')
-		{
-			words.push_back(text.substr(0));
-			return (words);
-		}
-		words.push_back(text.substr(0, pos));
-		int nbDelimiters = 0;
-		while (there_is_no_server(text[pos + nbDelimiters], space_delimiter) == 0)
-			nbDelimiters++;
-		text.erase(0, pos + nbDelimiters);
-	}
-	words.push_back(text.substr(0));
-	words.push_back("\0");
-	return (words);
-}
-
 void	Server::getMotdFile(User* user, std::string parameters) {
 	int fd = user->getFd();
 	(void)fd;
 
+<<<<<<< HEAD
 	// TODO use split of channel_management branch
 	if (!parameters.empty() && parameters.compare(this->name)) {
+=======
+	// TODO use irc::split of channel_management branch
+	if (!parameters.empty() && parameters.compare((conf.find("name"))->second)) {
+>>>>>>> 1fce082 (progressing)
 		// Send ERR_NOSUCHSERVER 402
 		return ;
-	} else if (motd.empty()) {
+	} else if ((conf.find("motd"))->second.empty()) {
 		// Send ERR_NOMOTD 422
 		return ;
 	}
 	// Send RPL_MOTDSTART 375
-	std::vector<std::string> lines = split_server(motd, "\n");
+	//std::vector<std::string> lines = irc::split(motd, "\n");
 	for (std::vector<std::string>::iterator it = lines.begin(); it != lines.end(); it++) {
 		// Send RPL_MOTD 372 with (*it) 
 	}
