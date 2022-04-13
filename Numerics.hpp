@@ -12,9 +12,6 @@
 #include "Server.hpp"
 #include "User.hpp"
 
-#include "Server.hpp"
-#include "User.hpp"
-
 namespace irc {
 	class Server;
 	class User;

@@ -178,13 +178,18 @@ void	Command::intUserhost()
 {
 	std::string param = getParam();
 	std::vector<std::string>	params;
-	std::string					reply;
-	unsigned long				i = 0;
+	unsigned long				i;
 
+	std::string	reply;
 	params = irc::split(param, " ");
-	// if (params.size() == 0)
-		// return ERR_NEEDMOREPARAMS 461
-
+	if (params.size() == 0)	// ERR_NEEDMOREPARAMS
+	{
+		std::vector<std::string> para;
+		params.push_back(prefix);
+		irc::numericReply(461, user, para);
+		return ;
+	}
+	i = 0;
 	while (i < params.size())
 	{
 		reply.append(user->getNickname());
@@ -548,34 +553,6 @@ void Command::intJoin()
 	}
 	return ;
 }
-
-// User *  Server::getUserByUsername(std::string name)
-// {
-// 	int i;
-
-// 	i = 0;
-// 	while (i < users.size())
-// 	{
-// 		if (users[i].getName() == name)
-// 			return (&users[i]);
-// 		i++;
-// 	}
-// 	return (NULL);
-// }
-
-// User * Server::getUserByNick(std::string nick)
-// {
-// 	int i;
-
-// 	i = 0;
-// 	while (i < users.size())
-// 	{
-// 		if (users[i].getNick() == nick)
-// 			return (&users[i]);
-// 		i++;
-// 	}
-// 	return (NULL);
-// }
 
 void Command::intInvite()
 {
