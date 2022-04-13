@@ -6,7 +6,7 @@
 /*   By: anadege <anadege@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/31 11:14:35 by cboutier          #+#    #+#             */
-/*   Updated: 2022/04/13 23:17:56 by anadege          ###   ########.fr       */
+/*   Updated: 2022/04/13 23:19:13 by anadege          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -128,10 +128,7 @@ namespace irc
 			void	setRealName(std::string real_name);
 			void	setHostname(std::string hostname);
 			void	setAwayMessage(std::string msg);
-<<<<<<< HEAD
 			void	setParams(std::vector<std::string> params);
-=======
->>>>>>> 95edfa0b41dcc3047475075c5835d344d49fc006
 
 			void	sendMessage(int fd, std::string msg);
 
