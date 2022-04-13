@@ -3,8 +3,7 @@
 using namespace irc;
 
 // TODO check name validity
-Server::Server(std::string password, const char* port) : password(password), port(port), \
-	name("In Real unControl - An ft_irc server")
+Server::Server(std::string password, const char* port) : password(password), port(port)
 {
 	std::cout << "Initializating server..." << std::endl;
 	this->users = std::vector<User *>();
@@ -78,7 +77,7 @@ int	Server::checkConf() {
 		std::cerr << "Missing at least one non-optionnal configuration parameter" << std::endl;
 		return (-1);
 	}
-	if ((this->conf.find("name")->second).size() > 63) {
+	if ((this->getName()).size() > 63) {
 		std::cerr << "Server name should be under 63 characters (please, modify .conf file)" << std::endl;
 		return (-1);
 	}
@@ -92,6 +91,11 @@ int	Server::initServer() {
 	int	server_fd;
 	int	opt = 1;
 	int res;
+
+
+	if (this->readConfFile() == -1 || this->checkConf() == -1) {
+		return (-1);
+	}
 
 	std::memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
@@ -263,7 +267,7 @@ void	Server::datasExtraction(std::string& buf, int pos) {
 
 std::string	Server::getName()
 {
-	return (name);
+	return ((this->conf.find("name"))->second);
 }
 
 Server&	Server::getServer() {
@@ -356,16 +360,9 @@ void	Server::listChannels (User* user) {
 }
 
 void	Server::getMotdFile(User* user, std::string parameters) {
-	int fd = user->getFd();
-	(void)fd;
-
-<<<<<<< HEAD
-	// TODO use split of channel_management branch
-	if (!parameters.empty() && parameters.compare(this->name)) {
-=======
+	(void)user;
 	// TODO use irc::split of channel_management branch
 	if (!parameters.empty() && parameters.compare((conf.find("name"))->second)) {
->>>>>>> 1fce082 (progressing)
 		// Send ERR_NOSUCHSERVER 402
 		return ;
 	} else if ((conf.find("motd"))->second.empty()) {
@@ -374,16 +371,17 @@ void	Server::getMotdFile(User* user, std::string parameters) {
 	}
 	// Send RPL_MOTDSTART 375
 	//std::vector<std::string> lines = irc::split(motd, "\n");
-	for (std::vector<std::string>::iterator it = lines.begin(); it != lines.end(); it++) {
+	//for (std::vector<std::string>::iterator it = lines.begin(); it != lines.end(); it++) {
 		// Send RPL_MOTD 372 with (*it) 
-	}
+	//}
 	// Send RPL_ENDOFMOTD 376
 }
 
 void	Server::retrieveTime(User* user, std::string parameters) {
 	// int fd = user->getFd();
+	std::string name = this->getName();
 
-	if (!parameters.empty() && parameters.compare(this->name)) {
+	if (!parameters.empty() && parameters.compare(name)) {
 		// Send ERR_NOSUCHSERVER 402
 		std::vector<std::string> params;
 		params.push_back(name);
@@ -400,9 +398,9 @@ void	Server::retrieveTime(User* user, std::string parameters) {
 }
 
 void	Server::retrieveVersion(User* user, std::string parameters) {
-	// int fd = user->getFd();
+	std::string name = this->getName();
 
-	if (!parameters.empty() && parameters.compare(this->name)) {
+	if (!parameters.empty() && parameters.compare(name)) {
 		// Send ERR_NOSUCHSERVER 402
 		std::vector<std::string> params;
 		params.push_back(name);
@@ -411,7 +409,7 @@ void	Server::retrieveVersion(User* user, std::string parameters) {
 	}
 	std::vector<std::string> params;
 	params.push_back(name);
-	params.push_back(version);
+	params.push_back(this->conf.find("version")->second);
 	params.push_back("");		// debug ??
 	params.push_back("");		// comments ??
 	irc::numericReply(351, user, params);
@@ -419,9 +417,9 @@ void	Server::retrieveVersion(User* user, std::string parameters) {
 }
 
 void	Server::getAdmin(User* user, std::string parameters) {
-	// int fd = user->getFd();
+	std::string name = this->getName();
 
-	if (!parameters.empty() && parameters.compare(this->name)) {
+	if (!parameters.empty() && parameters.compare(name)) {
 		// Send ERR_NOSUCHSERVER 402
 		std::vector<std::string> params;
 		params.push_back(name);
@@ -432,13 +430,13 @@ void	Server::getAdmin(User* user, std::string parameters) {
 	params.push_back(name);
 	irc::numericReply(256, user, params);
 	params.clear();
-	params.push_back(adminloc1);
+	params.push_back(this->conf.find("adminloc1")->second);
 	irc::numericReply(257, user, params);
 	params.clear();
-	params.push_back(adminloc2);
+	params.push_back(this->conf.find("adminloc2")->second);
 	irc::numericReply(258, user, params);
 	params.clear();
-	params.push_back(adminemail);
+	params.push_back(this->conf.find("adminemail")->second);
 	irc::numericReply(259, user, params);
 	// Send RPL_ADMINME 256	
 	// Send RPL_ADMINLOC1 257 with this->adminloc1
@@ -458,12 +456,13 @@ void	Server::sendError (User* user, std::string parameter) {
 }
 
 void	Server::sendPong (User* user, std::string parameter) {
-	int fd = user->getFd();
+	int	fd = user->getFd();
+	std::string name = this->conf.find("name")->second;
 
 	parameter.insert(0, " :");
-	parameter.insert(0, this->name);
+	parameter.insert(0, name);
 	parameter.insert(0, " PONG ");
-	parameter.insert(0, this->name);
+	parameter.insert(0, name);
 	parameter.insert(0, " :");
 	ssize_t bytes_send = send(fd, &parameter, parameter.size(), 0);
 	if (bytes_send == -1) {
@@ -488,14 +487,14 @@ std::string	Server::getPass()
 	return (password);
 }
 
-std::string	*Server::getVersionAddr()
+std::string	Server::getVersion()
 {
-	return (&version);
+	return (this->conf.find("version")->second);
 }
 
 std::string	Server::getMotd()
 {
-	return (motd);
+	return (this->conf.find("motd")->second);
 }
 
 std::vector<User *>	Server::getServOp()

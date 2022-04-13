@@ -3,12 +3,14 @@
 using namespace irc;
 
 
-std::string ft_toupper_str(std::string& str)
+std::string irc::ft_toupper_str(std::string& str)
 {
-	std::transform(str.begin(), str.end(), str.begin(), ::toupper);
+	std::string new_str = str;
+	std::transform(new_str.begin(), new_str.end(), new_str.begin(), ::toupper);
+	return new_str;
 }
 
-int	there_is_no(char c, std::string str)
+int	irc::there_is_no(char c, std::string str)
 {
 	int	i;
 
@@ -22,7 +24,7 @@ int	there_is_no(char c, std::string str)
 	return (1);
 };
 
-std::vector<std::string>	split(std::string text, std::string space_delimiter)
+std::vector<std::string>	irc::split(std::string text, std::string space_delimiter)
 {
 	std::vector<std::string> words;
 

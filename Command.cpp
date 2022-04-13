@@ -24,7 +24,7 @@ void	Command::parseCommand () {
 		this->prefix = first_word;
 	}
 	std::cout << this->prefix << std::endl;
-	ft_toupper_str(this->prefix);
+	this->prefix = ft_toupper_str(this->prefix);
 	this->param = this->content;
 	std::cout << this->param << std::endl;
 	this->goToExecution();
@@ -178,13 +178,13 @@ void	Command::intUserhost()
 {
 	std::string param = getParam();
 	std::vector<std::string>	params;
-	unsigned long				i;
+	std::string					reply;
+	unsigned long				i = 0;
 
-	std::string	reply;
 	params = irc::split(param, " ");
 	// if (params.size() == 0)
 		// return ERR_NEEDMOREPARAMS 461
-	unsigned long		i = 0;
+
 	while (i < params.size())
 	{
 		reply.append(user->getNickname());
@@ -1133,7 +1133,7 @@ void		Command::intSquit()
 	std::string					comment;
 	std::vector<std::string>	params;
 
-	vec = split_cmd(param, " ");
+	vec = irc::split(param, " ");
 	if (vec.size() < 2)      // ERR_NEEDMOREPARAMS
 	{
 		params.push_back(prefix);
