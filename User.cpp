@@ -208,6 +208,11 @@ void	User::sendMessage(int fd, std::string msg)
 	send(fd, &msg, msg.size(), MSG_DONTWAIT);
 }
 
+void	User::setParams(std::vector<std::string> params)
+{
+	_params = params;
+}
+
 
 // COMMANDS
 void	User::nick(std::string nickname)

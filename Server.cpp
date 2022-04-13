@@ -196,6 +196,11 @@ void	Server::datasExtraction(std::string& buf, int pos) {
 	}
 }
 
+std::string	Server::getName()
+{
+	return (name);
+}
+
 Server&	Server::getServer() {
 	return *this;
 }
@@ -230,7 +235,7 @@ Channel*	Server::getChannelByName(std::string name) {
 // 	return NULL;
 // }
 
-User *  Server::getUserByUsername(std::string name)
+User*	Server::getUserByUsername(std::string name)
 {
 	unsigned long i;
 
@@ -244,7 +249,7 @@ User *  Server::getUserByUsername(std::string name)
 	return (NULL);
 }
 
-User * Server::getUserByNick(std::string nick)
+User*	Server::getUserByNick(std::string nick)
 {
 	unsigned long i;
 
@@ -344,38 +349,65 @@ void	Server::getMotdFile(User* user, std::string parameters) {
 }
 
 void	Server::retrieveTime(User* user, std::string parameters) {
-	int fd = user->getFd();
-	(void)fd;
+	// int fd = user->getFd();
 
 	if (!parameters.empty() && parameters.compare(this->name)) {
 		// Send ERR_NOSUCHSERVER 402
+		std::vector<std::string> params;
+		params.push_back(name);
+		irc::numericReply(402, user, params);
 		return ;
 	}
 	std::time_t time;
 	std::time(&time);
 	std::string s_time = std::asctime(std::localtime(&time));
-	// Send RPL_TIME 391 with time as parameter
+	std::vector<std::string> params;
+	params.push_back(name);
+	params.push_back(s_time);
+	irc::numericReply(391, user, params); 	// Send RPL_TIME 391 with time as parameter
 }
 
 void	Server::retrieveVersion(User* user, std::string parameters) {
-	int fd = user->getFd();
-	(void)fd;
+	// int fd = user->getFd();
 
 	if (!parameters.empty() && parameters.compare(this->name)) {
 		// Send ERR_NOSUCHSERVER 402
+		std::vector<std::string> params;
+		params.push_back(name);
+		irc::numericReply(402, user, params);
 		return ;
 	}
+	std::vector<std::string> params;
+	params.push_back(name);
+	params.push_back(version);
+	params.push_back("");		// debug ??
+	params.push_back("");		// comments ??
+	irc::numericReply(351, user, params);
 	// Send RPL 351 - client this->version this->name :comments but without comment
 }
 
 void	Server::getAdmin(User* user, std::string parameters) {
-	int fd = user->getFd();
-	(void)fd;
+	// int fd = user->getFd();
 
 	if (!parameters.empty() && parameters.compare(this->name)) {
 		// Send ERR_NOSUCHSERVER 402
+		std::vector<std::string> params;
+		params.push_back(name);
+		irc::numericReply(402, user, params);
 		return ;
 	}
+	std::vector<std::string> params;
+	params.push_back(name);
+	irc::numericReply(256, user, params);
+	params.clear();
+	params.push_back(adminloc1);
+	irc::numericReply(257, user, params);
+	params.clear();
+	params.push_back(adminloc2);
+	irc::numericReply(258, user, params);
+	params.clear();
+	params.push_back(adminemail);
+	irc::numericReply(259, user, params);
 	// Send RPL_ADMINME 256	
 	// Send RPL_ADMINLOC1 257 with this->adminloc1
 	// Send RPL_ADMINLOC2 258 with this->adminloc2	
@@ -405,6 +437,16 @@ void	Server::sendPong (User* user, std::string parameter) {
 	if (bytes_send == -1) {
 		std::cout << "Error: send()" << std::endl;
 		// TODO delete user ?
+		unsigned long i = 0;
+		while (i < channels.size())
+		{
+			if (channels[i]->userIsInChanFromUsername(user->getUsername()))
+			{
+				channels[i]->deleteUser(*user, "");
+				this->deleteUser(user);
+			}
+			i++;
+		}
 		return ;
 	}
 }

@@ -57,7 +57,6 @@ namespace irc {
 			void		intMotd();
 			void		intTime();
 			void		intVersion();
-			void		intPing();
 			void		intPong();
 			void		intError();
 			void		intWho();

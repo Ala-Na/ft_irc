@@ -127,6 +127,7 @@ namespace irc
 			void	setRealName(std::string real_name);
 			void	setHostname(std::string hostname);
 			void	setAwayMessage(std::string msg);
+			void	setParams(std::vector<std::string> params);
 
 			void	sendMessage(int fd, std::string msg);
 
