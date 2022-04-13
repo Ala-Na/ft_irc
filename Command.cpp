@@ -181,6 +181,10 @@ void	Command::intUserhost()
 	std::string					reply;
 	unsigned long				i = 0;
 
+<<<<<<< HEAD
+=======
+	std::string	reply;
+>>>>>>> 1fce082 (progressing)
 	params = irc::split(param, " ");
 	// if (params.size() == 0)
 		// return ERR_NEEDMOREPARAMS 461
