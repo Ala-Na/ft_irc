@@ -53,11 +53,11 @@ void	Command::goToExecution () {
 		&Command::intWhoIs, &Command::intAway, &Command::intWallops, \
 		&Command::intUserhost, &Command::intPass, &Command::intUser, \
 		&Command::intSquit, &Command::intMotd, \
-		&Command::intError, &Command::intWho};
+		&Command::intError};
 	std::string msg[nbr_cmd] = {"OPER", "JOIN", "TOPIC", "MODE", "PART", "NAMES", \
 		"LIST", "INVITE", "KICK", "PRIVMSG", "NOTICE", "KILL", "QUIT", "NICK", \
 		"WHOIS", "AWAY", "WALLOPS", "USERHOST", "PASS", "USER", "SQUIT", \
-		"MOTD", "ERROR", "WHO"};
+		"MOTD", "ERROR"};
 
 	for (unsigned long i = 0; i < nbr_cmd; i++) {
 		if (!this->prefix.compare(msg[i])) {
@@ -170,7 +170,7 @@ void	Command::intWhoIs()
 	arg.push_back(user->getHostname());
 	arg.push_back(user->getRealName());
 
-	ERR_NOSUCHSERVER    RPL_WHOISSERVER
+	// ERR_NOSUCHSERVER    RPL_WHOISSERVER
 
 
 	if (param.size() == 0)
@@ -254,10 +254,11 @@ void	Command::intAway()
 {
 	std::string param = getParam();
 	user->away(param);
+	std::vector<std::string> arg;
 	if (user->userModes.a)
-		irc::numericReply(306, user, NULL); // NOWAWAY
+		irc::numericReply(306, user, arg); // NOWAWAY
 	else
-		irc::numericReply(305, user, NULL); // UNAWAY
+		irc::numericReply(305, user, arg); // UNAWAY
 
 }
 
@@ -309,16 +310,15 @@ void	Command::intPrivMsg()
 	size_t pos7 = param.find(":");
 	if (pos7 != std::string::npos)
 		msg = param.substr(pos7 + 1);
-
-	if (msg.size() == 0)
-		irc::numericReply(412, user, NULL); // NOTEXTTOSEND
 	std::vector<std::string> arg;
+	if (msg.size() == 0)
+		irc::numericReply(412, user, arg); // NOTEXTTOSEND
 	arg.push_back(user->getNickname());
 	if (username.size() == 0)
 		irc::numericReply(411, user, arg); // NORECIPIENT
 	arg.clear();
 	arg.push_back("PRIVMSG"); //command
-	User	*recipient;
+	User	*recipient = NULL;
 	if (username.size() > 0)
 		recipient = server.getUserByUsername(username);
 	if (!recipient)
@@ -331,9 +331,9 @@ void	Command::intPrivMsg()
 	if (recipient->userModes.a)
 		irc::numericReply(301, user, arg); // RPL_AWAY
 
-	recipient.setNickname(nickname);
-	recipient.setUsername(username);
-	recipient.setHostname(hostname);
+	recipient->setNickname(nickname);
+	recipient->setUsername(username);
+	recipient->setHostname(hostname);
 
 	//    ERR_CANNOTSENDTOCHAN            ERR_NOTOPLEVEL
 		// ERR_WILDTOPLEVEL                ERR_TOOMANYTARGETS
@@ -388,15 +388,15 @@ void	Command::intNotice()
 	if (pos7 != std::string::npos)
 		msg = param.substr(pos7 + 1);
 
-	if (msg.size() == 0)
-		irc::numericReply(412, user, NULL); // NOTEXTTOSEND
 	std::vector<std::string> arg;
+	if (msg.size() == 0)
+		irc::numericReply(412, user, arg); // NOTEXTTOSEND
 	arg.push_back(user->getNickname());
 	if (username.size() == 0)
 		irc::numericReply(411, user, arg); // NORECIPIENT
 	arg.clear();
 	arg.push_back("PRIVMSG"); //command
-	User	*recipient;
+	User	*recipient = NULL;
 	if (username.size() > 0)
 		recipient = server.getUserByUsername(username);
 		// recipient = Channel::getUserFromUsername(username);
@@ -473,7 +473,7 @@ void Command::intJoin()
 	Channel                     *chan_found;
 	std::string                 message;
 	ssize_t                     ret;
-	std::vector<Users> 			users;
+	std::vector<User> 			users;
 	std::string 				nicks;
 
 	vec = split_cmd(param, " ");
@@ -568,12 +568,12 @@ void Command::intJoin()
 				return ;
 			}
 			chan_found->addUser(*user);
-			params.push_back(chan_found->getName());
-			params.push_back(chan_found->getTopic());
+			params.push_back(chan_found->getChanName());
+			params.push_back(chan_found->getChanTopic());
 			irc::numericReply(332, user, params);
 			params.clear();
 			params.push_back("=");
-			params.push_back(chan_found->getName());
+			params.push_back(chan_found->getChanName());
 			users = chan_found->getVecChanUsers();
 			nicks = "";
 			i = 0;
@@ -598,7 +598,7 @@ void Command::intInvite()
 	std::string                 nickname;
 	std::string                 chan_name;
 	Channel                     *chan_found;
-	int                         ret;
+	// int                         ret;
 	User *                      user_asked;
 	std::vector<std::string> 	params;
 
@@ -634,7 +634,7 @@ void Command::intInvite()
 		irc::numericReply(482, user, params);
 		return ;
 	}
-	if (chan_found->userIsInChanFromNickname(nickame)) // ERR_USERONCHANNEL
+	if (chan_found->userIsInChanFromNickname(nickname)) // ERR_USERONCHANNEL
 	{
 		params.push_back(nickname);
 		params.push_back(chan_name);
@@ -659,7 +659,7 @@ void Command::intOper()
 	std::vector<std::string>	vec;
 	std::string                 name;
 	std::string                 key;
-	int                         ret;
+	// int                         ret;
 	std::vector<std::string> 	params;
 
 	vec = split_cmd(param, " ");
@@ -671,14 +671,15 @@ void Command::intOper()
 	}
 	name = vec[0];
 	key = vec[1];
+	std::vector<std::string> arg;
 	if (key != server.getPass())    // ERR_PASSWDMISMATCH
 	{
-		irc::numericReply(464, user, NULL);
+		irc::numericReply(464, user, arg);
 		return ;
 	}
 	if (user->isOperator())  // RPL_YOUREOPER
 	{
-		irc::numericReply(481, user, NULL);
+		irc::numericReply(481, user, arg);
 		return ;
 	}
 	return ;
@@ -691,7 +692,6 @@ void Command::intPart()
 	std::string					name;
 	unsigned long				i;
 	Channel                     *chan_found;
-	int                         ret;
 	std::vector<std::string> 	params;
 
 	vec = split_cmd(param, ":");
@@ -812,7 +812,6 @@ void Command::intList()
 	std::string                 name;
 	unsigned long				i;
 	Channel                     *chan_found;
-	int                         ret;
 
 	if (param.empty())
 	{
@@ -858,7 +857,6 @@ void Command::intKick()
 	std::string                 user_str;
 	unsigned long				i;
 	Channel                     *chan_found;
-	int                         ret;
 	std::vector<std::string>	params;
 
 	vec = split_cmd(param, " ");
@@ -922,7 +920,7 @@ void Command::intTopic()
 	std::string 	            name;
 	std::string                 new_topic;
 	Channel                     *chan_found;
-	int                         ret;
+	// int                         ret;
 	std::vector<std::string>	params;
 
 	if (param.size() == 0)  // ERR_NEEDMOREPARAMS
@@ -953,7 +951,7 @@ void Command::intTopic()
 	if (there_is_no_cmd(':', param))    // RPL_TOPIC
 	{
 		params.push_back(name);
-		params.push_back(chan_found->getTopic());
+		params.push_back(chan_found->getChanTopic());
 		irc::numericReply(332, user, params);
 		return ;
 	}
@@ -981,9 +979,10 @@ void Command::intMotd()
 	std::string	motd;
 
 	motd = server.getMotd();
+	std::vector<std::string> arg;
 	if (motd.size() == 0)
 	{
-		irc::numericReply(422, user, NULL);		// ERR_NOMOTD
+		irc::numericReply(422, user, arg);		// ERR_NOMOTD
 		return ;
 	}
 	ret = send(user->getFd(), &motd, motd.size(), MSG_DONTWAIT);  // RPL_MOTDSTART RPL_MOTD RPL_ENDOFMOTD
@@ -1017,7 +1016,7 @@ void Command::intKill()
 	std::vector<std::string>		vec;
 	std::string             		nickname;
 	std::string             		comment;
-	int                         	ret;
+	// int                         	ret;
 	User *                      	user_to_kill;
 	std::vector<User *>::iterator	found;
 	std::vector<std::string> 		params;
@@ -1033,7 +1032,7 @@ void Command::intKill()
 	comment = vec[1];
 	if (server.isServOp(*user) == 0)  // ERR_NOPRIVILEGES
 	{
-		irc::numericReply(481, user, NULL);
+		irc::numericReply(481, user, params);
 		return ;
 	}
 	user_to_kill = server.getUserByNick(nickname);
@@ -1184,9 +1183,10 @@ void		Command::intSquit()
 		irc::numericReply(461, user, params);
 		return ;
 	}
+	std::vector<std::string> arg;
 	if (server.isServOp(*user) == 0)  // ERR_NOPRIVILEGES
 	{
-		irc::numericReply(481, user, NULL);
+		irc::numericReply(481, user, arg);
 		return ;
 	}
 	serv_name = vec[0];
@@ -1212,9 +1212,4 @@ void		Command::intError()
 	msg.push_back("The client was not responsible for the error.");
 	user->setParams(msg);
 	intNotice();
-}
-
-void		Command::intWho()
-{
-
 }

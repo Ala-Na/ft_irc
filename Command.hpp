@@ -8,8 +8,10 @@
 #include "Server.hpp"
 #include "User.hpp"
 #include "Channel.hpp"
+#include "Numerics.hpp"
 
 namespace irc {
+
 	class Server;
 	class User;
 	class Channel;
@@ -26,17 +28,19 @@ namespace irc {
 
 			Command ();
 			Command (const Command& other);
-			Command&	operator= (const Command& other);
+			Command& operator= (const Command& other);
 
 		public :
 			Command (Server& server, User* user, std::string& content);
 			Command (Server& server, std::string& content);
 			~Command ();
 
-			void		parseCommand();
 			std::string	getWord();
-			void		goToExecution();
 			std::string	getParam();
+			User		*getUser();
+
+			void		parseCommand();
+			void		goToExecution();
 
 			// intermediate commands
 			void		intOper();
@@ -55,12 +59,7 @@ namespace irc {
 			void		intPass();
 			void		intSquit();
 			void		intMotd();
-			void		intTime();
-			void		intVersion();
-			void		intPong();
 			void		intError();
-			void		intWho();
-			void		intAdmin();
 			void		intUser();
 			void		intNick();
 			void		intUserMode();
@@ -70,7 +69,6 @@ namespace irc {
 			void		intPrivMsg();
 			void		intChannelMode();
 			
-			User		*getUser();
 			int			isServerOperator(User & user);
 
 	};

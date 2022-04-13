@@ -20,7 +20,7 @@ CFLAGS =	-Wall -Wextra -Werror -std=c++98
 
 DEPFLAGS =	-MMD -MP
 
-SRC =		Channel.cpp Command.cpp main.cpp Server.cpp User.cpp
+SRC =		Channel.cpp Command.cpp main.cpp Numerics.cpp Server.cpp User.cpp
 
 OBJ =		${addprefix ${OBJ_DIR}/,${SRC:.cpp=.o}}
 
