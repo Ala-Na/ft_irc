@@ -135,7 +135,7 @@ void	sendNumeric(int fd, std::string msg) {
 
 
 // For user parameter :
-void	irc::numericReply(int num_nb, User* user, std::vector<std::string> s_params) {
+void	irc::numericReply(int num_nb, User* user, std::vector<std::string>& s_params) {
 	std::string					msg;
 	char		 				s_num_nb[4];
 	// TODO maybe modify following functions calls
