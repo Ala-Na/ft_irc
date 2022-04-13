@@ -6,7 +6,7 @@
 #    By: anadege <anadege@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/01/26 11:14:39 by opacaud           #+#    #+#              #
-#    Updated: 2022/04/13 12:08:16 by anadege          ###   ########.fr        #
+#    Updated: 2022/04/13 12:18:03 by anadege          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -20,7 +20,7 @@ CFLAGS =	-Wall -Wextra -Werror -std=c++98
 
 DEPFLAGS =	-MMD -MP
 
-SRC =		Channel.cpp Command.cpp main.cpp Server.cpp User.cpp
+SRC =		Channel.cpp Command.cpp main.cpp Server.cpp User.cpp Utilitary.cpp
 
 OBJ =		${addprefix ${OBJ_DIR}/,${SRC:.cpp=.o}}
 

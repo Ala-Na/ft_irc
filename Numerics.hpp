@@ -17,6 +17,9 @@ namespace irc {
 	class User;
 
 	void	numericReply (int num_nb, User* user, std::vector<std::string> s_params);
+	void	sendNumeric(int fd, std::string msg);
+
+	
 
 };
 

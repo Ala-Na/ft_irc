@@ -144,32 +144,6 @@ User *Channel::getUserFromUsername(std::string username)
 	return (NULL);
 };
 
-int	there_is_no_chan(char c, std::string str)
-{
-	int	i;
-
-	i = 0;
-	while (str[i])
-	{
-		if (str[i] == c)
-			return (0);
-		i++;
-	}
-	return (1);
-};
-
-std::string ft_toupper_str(std::string str)
-{
-	std::string res;
-	int i = 0;
-	while (str[i])
-	{
-		res += toupper(str[i]);
-		i++;
-	}
-	return (res);
-}
-
 int	Channel::setChanName(std::string original_name)	// first character & % + !, <= 50 char, case insensitive, no space, coma, :
 {
 	int					random;
@@ -179,10 +153,10 @@ int	Channel::setChanName(std::string original_name)	// first character & % + !, 
 	int					i;
 	
 	srand(time(0));
-	name = ft_toupper_str(original_name);
+	name = irc::ft_toupper_str(original_name);
 	if ((name[0] == '&' || name[0] == '#' || name[0] == '+' || name[0] == '!')
 		&& name.length() <= 50
-		&& there_is_no_chan(' ', name) && there_is_no_chan(',', name) && there_is_no_chan(':', name))
+		&& irc::there_is_no(' ', name) && irc::there_is_no(',', name) && irc::there_is_no(':', name))
 	{
 		chan_name = original_name;
 		if (name[0] == '!')
@@ -209,7 +183,7 @@ int	Channel::setChanName(std::string original_name)	// first character & % + !, 
 		std::cerr << "Name of channel cannot be longer than 50 characters\n";
 		return (3);
 	}
-	else if (there_is_no_chan(' ', name) == 0 || there_is_no_chan(',', name) == 0 || there_is_no_chan(':', name) == 0)
+	else if (irc::there_is_no(' ', name) == 0 || irc::there_is_no(',', name) == 0 || irc::there_is_no(':', name) == 0)
 	{
 		std::cerr << "Name of channel cannot contain spaces, comas or colons\n";
 		return (4);
@@ -238,7 +212,7 @@ int	Channel::isOperator(User & user)
 
 void	Channel::setChanTopic(std::string topic, User & user_who_changes)
 {
-	if (there_is_no_chan('t', chan_mode) || (there_is_no_chan('t', chan_mode) == 0 && isOperator(user_who_changes)))
+	if (irc::there_is_no('t', chan_mode) || (irc::there_is_no('t', chan_mode) == 0 && isOperator(user_who_changes)))
 		chan_topic = topic;
 };
 
@@ -325,7 +299,7 @@ int	Channel::receivingAnInvitation(User & user_inviting, User & user_invited)
 	std::string	message;
 	int			ret;
 
-	if (there_is_no_chan('i', chan_mode) == 0 && isOperator(user_inviting) == 0)
+	if (irc::there_is_no('i', chan_mode) == 0 && isOperator(user_inviting) == 0)
 	{
 		message = "Only an operator can invite on channel " + chan_name;
 		ret = send(user_inviting.getFd(), &message, message.size(), MSG_DONTWAIT);	// flag since Linux 2.2 (https://linux.die.net/man/2/send)

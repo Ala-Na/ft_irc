@@ -2,6 +2,12 @@
 
 using namespace irc;
 
+
+std::string ft_toupper_str(std::string& str)
+{
+	std::transform(str.begin(), str.end(), str.begin(), ::toupper);
+}
+
 int	there_is_no(char c, std::string str)
 {
 	int	i;

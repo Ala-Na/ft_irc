@@ -6,51 +6,13 @@
 /*   By: anadege <anadege@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/04 09:41:08 by cboutier          #+#    #+#             */
-/*   Updated: 2022/04/13 12:07:52 by anadege          ###   ########.fr       */
+/*   Updated: 2022/04/13 12:13:17 by anadege          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "User.hpp"
 
 using namespace irc;
-
-int	there_is_no_usr(char c, std::string str)
-{
-	int	i;
-
-	i = 0;
-	while (str[i])
-	{
-		if (str[i] == c)
-			return (0);
-		i++;
-	}
-	return (1);
-};
-
-std::vector<std::string>	split_usr(std::string text, std::string space_delimiter)
-{
-	std::vector<std::string> words;
-
-	size_t pos = 0;
-	while ((pos = text.find_first_of(space_delimiter)) != std::string::npos)
-	{
-		std::cout << "substr: " << text.substr(0) << std::endl;
-		if (text[0] == ':')
-		{
-			words.push_back(text.substr(0));
-			return (words);
-		}
-		words.push_back(text.substr(0, pos));
-		int nbDelimiters = 0;
-		while (there_is_no_usr(text[pos + nbDelimiters], space_delimiter) == 0)
-			nbDelimiters++;
-		text.erase(0, pos + nbDelimiters);
-	}
-	words.push_back(text.substr(0));
-	words.push_back("\0");
-	return (words);
-}
 
 User::User(int fd, struct sockaddr_in address)
 : _fd(fd)
@@ -360,7 +322,7 @@ void	User::user_cmd(std::string params)
 {
 	std::vector<std::string>	param;
 
-	param = split_usr(params, " ");
+	param = irc::split(params, " ");
 	if (param.size() != 4)
 		// send ERR NEEDMOREPARAMS 461
 	// TODO: Check if user is already registered, if yes, send ERR ALREADYREGISTERED

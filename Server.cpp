@@ -23,7 +23,7 @@ int	Server::readConfFile() {
 	std::string		line;
 	std::string		key;
 	std::string		value = "";
-    ssize_t         found;
+    size_t			found;
 
 	in.open("./ft_irc.conf", std::ifstream::in);
 	if (!in.good()) {
@@ -350,58 +350,20 @@ void	Server::listChannels (User* user) {
 	// Send RPL_LISTEND 323
 }
 
-int	there_is_no_server(char c, std::string str)
-{
-	int	i;
-
-	i = 0;
-	while (str[i])
-	{
-		if (str[i] == c)
-			return (0);
-		i++;
-	}
-	return (1);
-};
-
-std::vector<std::string>	split_server(std::string text, std::string space_delimiter)
-{
-	std::vector<std::string> words;
-
-	size_t pos = 0;
-	while ((pos = text.find_first_of(space_delimiter)) != std::string::npos)
-	{
-		std::cout << "substr: " << text.substr(0) << std::endl;
-		if (text[0] == ':')
-		{
-			words.push_back(text.substr(0));
-			return (words);
-		}
-		words.push_back(text.substr(0, pos));
-		int nbDelimiters = 0;
-		while (there_is_no_server(text[pos + nbDelimiters], space_delimiter) == 0)
-			nbDelimiters++;
-		text.erase(0, pos + nbDelimiters);
-	}
-	words.push_back(text.substr(0));
-	words.push_back("\0");
-	return (words);
-}
-
 void	Server::getMotdFile(User* user, std::string parameters) {
 	int fd = user->getFd();
 	(void)fd;
 
 	// TODO use irc::split of channel_management branch
-	if (!parameters.empty() && parameters.compare(this->name)) {
+	if (!parameters.empty() && parameters.compare((conf.find("name"))->second)) {
 		// Send ERR_NOSUCHSERVER 402
 		return ;
-	} else if (motd.empty()) {
+	} else if ((conf.find("motd"))->second.empty()) {
 		// Send ERR_NOMOTD 422
 		return ;
 	}
 	// Send RPL_MOTDSTART 375
-	std::vector<std::string> lines = split_server(motd, "\n");
+	//std::vector<std::string> lines = irc::split(motd, "\n");
 	for (std::vector<std::string>::iterator it = lines.begin(); it != lines.end(); it++) {
 		// Send RPL_MOTD 372 with (*it) 
 	}

@@ -8,6 +8,7 @@
 #include "Server.hpp"
 #include "User.hpp"
 #include "Channel.hpp"
+#include "Utilitary.hpp"
 
 namespace irc {
 	class Server;
