@@ -6,7 +6,7 @@
 /*   By: anadege <anadege@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/04 09:41:08 by cboutier          #+#    #+#             */
-/*   Updated: 2022/04/13 23:17:51 by anadege          ###   ########.fr       */
+/*   Updated: 2022/04/14 01:49:06 by anadege          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,8 @@ User::User(int fd, struct sockaddr_in address)
 	userModes.r = false;		// restricted user connection;
 	userModes.o = false;		// operator flag;
 	userModes.O = false;
+	_nickname = "";
+	this->_status = PASS;
 }
 
 User::User(User const &src)
@@ -103,6 +105,10 @@ int	User::getNbOfChannels()
 	return (counter);
 }
 
+UserStatus	User::getStatus() {
+	return this->_status;
+}
+
 // FLAGS BOOL
 bool 	User::isAway()
 {
@@ -138,7 +144,14 @@ bool 	User::isOperator()
 		return (true);
 	return (false);
 }
-	
+
+bool	User::isRegistered()
+{
+	if (this->_status == REGISTERED)
+		return (true);
+	return (false);
+}
+
 // SETTERS
 void	User::setNickname(std::string nickname)
 {
@@ -175,6 +188,9 @@ void	User::setParams(std::vector<std::string> params)
 	_params = params;
 }
 
+void	User::setStatus(UserStatus status) {
+	this->_status = status;
+}
 
 // COMMANDS
 void	User::nick(std::string nickname)
@@ -323,17 +339,10 @@ void	User::mode(std::vector<std::string> params)
 	}
 }
 
-void	User::user_cmd(std::string params)
+void	User::userCmd(std::vector<std::string>& params)
 {
-	std::vector<std::string>	param;
-
-	param = irc::split(params, " ");
-	if (param.size() != 4)
-		// send ERR NEEDMOREPARAMS 461
-	// TODO: Check if user is already registered, if yes, send ERR ALREADYREGISTERED
-	_nickname = param[0];
-	
-	int mask = std::atoi(param[1].c_str());
+	this->setUsername(params[0]);
+	int mask = std::atoi(params[1].c_str());
 	int bit = 0;
 	bit = mask >> 2; // bit shifting to the right
 	if (bit &1) // check if 2nd bit is set, returns a 1 in each bit position for which the corresponding bits of both operands are 1s
@@ -341,9 +350,7 @@ void	User::user_cmd(std::string params)
 	bit = bit >> 1;
 	if (bit &1)
 		userModes.i = true;
-	_real_name = param[3];
-
-	// add ERR_ALREADY_REGISTERED
+	_real_name = params[3];
 	// for(int i = 0; i < param.size(); i++)
 	// 	std::cout << i << ": " << param[i] << '\n';
 }

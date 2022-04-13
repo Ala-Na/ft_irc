@@ -3,6 +3,7 @@
 
 #include <cstring>
 #include <algorithm>
+#include <vector>
 
 // TODO modify following
 #include "Server.hpp"
@@ -69,6 +70,8 @@ namespace irc {
 			void		intAway();
 			void		intPrivMsg();
 			void		intChannelMode();
+			void		intSummon();
+			void		intUsers();
 			
 			int			isServerOperator(User & user);
 

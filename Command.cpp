@@ -45,24 +45,28 @@ std::string	Command::getWord () {
 void	Command::goToExecution () {
 	// TODO delete unimplemented functions
 	int const nbr_cmd = 29;
-	void (Command::*pmf[nbr_cmd])() = {&Command::intOper, &Command::intJoin, \
-		&Command::intTopic, &Command::intMode, &Command::intPart, \
-		&Command::intNames, &Command::intList, &Command::intInvite, \
-		&Command::intKick, &Command::intPrivMsg, &Command::intNotice, \
-		&Command::intKill, &Command::intQuit, &Command::intNick, \
+	void (Command::*pmf[nbr_cmd])() = {&Command::intPass, &Command::intNick, \
+		&Command::intUser, &Command::intOper, \
+		&Command::intJoin, &Command::intTopic, &Command::intMode, \
+		&Command::intPart, &Command::intNames, &Command::intList, \
+		&Command::intInvite, &Command::intKick, &Command::intPrivMsg, \
+		&Command::intNotice, &Command::intKill, &Command::intQuit, \
 		&Command::intWhoIs, &Command::intAway, &Command::intWallops, \
-		&Command::intUserhost, &Command::intPass, &Command::intUser, \
-		&Command::intSquit, &Command::intMotd, \
-		&Command::intError};
-	std::string msg[nbr_cmd] = {"OPER", "JOIN", "TOPIC", "MODE", "PART", "NAMES", \
-		"LIST", "INVITE", "KICK", "PRIVMSG", "NOTICE", "KILL", "QUIT", "NICK", \
-		"WHOIS", "AWAY", "WALLOPS", "USERHOST", "PASS", "USER", "SQUIT", \
-		"MOTD", "ERROR"};
+		&Command::intUserhost, &Command::intSquit, &Command::intMotd, \
+		&Command::intError, &Command::intSummon, &Command::intUsers};
+	std::string msg[nbr_cmd] = {"PASS", "NICK", "USER", "OPER", "JOIN", "TOPIC", "MODE", "PART", "NAMES", \
+		"LIST", "INVITE", "KICK", "PRIVMSG", "NOTICE", "KILL", "QUIT", \
+		"WHOIS", "AWAY", "WALLOPS", "USERHOST", "SQUIT", \
+		"MOTD", "ERROR", "SUMMON", "USERS"};
+
+	std::cout << this->prefix << std::endl;
 
 	for (unsigned long i = 0; i < nbr_cmd; i++) {
 		if (!this->prefix.compare(msg[i])) {
+			if (i >= 3 && this->user->isRegistered() == false) {
+				// TODO maybe ignore ?
+			}
 			(this->*pmf[i])();
-			// this->*pmf[i]();
 			return ;
 		}
 	};
@@ -72,7 +76,8 @@ void	Command::goToExecution () {
 // Intermediate Commands
 void	Command::intUser()
 {
-	user->user_cmd(getParam());
+	this->server.checkUserCmd(this->user, this->param);
+	// Made in server to make deletion of unregistered user easier
 }
 
 void	Command::intNick()
@@ -81,27 +86,19 @@ void	Command::intNick()
 	std::vector<std::string> arg;
 	arg.push_back(param);
 
-	if (param.size() == 0)
-		irc::numericReply(431, user, arg);
-	if (param.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890-_{}[]\\`|") != std::string::npos)
-		irc::numericReply(432, user, arg);
-	// TODO : check if the session is still unregistered
-	// if unregistered, create new user object
+	this->server.checkNick(this->user, this->param);
+	// Made in server to make deletion of unregistered user easier
 
-	std::string nickname;
-	size_t pos = param.find("!");
-	if (pos != std::string::npos)
-	{
-		nickname = param.substr(1, pos - 1);
-	}
-	std::string	new_nickname;
-	size_t	pos2 = param.find("NICK") + 5;
-	new_nickname = param.substr(pos2);
-	user->setNickname(new_nickname);
-//    ERR_NICKNAMEINUSE
-// 	ERR_NICKCOLLISION
-//     ERR_UNAVAILRESOURCE
-// 	ERR_RESTRICTED
+	//std::string nickname;
+	//size_t pos = param.find("!");
+	//if (pos != std::string::npos)
+	//{
+	//	nickname = param.substr(1, pos - 1);
+	//}
+	//std::string	new_nickname;
+	//size_t	pos2 = param.find("NICK") + 5;
+	//new_nickname = param.substr(pos2);
+	//user->setNickname(new_nickname);
 }
 
 // void	Command::intUserMode()
@@ -935,25 +932,8 @@ void Command::intTopic()
 	return ;
 }
 
-void Command::intMotd()
-{
-	int			ret;
-	std::string	motd;
-
-	motd = server.getMotd();
-	std::vector<std::string> arg;
-	if (motd.size() == 0)
-	{
-		irc::numericReply(422, user, arg);		// ERR_NOMOTD
-		return ;
-	}
-	ret = send(user->getFd(), &motd, motd.size(), MSG_DONTWAIT);  // RPL_MOTDSTART RPL_MOTD RPL_ENDOFMOTD
-	if (ret == -1)
-	{
-		std::cerr << "Could not send message\n";
-		return ;
-	}
-	return ;
+void Command::intMotd() {
+	this->server.getMotd(this->user, param);
 }
 
 int	Command::isServerOperator(User & user)
@@ -1126,9 +1106,8 @@ void	 Command::intMode()
 	}
 }
 
-void		Command::intPass()
-{
-
+void		Command::intPass() {
+	this->server.checkPassword(user, param);
 }
 
 void		Command::intSquit()
@@ -1174,4 +1153,16 @@ void		Command::intError()
 	msg.push_back("The client was not responsible for the error.");
 	user->setParams(msg);
 	intNotice();
+}
+
+void	Command::intSummon() {
+	std::vector<std::string>	params;
+
+	irc::numericReply(445, user, params);	
+}
+
+void	Command::intUsers() {
+	std::vector<std::string>	params;
+
+	irc::numericReply(446, user, params);		
 }

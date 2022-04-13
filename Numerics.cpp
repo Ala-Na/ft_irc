@@ -41,7 +41,7 @@ void	irc::sendNumeric(int fd, std::string msg) {
 /* 311 */ std::string	irc::RplWhoIsUser (std::string w_nick, std::string w_user, std::string w_host, std::string w_real) { return (" " + w_nick + " " + w_user + " " + w_host + " * :" + w_real); }
 /* 312 */ std::string	irc::RplWhoIsServer (std::string server, std::string server_nick, std::string infos) { return (" " + server_nick + " " + server + " :" + infos); };
 /* 313 */ std::string	irc::RplWhoIsOperator (std::string o_nick) { return (" " + o_nick + " :is an IRC operator"); }
-/* 315 */ std::string	irc::RplEndOfWho (std::string name_searched) { return (" " + name_searched + " :End of WHO list"); }
+// 315 - No need
 // 317 - No need
 /* 318 */ std::string	irc::RplEndOfWhoIs () { return (" :End of WHOIS list"); }
 /* 319 */ std::string	irc::RplWhoIsChannels (std::string w_nick, std::string w_list_channels_and_op) { return (" " + w_nick + " :" + w_list_channels_and_op); } 
@@ -57,8 +57,7 @@ void	irc::sendNumeric(int fd, std::string msg) {
 /* 348 */ std::string	irc::RplExceptList (std::string channel, std::string exceptionmask) { return (" " + channel + " " + exceptionmask); }
 /* 349 */ std::string	irc::RplEndOfExceptList (std::string channel) { return (" " + channel + " :End of channel invite list"); }
 /* 351 */ std::string	irc::RplVersion (std::string server, std::string version, std::string debug, std::string comments) { return (" " + version + "." + debug + " " + server + " :" + comments); }
-/* 352 */ std::string	irc::RplWhoReply (std::string server, std::string nick, std::string channel, std::string user, std::string host, std::string more, std::string hopcount, std::string real_name) { return (" " + channel + " " + user + " " + host + " " + server + " " + nick + " " + more + " :" + hopcount + " " +  real_name); }
-// Explanation for 352 : http://chi.cs.uchicago.edu/chirc/assignment3.html
+// 352 - No need
 /* 353 */ std::string	irc::RplNamReply (std::string type_chan, std::string channel, std::string nicks) { return (" " + type_chan + " " + channel + " :" + nicks); }
 // nicks must contains each nicks of the users presents in the channel with either nothing/@/+ as prefix (@ = operator of channel, +=authorization to speak in moderated channel)
 // 364 - No need
@@ -198,9 +197,6 @@ void	irc::numericReply(int num_nb, User* user, std::vector<std::string>& s_param
 		case 313:
 			msg += irc::RplWhoIsOperator(s_params[0]);
 			break;
-		case 315:
-			msg += irc::RplEndOfWho(s_params[0]);
-			break;
 		case 318:
 			msg += irc::RplEndOfWhoIs();
 			break;
@@ -239,9 +235,6 @@ void	irc::numericReply(int num_nb, User* user, std::vector<std::string>& s_param
 			break;
 		case 351:
 			msg += irc::RplVersion(server, s_params[0], s_params[1], s_params[2]);
-			break;
-		case 352:
-			msg += irc::RplWhoReply(server, nick, s_params[0], s_params[1], s_params[2], s_params[3], s_params[4], s_params[5]);
 			break;
 		case 353:
 			msg += irc::RplNamReply(s_params[0], s_params[1], s_params[2]);

@@ -6,7 +6,7 @@
 /*   By: anadege <anadege@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/31 11:14:35 by cboutier          #+#    #+#             */
-/*   Updated: 2022/04/13 23:19:13 by anadege          ###   ########.fr       */
+/*   Updated: 2022/04/14 01:09:27 by anadege          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,10 +24,10 @@ namespace irc
 {
 	enum UserStatus
 	{
-		PASSWORD,
-		REGISTERED,
-		ONLINE,
-		DELETED
+		PASS,
+		NICK,
+		USER,
+		REGISTERED
 	};
 
 	class Channel;
@@ -47,6 +47,8 @@ namespace irc
 			struct	sockaddr_in			_address;
 
 			std::string					_away_message;
+			
+			UserStatus					_status;
 		/*
 			The user MODE's are typically changes which affect either how the
 			client is seen by others or what 'extra' messages the client is sent.
@@ -112,6 +114,7 @@ namespace irc
 			int			getFd();
 			sockaddr_in	getAddr();
 			std::vector<std::string> getChannels();
+			UserStatus	getStatus();
 
 			int			getNbOfChannels();
 
@@ -121,6 +124,7 @@ namespace irc
 			bool	isWallops();
 			bool	isRestricted();
 			bool	isOperator();
+			bool	isRegistered();
 
 			// Setters
 			void	setNickname(std::string nickname);
@@ -129,6 +133,7 @@ namespace irc
 			void	setHostname(std::string hostname);
 			void	setAwayMessage(std::string msg);
 			void	setParams(std::vector<std::string> params);
+			void	setStatus(UserStatus status);
 
 			void	sendMessage(int fd, std::string msg);
 
@@ -136,7 +141,7 @@ namespace irc
 			void	deleteChannel(std::string const &chan);
 
 			// Commands
-			void	user_cmd(std::string params);
+			void	userCmd(std::vector<std::string>& params);
 			void	nick(std::string nickname);
 			void	quit(std::vector<std::string> channels);
 			void	privmsg(User usr, std::string msg);

@@ -6,7 +6,7 @@
 #    By: anadege <anadege@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/01/26 11:14:39 by opacaud           #+#    #+#              #
-#    Updated: 2022/04/13 23:21:43 by anadege          ###   ########.fr        #
+#    Updated: 2022/04/14 01:47:48 by anadege          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -16,7 +16,7 @@ OBJ_DIR =	obj
 
 CXX =		c++
 
-CFLAGS =	-Wall -Wextra -Werror -std=c++98
+CFLAGS =	-Wall -Wextra -Werror -std=c++98 -g
 
 DEPFLAGS =	-MMD -MP
 

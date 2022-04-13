@@ -36,7 +36,6 @@ namespace irc {
 	std::string	RplWhoIsUser (std::string w_nick, std::string w_user, std::string w_host, std::string w_real);
 	std::string	RplWhoIsServer (std::string server, std::string server_nick, std::string infos);
 	std::string	RplWhoIsOperator (std::string o_nick);
-	std::string	RplEndOfWho (std::string name_searched);
 	std::string	RplEndOfWhoIs ();
 	std::string	RplWhoIsChannels (std::string w_nick, std::string w_list_channels_and_op);
 	std::string	RplList (std::string channel, std::string visible, std::string topic);
@@ -50,7 +49,6 @@ namespace irc {
 	std::string	RplExceptList (std::string channel, std::string exceptionmask);
 	std::string	RplEndOfExceptList (std::string channel);
 	std::string	RplVersion (std::string server, std::string version, std::string debug, std::string comments);
-	std::string	RplWhoReply (std::string server, std::string nick, std::string channel, std::string user, std::string host, std::string more, std::string hopcount, std::string real_name);
 	std::string	RplNamReply (std::string type_chan, std::string channel, std::string nicks);
 	std::string	RplEndOfNames (std::string channel);
 	std::string	RplBanList (std::string channel, std::string mask);

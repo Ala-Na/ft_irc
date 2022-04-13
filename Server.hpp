@@ -73,8 +73,12 @@ namespace irc {
 			void						datasExtraction (std::string& buf, int pos);
 
 			void						checkPassword (User* user, std::string parameters);
+			void						checkNick (User* user, std::string parameters);
+			void						checkUserCmd(User *user, std::string paramters);
+			void						welcomeUser(User *user);
+
 			void						listChannels (User* user);
-			void						getMotdFile (User* user, std::string parameters);
+			void						getMotd (User* user, std::string parameters);
 			void						retrieveTime (User* user, std::string parameters);
 			void						retrieveVersion (User* user, std::string parameter);
 			void						sendError (User* user, std::string parameter);
@@ -93,7 +97,6 @@ namespace irc {
 			User *						getUserByNick (std::string nick);
 			std::string					getPass ();
 			std::string					getVersion ();
-			std::string					getMotd ();
 			std::vector<User *>			getServOp ();
 			std::vector<User *>			getServUsers ();
 
