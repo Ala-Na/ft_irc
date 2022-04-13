@@ -290,7 +290,7 @@ Channel*	Server::getChannelByName(std::string name) {
 }
 
 // User*	Server::getUserByName(std::string name) const {
-// 	for (std::vector<User *>::iterator it = this->users.begin(); \
+// 	for (std::vector<User *>::iterator it = this->users.begin(); 
 // 		it != this->users.end(); it++)
 // 	{
 // 		// TODO
@@ -343,7 +343,7 @@ void	Server::checkPassword(User* user, std::string parameters) {
 }
 
 void	Server::listChannels (User* user) {
-	int fd = user->getFd();
+	(void)user;
 	// Maybe send 321 and 323 from intList ?
 	// Send RPL_liststart 321
 	for (std::vector<Channel *>::iterator it = this->channels.begin(); it != this->channels.end(); it++) {
