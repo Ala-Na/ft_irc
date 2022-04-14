@@ -1,5 +1,7 @@
 #include "Server.hpp"
 
+#define MAX_USERS 10
+
 using namespace irc;
 
 Server::Server(std::string password, const char* port) : password(password), port(port) {
@@ -8,6 +10,7 @@ Server::Server(std::string password, const char* port) : password(password), por
 	this->channels = std::vector<Channel *>();
 	this->pfds = std::vector<pollfd>();
 	this->conf = std::map<std::string, std::string>();
+	this->operators = std::vector<User *>();
 }
 
 Server::~Server() {
@@ -79,6 +82,9 @@ int	Server::checkConf() {
 		std::cerr << "Server name should be under 63 characters (please, modify .conf file)" << std::endl;
 		return (-1);
 	}
+	if (this->conf.count("op_pwd") == 0) {
+		this->conf.insert(std::make_pair("op_pwd", "admin"));
+	}
 	return 0;
 }
 
@@ -139,6 +145,8 @@ int	Server::runServer() {
 		} else if (running == true) {
 			if (pfds[0].revents & POLLIN) {
 				this->createUser();
+				// std::cout << "UUUUUUUUSER1: " << users[0]->getUsername() << std::endl;
+
 			}
 			this->receiveDatas();
 		}
@@ -171,16 +179,23 @@ void	Server::deleteSocketFromPoll(std::vector<pollfd>::iterator& to_del) {
 }
 
 void	Server::createUser() {
-	// TODO create max number of user to avoid slow server
 	struct sockaddr_in	client_addr;
 	socklen_t			addr_len;
 	int					client_fd;
 
 	addr_len = sizeof(client_addr);
 	client_fd = accept(this->server_socket, (struct sockaddr *)&client_addr, &addr_len);
+	if (this->users.size() == MAX_USERS) {
+		std::string	refused = "Too many users on server, your connection was refused";
+		send(client_fd, &refused, sizeof(refused), 0);
+		std::cout << "A new connection was refused because there's already too many clients" << std::endl;
+		close(client_fd);
+		return ;
+	}
 	this->addSocketToPoll(client_fd);
-	std::cout << "Accepting new connection from " << inet_ntoa(client_addr.sin_addr) << " on fd :" << client_fd << std::endl;
-	this->users.push_back(new User(client_fd, client_addr));
+	std::cout << "Accepting new connection from " << inet_ntoa(client_addr.sin_addr) << " on fd: " << client_fd << std::endl;
+	this->users.push_back(new User(client_fd, client_addr, this));
+	// std::cout << "UUUUSER0: " << users[0]->getUsername() << std::endl;
 	this->datas.push_back("");
 }
 
@@ -188,7 +203,9 @@ void	Server::deleteUser(User* user) {
 	for (std::vector<User *>::iterator it1 = this->users.begin(); \
 			it1 != this->users.end(); it1++) {
 		if ((*it1) == user) {
-			// TODO Response with ERROR
+			this->sendError(user, "Closing link");
+			this->deleteUserFromChannels(user);
+			this->deleteServOperator(user);
 			int position = it1 - this->users.begin();
 			std::vector<std::string>::iterator it2 = this->datas.begin();
 			std::advance(it2, position);
@@ -200,6 +217,19 @@ void	Server::deleteUser(User* user) {
 			delete *it1;
 		}
 	}
+}
+
+void	Server::deleteUserFromChannels(User* user) {
+	unsigned long i = 0;
+	while (i < channels.size())
+	{
+		if (channels[i]->userIsInChanFromUsername(user->getUsername()))
+		{
+			channels[i]->deleteUser(*user, "");
+		}
+		i++;
+	}
+	return ;
 }
 
 int	Server::isServOp(User & user)
@@ -247,12 +277,21 @@ void	Server::receiveDatas() {
 	}
 }
 
-void	Server::datasExtraction(std::string& buf, int pos) {
-	User *user = this->getSpecificUser(pos - 1);
+void	Server::datasExtraction(std::string& buf, size_t pos) {
+	// std::cout << "POOOOOOS: " << pos << std::endl;
+	User *user = this->getSpecificUser(pos);
+	// std::cout << "UUUUSER2: " << users[0]->getUsername() << std::endl;
+	// std::cout << "UUUUSER3: " << user->getUsername() << std::endl;
+	// std::cout << "buf: " << buf << std::endl;
+
 	datas[pos].append(buf);
 	size_t cmd_end = datas[pos].find("\r\n");
 	while (cmd_end != std::string::npos) {
+		if (datas[pos].empty() == 0 || datas[pos].size() <= 2)
+			break ;
 		std::string	content = datas[pos].substr(0, cmd_end);
+		// std::cout << "content: " << content << std::endl;
+		// std::cout << "POOOOOOS2: " << pos << std::endl;
 		datas[pos].erase(0, cmd_end + 2);
 		cmd_end = datas[pos].find("\r\n");
 		Command* cmd = new Command(getServer(), user, content);
@@ -271,7 +310,9 @@ Server&	Server::getServer() {
 }
 
 // Here, user_nb is from 0 to max - 1.
-User*	Server::getSpecificUser(unsigned long user_nb) {
+User*	Server::getSpecificUser(size_t user_nb) {
+	// std::cout << "nb : " << user_nb << std::endl;
+	// std::cout << "users size : " << users.size() << std::endl;
 	if (user_nb < this->users.size())
 		return this->users[user_nb];
 	return NULL;
@@ -506,10 +547,10 @@ void	Server::sendError (User* user, std::string parameter) {
 	int fd = user->getFd();
 
 	parameter.insert(0, "ERROR :");
-	ssize_t bytes_send = send(fd, &parameter, parameter.size(), 0);
+	ssize_t bytes_send = send(fd, &parameter, sizeof(parameter), 0);
 	if (bytes_send == -1) {
 		std::cout << "Error: send()" << std::endl;
-		return ;
+		this->deleteUser(user);
 	}
 }
 
@@ -522,21 +563,10 @@ void	Server::sendPong (User* user, std::string parameter) {
 	parameter.insert(0, " PONG ");
 	parameter.insert(0, name);
 	parameter.insert(0, " :");
-	ssize_t bytes_send = send(fd, &parameter, parameter.size(), 0);
+	ssize_t bytes_send = send(fd, &parameter, sizeof(parameter), 0);
 	if (bytes_send == -1) {
 		std::cout << "Error: send()" << std::endl;
-		// TODO delete user ? 
-		unsigned long i = 0;
-		while (i < channels.size())
-		{
-			if (channels[i]->userIsInChanFromUsername(user->getUsername()))
-			{
-				channels[i]->deleteUser(*user, "");
-				this->deleteUser(user);
-			}
-			i++;
-		}
-		return ;
+		this->deleteUser(user);
 	}
 }
 
@@ -558,4 +588,23 @@ std::vector<User *>	Server::getServOp()
 std::vector<User *>	Server::getServUsers()
 {
 	return (users);
+}
+
+void	Server::setServOperator(User*	user) {
+	std::vector<User *>::iterator it = std::find(this->operators.begin(), this->operators.end(), user);
+
+	if (it == this->operators.end()) {
+		this->operators.push_back(user);
+	}
+	std::vector<std::string> params;
+	irc::numericReply(381, user, params);
+
+}
+
+void	Server::deleteServOperator(User* user) {
+	std::vector<User *>::iterator it = std::find(this->operators.begin(), this->operators.end(), user);
+
+	if (it != operators.end()) {
+		this->operators.erase(it);
+	}		
 }

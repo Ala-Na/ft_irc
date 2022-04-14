@@ -14,11 +14,16 @@
 
 using namespace irc;
 
+User::User()
+{
+
+}
+
 User::User(int fd, struct sockaddr_in address)
 : _fd(fd)
 {
-	std::string	msg = "Please wait while we are connecting you...";
-	send(fd, &msg, msg.size(), MSG_DONTWAIT);
+	std::string	msg = "Please wait while we are connecting you...\r\n";
+	send(fd, &msg, sizeof(msg), 0);
 	_address = address;
 	userModes.set_a(false);		// user is flagged as away;
 	userModes.set_i(false);		// marks a users as invisible; hides you if someone does a /WHO or /NAMES outside the channel
@@ -36,6 +41,32 @@ User::User(int fd, struct sockaddr_in address)
 	this->_status = PASS;
 }
 
+
+User::User(int fd, struct sockaddr_in address, Server *server)
+{
+	_fd = fd;
+	_server = server;
+	_address = address;
+	std::string	msg = "Please wait while we are connecting you..."; 	// len = 42 or 43 if \n or 44 if \n\0
+	// char msg[43] = "Please wait while we are connecting you...";
+	send(_fd, &msg, sizeof(msg), 0);									// sizeof instead of std::string.size()
+	userModes.set_a(false);		// user is flagged as away;
+	userModes.set_i(false);		// marks a users as invisible; hides you if someone does a /WHO or /NAMES outside the channel
+	userModes.set_w(false);		// user receives wallops; Used by IRC operators, WALLOPS is a command utilized to send messages on an IRC network. WALLOPS messages are for broadcasting network information and its status to following users.
+	userModes.set_r(false);		// restricted user connection;
+	userModes.set_o(false);		// operator flag;
+	userModes.set_O(false);
+	// userModes.a = false;		// user is flagged as away;
+	// userModes.i = false;		// marks a users as invisible; hides you if someone does a /WHO or /NAMES outside the channel
+	// userModes.w = false;		// user receives wallops; Used by IRC operators, WALLOPS is a command utilized to send messages on an IRC network. WALLOPS messages are for broadcasting network information and its status to following users.
+	// userModes.r = false;		// restricted user connection;
+	// userModes.o = false;		// operator flag;
+	// userModes.O = false;
+	_nickname = "";
+	_username = "";
+	this->_status = PASS;
+}
+
 User::User(User const &src)
 {
 	*this = src;
@@ -43,10 +74,18 @@ User::User(User const &src)
 
 User &User::operator=(User const &src)
 {
+	_server = src._server;
 	_nickname = src._nickname;
 	_username = src._username;
 	_real_name = src._real_name;
 	_hostname = src._hostname;
+	_channels = src._channels;
+	_params = src._params;
+	_fd = src._fd;
+	_address = src._address;
+	_away_message = src._away_message;
+	_status = src._status;
+	userModes = src.userModes;
 	return (*this);
 }
 
@@ -217,7 +256,7 @@ void	User::setAwayMessage(std::string msg)
 
 void	User::sendMessage(int fd, std::string msg)
 {
-	send(fd, &msg, msg.size(), MSG_DONTWAIT);
+	send(fd, &msg, sizeof(msg), 0);
 }
 
 void	User::setParams(std::vector<std::string> params)
@@ -304,7 +343,7 @@ void	User::away(std::string msg)
 		userModes.set_a(true);
 		std::string reply = "You have been marked as being away";
 		setAwayMessage(msg);
-		send(this->_fd, &msg, msg.size(), MSG_DONTWAIT);
+		send(this->_fd, &msg, sizeof(msg), 0);
 		// // numeric reply sent to client
 		// std::string reply2 = getNickname() + " :" + msg;
 	}
@@ -374,7 +413,7 @@ void	User::whois(User usr)
 							+ nickname + usr._nickname
 							+ real_name + usr._real_name
 							+ hostname + usr._hostname;
-	send(usr._fd, &combined, combined.size(), MSG_DONTWAIT);
+	send(usr._fd, &combined, sizeof(combined), 0);
 }
 
 void	User::mode(std::vector<std::string> params)

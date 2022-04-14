@@ -68,9 +68,10 @@ namespace irc {
 
 			void						createUser ();
 			void						deleteUser (User* user);
+			void						deleteUserFromChannels (User* user);
 			Channel*					createChannel (std::string name);
 			void						receiveDatas ();
-			void						datasExtraction (std::string& buf, int pos);
+			void						datasExtraction (std::string& buf, size_t pos);
 
 			void						checkPassword (User* user, std::string parameters);
 			void						checkNick (User* user, std::string parameters);
@@ -89,7 +90,7 @@ namespace irc {
 			std::string					getName ();
 			Server&						getServer ();
 
-			User*						getSpecificUser (unsigned long user_nb);
+			User*						getSpecificUser (size_t user_nb);
 			Channel*					getChannelByName (std::string name);
 			// User*					getUserByName (std::string name);
 
@@ -99,6 +100,9 @@ namespace irc {
 			std::string					getVersion ();
 			std::vector<User *>			getServOp ();
 			std::vector<User *>			getServUsers ();
+			
+			void						setServOperator (User* user);
+			void						deleteServOperator (User* user);
 
 			void						intWallops ();
 
