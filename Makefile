@@ -16,7 +16,7 @@ OBJ_DIR =	obj
 
 CXX =		c++
 
-CFLAGS =	-Wall -Wextra -Werror -std=c++98 -g
+CFLAGS =	-Wall -Wextra -Werror -std=c++98 -g3 -fsanitize=address
 
 DEPFLAGS =	-MMD -MP
 

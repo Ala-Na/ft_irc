@@ -9,6 +9,7 @@ std::string Command::getParam()
 }
 
 Command::Command (Server& server, User* user, std::string& content) : server(server), user(user), content(content) {
+	// std::cout << "nick: " << user->getNickname() << std::endl;
 	this->prefix = "";
 }
 
@@ -27,6 +28,7 @@ void	Command::parseCommand () {
 	this->prefix = ft_toupper_str(this->prefix);
 	this->param = this->content;
 	std::cout << this->param << std::endl;
+
 	this->goToExecution();
 
 }
@@ -44,7 +46,9 @@ std::string	Command::getWord () {
 
 void	Command::goToExecution () {
 	// TODO delete unimplemented functions
-	int const nbr_cmd = 29;
+	// std::cout << "nick: " << user->getNickname() << std::endl;
+
+	int const nbr_cmd = 25;
 	void (Command::*pmf[nbr_cmd])() = {&Command::intPass, &Command::intNick, \
 		&Command::intUser, &Command::intOper, \
 		&Command::intJoin, &Command::intTopic, &Command::intMode, \
@@ -164,9 +168,9 @@ void	Command::intWhoIs()
 	arg.push_back(server.getName());
 	irc::numericReply(312, user, arg); // RPL_WHOISSERVER
 
-	if (user->userModes.a)
+	if (user->userModes.get_a())
 		irc::numericReply(301, user, arg); // RPL_AWAY
-	if (user->userModes.o)
+	if (user->userModes.get_o())
 		irc::numericReply(313, user, arg); // RPL_WHOISOPERATOR
 	irc::numericReply(318, user, arg); // RPL_ENDOFWHOIS
 }
@@ -190,10 +194,10 @@ void	Command::intUserhost()
 	while (i < params.size())
 	{
 		reply.append(user->getNickname());
-		if (user->userModes.o)
+		if (user->userModes.get_o())
 			reply.append("*");
 		reply.append("=");
-		if (user->userModes.a)
+		if (user->userModes.get_a())
 			reply.append("-");
 		else
 			reply.append("+");
@@ -214,7 +218,7 @@ void	Command::intAway()
 	std::string param = getParam();
 	user->away(param);
 	std::vector<std::string> arg;
-	if (user->userModes.a)
+	if (user->userModes.get_a())
 		irc::numericReply(306, user, arg); // NOWAWAY
 	else
 		irc::numericReply(305, user, arg); // UNAWAY
@@ -287,7 +291,7 @@ void	Command::intPrivMsg()
 	arg.clear();
 	arg.push_back(recipient->getNickname());
 	arg.push_back(recipient->getAwayMessage());
-	if (recipient->userModes.a)
+	if (recipient->userModes.get_a())
 		irc::numericReply(301, user, arg); // RPL_AWAY
 
 	recipient->setNickname(nickname);
@@ -365,7 +369,7 @@ void	Command::intNotice()
 	arg.clear();
 	arg.push_back(recipient->getNickname());
 	arg.push_back(recipient->getAwayMessage());
-	if (recipient->userModes.a)
+	if (recipient->userModes.get_a())
 		irc::numericReply(301, user, arg); // RPL_AWAY
 
 	recipient->setNickname(nickname);
@@ -387,8 +391,8 @@ void	Command::intWallops()
 	std::vector<User *>::iterator	it = users.begin();
 	while (it != users.end())
 	{
-		if ((*it)->userModes.w)
-			send((*it)->getFd(), &sentence, sentence.size(), MSG_DONTWAIT);
+		if ((*it)->userModes.get_w())
+			send((*it)->getFd(), &sentence, sizeof(sentence), 0);
 		it++;
 	}
 }
@@ -520,7 +524,7 @@ void Command::intJoin()
 		else
 		{
 			message = chan_found->getChanName() + ": channel joined\n";
-			ret = send(user->getFd(), &message, message.size(), 0);
+			ret = send(user->getFd(), &message, sizeof(message), 0);
 			if (ret == -1)
 			{
 				std::cerr << "Could not send message\n";
@@ -635,12 +639,12 @@ void Command::intOper()
 	{
 		irc::numericReply(464, user, arg);
 		return ;
-	}
-	if (user->isOperator())  // RPL_YOUREOPER
+	} else if (user->isOperator())  // RPL_YOUREOPER
 	{
 		irc::numericReply(481, user, arg);
 		return ;
 	}
+	//this->server->setServerOperator(this->user);
 	return ;
 }
 
@@ -1096,7 +1100,7 @@ void	 Command::intMode()
 	if (irc::there_is_no('O', letters) == 0 && vec.size() == 2)
 	{
 		message = chan_found->getChanCreator();
-		ret = send(user->getFd(), &message, message.size(), MSG_DONTWAIT);
+		ret = send(user->getFd(), &message, sizeof(message), 0);
 		if (ret == -1)
 		{
 			std::cerr << "Could not send message\n";

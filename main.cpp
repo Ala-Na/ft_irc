@@ -28,7 +28,7 @@ int	main (int argc, char **argv)
 
 	// First, check than arguments are presents
 	if (argc != 3) {
-		std::cerr << "Missing arguments.\nMust be launch as following:\n./ircsrv <port> <password>" << std::endl;
+		std::cerr << "Missing arguments.\nMust be launch as following:\n./ircserv <port> <password>" << std::endl;
 		return 1;
 	}
 
