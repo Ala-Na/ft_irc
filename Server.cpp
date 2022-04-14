@@ -3,7 +3,7 @@
 using namespace irc;
 
 Server::Server(std::string password, const char* port) : password(password), port(port) {
-	std::cout << "Initializating server..." << std::endl;
+	std::cout << "Initializing server..." << std::endl;
 	this->users = std::vector<User *>();
 	this->channels = std::vector<Channel *>();
 	this->pfds = std::vector<pollfd>();

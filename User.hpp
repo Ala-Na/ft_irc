@@ -84,6 +84,7 @@ namespace irc
 
 				The flag 's' is obsolete but MAY still be used.
 			*/
+			private:
 			bool		a;		// user is flagged as away;
 			bool		i;		// marks a users as invisible; hides you if someone does a /WHO or /NAMES outside the channel
 			bool		w;		// user receives wallops; Used by IRC operators, WALLOPS is a command utilized to send messages on an IRC network. WALLOPS messages are for broadcasting network information and its status to following users.
@@ -92,6 +93,20 @@ namespace irc
 			bool		O;		// local operator flag;
 			// bool s;			// marks a user for receipt of server notices.
 
+			public:
+			// UserModes_getters
+			bool	get_a();
+			bool	get_i();
+			bool	get_w();
+			bool	get_r();
+			bool	get_o();
+			bool	get_O();
+			void	set_a(bool val);
+			void	set_i(bool val);
+			void	set_w(bool val);
+			void	set_r(bool val);
+			void	set_o(bool val);
+			void	set_O(bool val);
 		};
 
 
@@ -103,6 +118,7 @@ namespace irc
 			~User();
 			User(const User &src);
 			User &operator=(const User &src);
+
 			// Getters
 			Server *	getServer();
 			std::string getNickname();
