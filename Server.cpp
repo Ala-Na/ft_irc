@@ -18,6 +18,12 @@ Server::~Server() {
 	for (std::vector<pollfd>::reverse_iterator it = pfds.rbegin(); it != pfds.rend(); it++) {
 		close((*it).fd);
 	}
+	for (std::vector<User *>::reverse_iterator it = this->users.rbegin(); it != this->users.rend(); it++) {
+		delete *it;
+	}
+	for (std::vector<Channel *>::reverse_iterator it = this->channels.rbegin(); it != this->channels.rend(); it++) {
+		delete *it;
+	}
 }
 
 int	Server::readConfFile() {
@@ -161,23 +167,6 @@ void	Server::addSocketToPoll(int socket_fd) {
 	this->pfds.back().events = POLLIN;
 }
 
-void	Server::deleteSocketFromPoll(std::vector<pollfd>::iterator& to_del) {
-	std::cout << "Closing connection to client fd = " << (*to_del).fd << std::endl;
-
-	int	position = to_del - this->pfds.begin();
-
-	close((*to_del).fd);
-	this->pfds.erase(to_del);
-	std::vector<User *>::iterator it1 = this->users.begin();
-	std::advance(it1, position);
-	delete (*it1);
-	this->users.erase(it1);
-	std::vector<std::string>::iterator it2 = this->datas.begin();
-	std::advance(it2, position);
-	this->datas.erase(it2);
-
-}
-
 void	Server::createUser() {
 	struct sockaddr_in	client_addr;
 	socklen_t			addr_len;
@@ -195,7 +184,6 @@ void	Server::createUser() {
 	this->addSocketToPoll(client_fd);
 	std::cout << "Accepting new connection from " << inet_ntoa(client_addr.sin_addr) << " on fd: " << client_fd << std::endl;
 	this->users.push_back(new User(client_fd, client_addr, this));
-	// std::cout << "UUUUSER0: " << users[0]->getUsername() << std::endl;
 	this->datas.push_back("");
 }
 
@@ -203,7 +191,7 @@ void	Server::deleteUser(User* user) {
 	for (std::vector<User *>::iterator it1 = this->users.begin(); \
 			it1 != this->users.end(); it1++) {
 		if ((*it1) == user) {
-			this->sendError(user, "Closing link");
+			std::cout << "Closing connection to client fd = " << (*it1)->getFd() << "\n" << std::endl;
 			this->deleteUserFromChannels(user);
 			this->deleteServOperator(user);
 			int position = it1 - this->users.begin();
@@ -211,10 +199,12 @@ void	Server::deleteUser(User* user) {
 			std::advance(it2, position);
 			this->datas.erase(it2);
 			std::vector<pollfd>::iterator it3 = this->pfds.begin();
-			std::advance(it3, position);
+			std::advance(it3, position + 1);
 			close((*it3).fd);
 			this->pfds.erase(it3);
 			delete *it1;
+			this->users.erase(it1);
+			return ;
 		}
 	}
 }
@@ -256,7 +246,7 @@ void	Server::receiveDatas() {
 	char		buf[SERV_BUF_SIZE + 1];
 	std::string	s_buf;
 
-	for (std::vector<pollfd>::iterator it = pfds.begin() + 1; it != pfds.end(); it++) {
+	for (std::vector<pollfd>::iterator it = pfds.begin() + 1; it != pfds.end(); ++it) {
 		if ((*it).revents & POLLIN) {
 			ssize_t	bytes_recv = recv((*it).fd, &buf, SERV_BUF_SIZE, 0);
 			if (bytes_recv <= 0) {
@@ -265,38 +255,43 @@ void	Server::receiveDatas() {
 				} else {
 					std::cout << "Client " << (*it).fd << " exited" << std::endl;
 				}
-				this->deleteSocketFromPoll(it);
+				int	position = it - this->pfds.begin();
+				std::vector<User *>::iterator it1 = this->users.begin();
+				std::advance(it1, position - 1);
+				this->deleteUser(*it1);
 				break ;
 			} else {
 				buf[bytes_recv] = 0;
 				std::cout << "From client (fd = " << (*it).fd << "): " << buf << std::endl;
 				s_buf = buf;
 				this->datasExtraction(s_buf, it - pfds.begin() - 1);
+				break ;
 			}
 		}
 	}
 }
 
 void	Server::datasExtraction(std::string& buf, size_t pos) {
-	// std::cout << "POOOOOOS: " << pos << std::endl;
 	User *user = this->getSpecificUser(pos);
-	// std::cout << "UUUUSER2: " << users[0]->getUsername() << std::endl;
-	// std::cout << "UUUUSER3: " << user->getUsername() << std::endl;
-	// std::cout << "buf: " << buf << std::endl;
+	static int i = 0;
 
 	datas[pos].append(buf);
+	std::cout << "Data for client " << pos << ": " << datas[pos] << std::endl;
 	size_t cmd_end = datas[pos].find("\r\n");
-	while (cmd_end != std::string::npos) {
-		if (datas[pos].empty() == 0 || datas[pos].size() <= 2)
-			break ;
+	while (cmd_end != std::string::npos && i < 2) {
 		std::string	content = datas[pos].substr(0, cmd_end);
-		// std::cout << "content: " << content << std::endl;
-		// std::cout << "POOOOOOS2: " << pos << std::endl;
-		datas[pos].erase(0, cmd_end + 2);
-		cmd_end = datas[pos].find("\r\n");
+		if (cmd_end + 2 >= datas[pos].size()) {
+			datas[pos].clear();
+			cmd_end = std::string::npos;
+		} else {
+			datas[pos].erase(0, cmd_end + 2);
+			cmd_end = datas[pos].find("\r\n");
+		}
+		std::cout << "Creating new command with: " << content << std::endl;
 		Command* cmd = new Command(getServer(), user, content);
 		cmd->parseCommand();
 		delete cmd;
+		i++;
 	}
 }
 
@@ -390,7 +385,10 @@ void	Server::checkPassword(User* user, std::string parameters) {
 void	Server::checkNick(User* user, std::string parameters) {
 	std::vector<std::string>	params;
 
-	if (parameters.empty()) {
+	if (user->getStatus() == PASS) {
+		this->checkPassword(user, "");
+		return ;
+	} else if (parameters.empty()) {
 		irc::numericReply(431, user, params);
 		if (user->isRegistered() == false)
 			this->deleteUser(user);
@@ -547,8 +545,8 @@ void	Server::sendError (User* user, std::string parameter) {
 	int fd = user->getFd();
 
 	parameter.insert(0, "ERROR :");
-	ssize_t bytes_send = send(fd, &parameter, sizeof(parameter), 0);
-	if (bytes_send == -1) {
+	int res = irc::sendString(fd, parameter);
+	if (res == -1) {
 		std::cout << "Error: send()" << std::endl;
 		this->deleteUser(user);
 	}
