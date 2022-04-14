@@ -64,7 +64,6 @@ namespace irc {
 			int							runServer ();
 
 			void						addSocketToPoll (int socket_fd);
-			void						deleteSocketFromPoll (std::vector<pollfd>::iterator& to_del);
 
 			void						createUser ();
 			void						deleteUser (User* user);

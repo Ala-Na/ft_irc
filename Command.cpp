@@ -9,7 +9,7 @@ std::string Command::getParam()
 }
 
 Command::Command (Server& server, User* user, std::string& content) : server(server), user(user), content(content) {
-	// std::cout << "nick: " << user->getNickname() << std::endl;
+	std::cout << "nick: " << user->getNickname() << std::endl;
 	this->prefix = "";
 }
 
