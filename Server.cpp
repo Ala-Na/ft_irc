@@ -80,7 +80,8 @@ int	Server::readConfFile() {
 
 int	Server::checkConf() {
 	if (this->conf.count("name") == 0 || this->conf.count("version") == 0
-		|| this->conf.count("adminloc1") == 0 || this->conf.count("adminemail") == 0) {
+		|| this->conf.count("adminloc1") == 0 || this->conf.count("adminemail") == 0
+		|| this->conf.count("creation") == 0) {
 		std::cerr << "Missing at least one non-optionnal configuration parameter" << std::endl;
 		return (-1);
 	}
