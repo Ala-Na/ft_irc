@@ -273,13 +273,11 @@ void	Server::receiveDatas() {
 
 void	Server::datasExtraction(std::string& buf, size_t pos) {
 	User *user = this->getSpecificUser(pos);
-	static int i = 0;
 	size_t	nbr_us = datas.size();
 
 	datas[pos].append(buf);
-	std::cout << "Data for client " << pos << ": " << datas[pos] << std::endl;
 	size_t cmd_end = datas[pos].find("\r\n");
-	while (datas.size() == nbr_us && cmd_end != std::string::npos && i < 3) {
+	while (datas.size() == nbr_us && cmd_end != std::string::npos) {
 		std::string	content = datas[pos].substr(0, cmd_end);
 		if (cmd_end + 2 >= datas[pos].size()) {
 			datas[pos].clear();
@@ -292,7 +290,6 @@ void	Server::datasExtraction(std::string& buf, size_t pos) {
 		Command* cmd = new Command(getServer(), user, content);
 		cmd->parseCommand();
 		delete cmd;
-		i++;
 	}
 }
 
@@ -325,17 +322,6 @@ Channel*	Server::getChannelByName(std::string name) {
 	}
 	return NULL;
 }
-
-// User*	Server::getUserByName(std::string name) const {
-// 	for (std::vector<User *>::iterator it = this->users.begin(); 
-// 		it != this->users.end(); it++)
-// 	{
-// 		// TODO
-// 		// Check if (*it)->getname() == name;
-// 		// If true, return user;
-// 	}
-// 	return NULL;
-// }
 
 User*	Server::getUserByUsername(std::string name)
 {
@@ -379,6 +365,7 @@ void	Server::checkPassword(User* user, std::string parameters) {
 	} else if (parameters.compare(this->password) != 0) {
 		irc::numericReply(464, user, params);
 		this->deleteUser(user);
+		return ;
 	}
 	user->setStatus(NICK);
 }
