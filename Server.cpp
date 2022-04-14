@@ -274,11 +274,12 @@ void	Server::receiveDatas() {
 void	Server::datasExtraction(std::string& buf, size_t pos) {
 	User *user = this->getSpecificUser(pos);
 	static int i = 0;
+	size_t	nbr_us = datas.size();
 
 	datas[pos].append(buf);
 	std::cout << "Data for client " << pos << ": " << datas[pos] << std::endl;
 	size_t cmd_end = datas[pos].find("\r\n");
-	while (cmd_end != std::string::npos && i < 2) {
+	while (datas.size() == nbr_us && cmd_end != std::string::npos && i < 3) {
 		std::string	content = datas[pos].substr(0, cmd_end);
 		if (cmd_end + 2 >= datas[pos].size()) {
 			datas[pos].clear();
