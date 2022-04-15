@@ -178,6 +178,8 @@ void	Server::createUser() {
 	if (this->users.size() == MAX_USERS) {
 		std::string	refused = "Too many users on server, your connection was refused";
 		irc::sendString(client_fd, refused);
+		// No need to close connection if error with sendString, as User is not created
+		// and fd is closed anyway
 		std::cout << "A new connection was refused because there's already too many clients" << std::endl;
 		close(client_fd);
 		return ;
@@ -537,7 +539,6 @@ void	Server::sendError (User* user, std::string parameter) {
 	parameter.insert(0, "ERROR :");
 	int res = irc::sendString(fd, parameter);
 	if (res == -1) {
-		std::cout << "Error: send()" << std::endl;
 		this->deleteUser(user);
 	}
 }
@@ -553,7 +554,6 @@ void	Server::sendPong (User* user, std::string parameter) {
 	parameter.insert(0, " :");
 	int ret = irc::sendString(fd, parameter);
 	if (ret == -1) {
-		std::cout << "Error: send()" << std::endl;
 		this->deleteUser(user);
 	}
 }

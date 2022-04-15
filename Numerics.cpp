@@ -5,14 +5,14 @@ using namespace irc;
 
 #define END "\r\n"
 
-void	irc::sendNumeric(int fd, std::string msg) {
+int	irc::sendNumeric(int fd, std::string msg) {
 	std::cout << "In send num" << std::endl;
-	//int res = irc::sendString(fd, msg);
-	int res = send(fd, msg.c_str(), sizeof(msg), 0);
+	int res = irc::sendString(fd, msg);
 	if (res == -1) {
-		std::cerr << "Error while sending message to fd = " << fd << std::endl;
 		// TODO close connection
+		return -1;
 	}
+	return 0;
 }
 
 /* COMMAND RESPONSES */
@@ -135,7 +135,7 @@ void	irc::sendNumeric(int fd, std::string msg) {
 /* 502 */ std::string	irc::ErrUsersDontMatch () { return (" :Cannot change mode for tohers users"); }
 
 
-void	irc::numericReply(int num_nb, User* user, std::vector<std::string>& s_params) {
+int	irc::numericReply(int num_nb, User* user, std::vector<std::string>& s_params) {
 	std::string					msg;
 	char		 				s_num_nb[4];
 	// TODO maybe modify following functions calls
@@ -408,5 +408,5 @@ void	irc::numericReply(int num_nb, User* user, std::vector<std::string>& s_param
 			break;
 	}
 	msg += END;
-	irc::sendNumeric(fd, msg);
+	return (irc::sendNumeric(fd, msg));
 }

@@ -68,7 +68,8 @@ void	Command::goToExecution () {
 	for (unsigned long i = 0; i < nbr_cmd; i++) {
 		if (!this->prefix.compare(msg[i])) {
 			if (i >= 3 && this->user->isRegistered() == false) {
-				break;
+				//TODO maybe send error message ? But there's not command code for it
+				return;
 			}
 			(this->*pmf[i])();
 			return ;
@@ -391,8 +392,12 @@ void	Command::intWallops()
 	std::vector<User *>::iterator	it = users.begin();
 	while (it != users.end())
 	{
-		if ((*it)->userModes.get_w())
-			irc::sendString((*it)->getFd(), sentence);
+		if ((*it)->userModes.get_w()) {
+			int res = irc::sendString((*it)->getFd(), sentence);
+			if (res == -1) {
+				//TODO close connection
+			}
+		}
 		it++;
 	}
 }
@@ -527,7 +532,7 @@ void Command::intJoin()
 			ret = irc::sendString(user->getFd(), message);
 			if (ret == -1)
 			{
-				std::cerr << "Could not send message\n";
+				//TODO close connection
 				return ;
 			}
 			chan_found->addUser(*user);
@@ -1103,7 +1108,7 @@ void	 Command::intMode()
 		ret = irc::sendString(user->getFd(), message);
 		if (ret == -1)
 		{
-			std::cerr << "Could not send message\n";
+			// TODO close connection
 			return ;
 		}
 		return ;

@@ -302,27 +302,28 @@ int	Channel::receivingAnInvitation(User & user_inviting, User & user_invited)
 	if (irc::there_is_no('i', chan_mode) == 0 && isOperator(user_inviting) == 0)
 	{
 		message = "Only an operator can invite on channel " + chan_name;
-		//ret = irc::sendString(user_inviting.getFd(), message);
-		ret = send(user_inviting.getFd(), &message, sizeof(message), 0);
+		ret = irc::sendString(user_inviting.getFd(), message);
 		if (ret == -1)
 		{
-			std::cerr << "Only an operator can invite on channel " << chan_name << "\n";
+			std::cerr << "Could not send :Only an operator can invite on channel " << chan_name << "\n";
+			// TODO close connection here or in calling function
 			return (-1);
 		}
 		return (1);
 	}
 	message = "Invitation sent to " + user_invited.getNickname() + " to join channel " + chan_name;
-	//ret = irc::sendString(user_inviting.getFd(), message);
-	ret = send(user_inviting.getFd(), &message, sizeof(message), 0);
+	ret = irc::sendString(user_inviting.getFd(), message);
 	if (ret == -1)
 	{
 		std::cerr << "Could not send invitation\n";
+		// TODO close connection here or in calling function
 		return (-1);
 	}
 	message = "Invitation coming from " + user_inviting.getNickname() + " to join channel " + chan_name;
 	ret = irc::sendString(user_inviting.getFd(), message);
 	if (ret == -1)
 	{
+		// TODO close connection here or in calling function
 		std::cerr << "Could not receive invitation\n";
 		return (-1);
 	}
@@ -349,6 +350,7 @@ int Channel::listAllUsersInChan(User & user_asking)
 	if (ret == -1)
 	{
 		std::cerr << "Could not send list of users to user " << user_asking.getNickname() << "\n";
+		// TODO close connection
 		return (-1);
 	}
 	return (0);
@@ -366,6 +368,7 @@ int	Channel::writeToAllChanUsers(std::string sentence_to_send)
 		if (ret == -1)
 		{
 			std::cerr << "Could not send message to user " << vec_chan_users[i].getNickname() << "\n";
+			// TODO close connection
 			return (-1);
 		}
 		i++;
@@ -383,7 +386,7 @@ int Channel::addUser(User & user_to_add)
 	if (vec_chan_users.size() == max_nb_users_in_chan)
 	{
 		ret = writeToAllChanUsers("Cannot add user: channel is full\n");
-		if (ret == -1)
+		if (ret == -1) 
 			return (1);
 		std::cerr << "Cannot add user: channel is full\n";
 		return (1);

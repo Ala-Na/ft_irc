@@ -6,7 +6,7 @@
 /*   By: anadege <anadege@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/31 11:14:35 by cboutier          #+#    #+#             */
-/*   Updated: 2022/04/14 01:09:27 by anadege          ###   ########.fr       */
+/*   Updated: 2022/04/15 11:28:37 by anadege          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -156,8 +156,6 @@ namespace irc
 			void	setAwayMessage(std::string msg);
 			void	setParams(std::vector<std::string> params);
 			void	setStatus(UserStatus status);
-
-			void	sendMessage(int fd, std::string msg);
 
 			void	addChannel(std::string const &chan);
 			void	deleteChannel(std::string const &chan);

@@ -6,7 +6,7 @@
 /*   By: anadege <anadege@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/04 09:41:08 by cboutier          #+#    #+#             */
-/*   Updated: 2022/04/15 01:35:22 by anadege          ###   ########.fr       */
+/*   Updated: 2022/04/15 11:38:02 by anadege          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,12 +31,6 @@ User::User(int fd, struct sockaddr_in address)
 	userModes.set_r(false);		// restricted user connection;
 	userModes.set_o(false);		// operator flag;
 	userModes.set_O(false);
-	// userModes.a = false;		// user is flagged as away;
-	// userModes.i = false;		// marks a users as invisible; hides you if someone does a /WHO or /NAMES outside the channel
-	// userModes.w = false;		// user receives wallops; Used by IRC operators, WALLOPS is a command utilized to send messages on an IRC network. WALLOPS messages are for broadcasting network information and its status to following users.
-	// userModes.r = false;		// restricted user connection;
-	// userModes.o = false;		// operator flag;
-	// userModes.O = false;
 	_nickname = "";
 	this->_status = PASS;
 }
@@ -246,16 +240,6 @@ void	User::setAwayMessage(std::string msg)
 	_away_message = msg;
 }
 
-void	User::sendMessage(int fd, std::string msg)
-{
-	int res = irc::sendString(fd, msg);
-	if (res == -1) {
-		std::cerr << "Error: send()" << std::endl;
-		//TODO delete User from Server but check that it doesn't try to do anything
-		// with current user
-	}
-}
-
 void	User::setParams(std::vector<std::string> params)
 {
 	_params = params;
@@ -305,44 +289,62 @@ void	User::nick(std::string nickname)
 
 void	User::privmsg(User usr, std::string msg) // pov de la pax qui recoit le msg, usr est la pax qui veut lui envoyer un msg
 {
+	int ret;
+	
 	if (usr.userModes.get_a())
 	{
-		sendMessage(usr._fd, this->getAwayMessage());
-		// send(usr._fd, this->getAwayMessage(), this->getAwayMessage().size())
+		ret = irc::sendString(usr._fd, this->getAwayMessage());
+		if (ret == -1) {
+			// TODO close connection
+			return ;
+		}
 		std::string reply = getNickname() + " :" + getAwayMessage();
 	}
-	sendMessage(this->_fd, msg);
-	// send(this->_fd, &msg, msg.size());
+	ret = irc::sendString(this->_fd, msg);
+	if (ret == -1) {
+		// TODO close connection
+	}
+
 }
 
 void	User::notice(std::string msg)
 {
-	sendMessage(this->_fd, msg);
-	// send(this->_fd, &msg, msg.size());
+	int ret = irc::sendString(this->_fd, msg);
+	if (ret == -1) {
+		// TODO close connection
+	}
 }
 
 void	User::wallops(std::string msg) // pov de la pax qui recoit le msg, usr est la pax qui veut lui envoyer un msg
 {
-	if(userModes.get_w() == true)
-		sendMessage(this->_fd, msg);
-	// send(this->_fd, &msg, msg.size());
+	if(userModes.get_w() == true) {
+		int ret = irc::sendString(this->_fd, msg);
+		if (ret == -1) {
+			// TODO close connection
+		}
+	}
 }
 
 void	User::away(std::string msg)
 {
+	int ret;
+	std::vector<std::string> params;
+	
 	if (userModes.get_a())
 	{
 		userModes.set_a(false);
-		std::string reply = "You are no longer marked as being away";
+		ret = irc::numericReply(305, this, params);
+
 	}
 	else
 	{
 		userModes.set_a(true);
-		std::string reply = "You have been marked as being away";
 		setAwayMessage(msg);
-		sendMessage(this->_fd, msg);
-		// // numeric reply sent to client
-		// std::string reply2 = getNickname() + " :" + msg;
+		params.push_back(msg);
+		ret = irc::numericReply(301, this, params);
+	}
+	if (ret == -1) {
+		// TODO close connection
 	}
 }
 
@@ -410,7 +412,7 @@ void	User::whois(User usr)
 							+ nickname + usr._nickname
 							+ real_name + usr._real_name
 							+ hostname + usr._hostname;
-	send(usr._fd, &combined, sizeof(combined), 0);
+	// TODO use numericsReply for WHOIS
 }
 
 void	User::mode(std::vector<std::string> params)
@@ -456,8 +458,6 @@ void	User::userCmd(std::vector<std::string>& params)
 	if (bit &1)
 		userModes.set_i(true);
 	_real_name = params[3];
-	// for(int i = 0; i < param.size(); i++)
-	// 	std::cout << i << ": " << param[i] << '\n';
 }
 
 bool	User::operator==(User const &rhs) const
