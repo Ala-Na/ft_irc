@@ -14,7 +14,6 @@ namespace irc {
 	int							there_is_no (char c, std::string str);
 	std::vector<std::string>	split (std::string text, std::string space_delimiter);
 
-	int	sendData (int client_fd, const void* data, int data_size);
 	int	sendString (int client_fd, const std::string& data);
 };
 
