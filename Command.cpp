@@ -68,7 +68,7 @@ void	Command::goToExecution () {
 	for (unsigned long i = 0; i < nbr_cmd; i++) {
 		if (!this->prefix.compare(msg[i])) {
 			if (i >= 3 && this->user->isRegistered() == false) {
-				// TODO maybe ignore ?
+				break;
 			}
 			(this->*pmf[i])();
 			return ;
@@ -392,7 +392,7 @@ void	Command::intWallops()
 	while (it != users.end())
 	{
 		if ((*it)->userModes.get_w())
-			send((*it)->getFd(), &sentence, sizeof(sentence), 0);
+			irc::sendString((*it)->getFd(), sentence);
 		it++;
 	}
 }
@@ -524,7 +524,7 @@ void Command::intJoin()
 		else
 		{
 			message = chan_found->getChanName() + ": channel joined\n";
-			ret = send(user->getFd(), &message, sizeof(message), 0);
+			ret = irc::sendString(user->getFd(), message);
 			if (ret == -1)
 			{
 				std::cerr << "Could not send message\n";
@@ -1100,7 +1100,7 @@ void	 Command::intMode()
 	if (irc::there_is_no('O', letters) == 0 && vec.size() == 2)
 	{
 		message = chan_found->getChanCreator();
-		ret = send(user->getFd(), &message, sizeof(message), 0);
+		ret = irc::sendString(user->getFd(), message);
 		if (ret == -1)
 		{
 			std::cerr << "Could not send message\n";

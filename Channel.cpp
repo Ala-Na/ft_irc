@@ -302,6 +302,7 @@ int	Channel::receivingAnInvitation(User & user_inviting, User & user_invited)
 	if (irc::there_is_no('i', chan_mode) == 0 && isOperator(user_inviting) == 0)
 	{
 		message = "Only an operator can invite on channel " + chan_name;
+		//ret = irc::sendString(user_inviting.getFd(), message);
 		ret = send(user_inviting.getFd(), &message, sizeof(message), 0);
 		if (ret == -1)
 		{
@@ -311,6 +312,7 @@ int	Channel::receivingAnInvitation(User & user_inviting, User & user_invited)
 		return (1);
 	}
 	message = "Invitation sent to " + user_invited.getNickname() + " to join channel " + chan_name;
+	//ret = irc::sendString(user_inviting.getFd(), message);
 	ret = send(user_inviting.getFd(), &message, sizeof(message), 0);
 	if (ret == -1)
 	{
@@ -318,7 +320,7 @@ int	Channel::receivingAnInvitation(User & user_inviting, User & user_invited)
 		return (-1);
 	}
 	message = "Invitation coming from " + user_inviting.getNickname() + " to join channel " + chan_name;
-	ret = send(user_invited.getFd(), &message, sizeof(message), 0);
+	ret = irc::sendString(user_inviting.getFd(), message);
 	if (ret == -1)
 	{
 		std::cerr << "Could not receive invitation\n";
@@ -343,7 +345,7 @@ int Channel::listAllUsersInChan(User & user_asking)
 			name += ".";
 		i++;
 	}
-	ret = send(user_asking.getFd(), &name, sizeof(name), 0);
+	ret = irc::sendString(user_asking.getFd(), name);
 	if (ret == -1)
 	{
 		std::cerr << "Could not send list of users to user " << user_asking.getNickname() << "\n";
@@ -360,7 +362,7 @@ int	Channel::writeToAllChanUsers(std::string sentence_to_send)
 	i = 0;
 	while (i < vec_chan_users.size())
 	{
-		ret = send(vec_chan_users[i].getFd(), &sentence_to_send, sizeof(sentence_to_send), 0);
+		ret = irc::sendString(vec_chan_users[i].getFd(), sentence_to_send);
 		if (ret == -1)
 		{
 			std::cerr << "Could not send message to user " << vec_chan_users[i].getNickname() << "\n";

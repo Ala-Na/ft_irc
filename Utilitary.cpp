@@ -53,6 +53,7 @@ int	irc::sendData(int client_fd, const void* data, int data_size) {
 	int bytes_sent;
 
 	while (data_size > 0) {
+		std::cout<< "send" << std::endl;
 		bytes_sent = send(client_fd, data_ptr, data_size, 0);
 		if (bytes_sent == -1) {
 			return (-1);
@@ -66,6 +67,7 @@ int	irc::sendData(int client_fd, const void* data, int data_size) {
 int irc::sendString(int client_fd, const std::string& data) {
 	ulong	data_size = htonl(data.size());
 
+	std::cout << client_fd << " " << data << std::endl;
 	int result = sendData(client_fd, &data_size, sizeof(data_size));
 	if (result == 0) {
 		result = sendData(client_fd, data.c_str(), data.size());

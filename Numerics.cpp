@@ -6,8 +6,10 @@ using namespace irc;
 #define END "\r\n"
 
 void	irc::sendNumeric(int fd, std::string msg) {
-	int bytes_send = send(fd, msg.c_str(), msg.size(), 0);
-	if ((size_t)bytes_send < msg.size()) {
+	std::cout << "In send num" << std::endl;
+	//int res = irc::sendString(fd, msg);
+	int res = send(fd, msg.c_str(), sizeof(msg), 0);
+	if (res == -1) {
 		std::cerr << "Error while sending message to fd = " << fd << std::endl;
 		// TODO close connection
 	}

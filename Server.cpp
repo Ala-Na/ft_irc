@@ -177,7 +177,7 @@ void	Server::createUser() {
 	client_fd = accept(this->server_socket, (struct sockaddr *)&client_addr, &addr_len);
 	if (this->users.size() == MAX_USERS) {
 		std::string	refused = "Too many users on server, your connection was refused";
-		send(client_fd, &refused, sizeof(refused), 0);
+		irc::sendString(client_fd, refused);
 		std::cout << "A new connection was refused because there's already too many clients" << std::endl;
 		close(client_fd);
 		return ;
@@ -427,6 +427,7 @@ void	Server::checkUserCmd(User* user, std::string parameters) {
 void	Server::welcomeUser(User *user) {
 	std::vector<std::string>	params;
 
+	std::cout << "In welcome" << std::endl;
 	params.push_back(user->getUsername());
 	params.push_back(user->getHostname());
 	irc::numericReply(1, user, params);
@@ -550,8 +551,8 @@ void	Server::sendPong (User* user, std::string parameter) {
 	parameter.insert(0, " PONG ");
 	parameter.insert(0, name);
 	parameter.insert(0, " :");
-	ssize_t bytes_send = send(fd, &parameter, sizeof(parameter), 0);
-	if (bytes_send == -1) {
+	int ret = irc::sendString(fd, parameter);
+	if (ret == -1) {
 		std::cout << "Error: send()" << std::endl;
 		this->deleteUser(user);
 	}

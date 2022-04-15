@@ -6,7 +6,7 @@
 /*   By: anadege <anadege@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/04 09:41:08 by cboutier          #+#    #+#             */
-/*   Updated: 2022/04/15 00:48:54 by anadege          ###   ########.fr       */
+/*   Updated: 2022/04/15 01:35:22 by anadege          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,8 +22,6 @@ User::User()
 User::User(int fd, struct sockaddr_in address)
 : _fd(fd)
 {
-	std::string	msg = "Please wait while we are connecting you...\r\n";
-	send(fd, &msg, sizeof(msg), 0);
 	_address = address;
 	// TODO recuperate hostname in address
 	//_hostname = 
@@ -56,12 +54,6 @@ User::User(int fd, struct sockaddr_in address, Server *server)
 	userModes.set_r(false);		// restricted user connection;
 	userModes.set_o(false);		// operator flag;
 	userModes.set_O(false);
-	// userModes.a = false;		// user is flagged as away;
-	// userModes.i = false;		// marks a users as invisible; hides you if someone does a /WHO or /NAMES outside the channel
-	// userModes.w = false;		// user receives wallops; Used by IRC operators, WALLOPS is a command utilized to send messages on an IRC network. WALLOPS messages are for broadcasting network information and its status to following users.
-	// userModes.r = false;		// restricted user connection;
-	// userModes.o = false;		// operator flag;
-	// userModes.O = false;
 	_nickname = "";
 	_username = "";
 	this->_status = PASS;
@@ -256,7 +248,12 @@ void	User::setAwayMessage(std::string msg)
 
 void	User::sendMessage(int fd, std::string msg)
 {
-	send(fd, &msg, sizeof(msg), 0);
+	int res = irc::sendString(fd, msg);
+	if (res == -1) {
+		std::cerr << "Error: send()" << std::endl;
+		//TODO delete User from Server but check that it doesn't try to do anything
+		// with current user
+	}
 }
 
 void	User::setParams(std::vector<std::string> params)
@@ -343,7 +340,7 @@ void	User::away(std::string msg)
 		userModes.set_a(true);
 		std::string reply = "You have been marked as being away";
 		setAwayMessage(msg);
-		send(this->_fd, &msg, sizeof(msg), 0);
+		sendMessage(this->_fd, msg);
 		// // numeric reply sent to client
 		// std::string reply2 = getNickname() + " :" + msg;
 	}
