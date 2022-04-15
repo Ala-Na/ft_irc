@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <iostream>
 
 namespace irc {
 	std::string					ft_toupper_str (std::string& str);
