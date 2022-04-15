@@ -6,7 +6,6 @@ using namespace irc;
 #define END "\r\n"
 
 int	irc::sendNumeric(int fd, std::string msg) {
-	std::cout << "In send num" << std::endl;
 	int res = irc::sendString(fd, msg);
 	if (res == -1) {
 		// TODO close connection
@@ -138,7 +137,6 @@ int	irc::sendNumeric(int fd, std::string msg) {
 int	irc::numericReply(int num_nb, User* user, std::vector<std::string>& s_params) {
 	std::string					msg;
 	char		 				s_num_nb[4];
-	// TODO maybe modify following functions calls
 	int							fd = user->getFd();
 	std::string					nick = user->getNickname();
 	std::string					server = user->getServer()->getName();

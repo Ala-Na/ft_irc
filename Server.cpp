@@ -152,8 +152,6 @@ int	Server::runServer() {
 		} else if (running == true) {
 			if (pfds[0].revents & POLLIN) {
 				this->createUser();
-				// std::cout << "UUUUUUUUSER1: " << users[0]->getUsername() << std::endl;
-
 			}
 			this->receiveDatas();
 		}
@@ -307,8 +305,6 @@ Server&	Server::getServer() {
 
 // Here, user_nb is from 0 to max - 1.
 User*	Server::getSpecificUser(size_t user_nb) {
-	// std::cout << "nb : " << user_nb << std::endl;
-	// std::cout << "users size : " << users.size() << std::endl;
 	if (user_nb < this->users.size())
 		return this->users[user_nb];
 	return NULL;

@@ -9,7 +9,6 @@ std::string Command::getParam()
 }
 
 Command::Command (Server& server, User* user, std::string& content) : server(server), user(user), content(content) {
-	std::cout << "nick: " << user->getNickname() << std::endl;
 	this->prefix = "";
 }
 
@@ -46,8 +45,6 @@ std::string	Command::getWord () {
 
 void	Command::goToExecution () {
 	// TODO delete unimplemented functions
-	// std::cout << "nick: " << user->getNickname() << std::endl;
-
 	int const nbr_cmd = 25;
 	void (Command::*pmf[nbr_cmd])() = {&Command::intPass, &Command::intNick, \
 		&Command::intUser, &Command::intOper, \

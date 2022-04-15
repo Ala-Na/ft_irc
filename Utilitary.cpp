@@ -31,7 +31,6 @@ std::vector<std::string>	irc::split(std::string text, std::string space_delimite
 	size_t pos = 0;
 	while ((pos = text.find_first_of(space_delimiter)) != std::string::npos)
 	{
-		std::cout << "substr: " << text.substr(0) << std::endl;
 		if (text[0] == ':')
 		{
 			words.push_back(text.substr(0));
