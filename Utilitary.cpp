@@ -31,7 +31,6 @@ std::vector<std::string>	irc::split(std::string text, std::string space_delimite
 	size_t pos = 0;
 	while ((pos = text.find_first_of(space_delimiter)) != std::string::npos)
 	{
-		std::cout << "substr: " << text.substr(0) << std::endl;
 		if (text[0] == ':')
 		{
 			words.push_back(text.substr(0));
@@ -48,27 +47,10 @@ std::vector<std::string>	irc::split(std::string text, std::string space_delimite
 	return (words);
 }
 
-int	irc::sendData(int client_fd, const void* data, int data_size) {
-	const char*	data_ptr = (const char*) data;
-	int bytes_sent;
-
-	while (data_size > 0) {
-		bytes_sent = send(client_fd, data_ptr, data_size, 0);
-		if (bytes_sent == -1) {
-			return (-1);
-		}
-		data_ptr += bytes_sent;
-		data_size -= bytes_sent;
-	}
-	return (0);
-}
-
 int irc::sendString(int client_fd, const std::string& data) {
-	ulong	data_size = htonl(data.size());
-
-	int result = sendData(client_fd, &data_size, sizeof(data_size));
-	if (result == 0) {
-		result = sendData(client_fd, data.c_str(), data.size());
+	int result = send(client_fd, data.c_str(), data.length(), 0);
+	if (result == -1) {
+		std::cerr << "Error: send() with client fd = " << client_fd << std::endl;
 	}
 	return result;
 }

@@ -5,12 +5,13 @@ using namespace irc;
 
 #define END "\r\n"
 
-void	irc::sendNumeric(int fd, std::string msg) {
-	int bytes_send = send(fd, msg.c_str(), msg.size(), 0);
-	if ((size_t)bytes_send < msg.size()) {
-		std::cerr << "Error while sending message to fd = " << fd << std::endl;
+int	irc::sendNumeric(int fd, std::string msg) {
+	int res = irc::sendString(fd, msg);
+	if (res == -1) {
 		// TODO close connection
+		return -1;
 	}
+	return 0;
 }
 
 /* COMMAND RESPONSES */
@@ -133,10 +134,9 @@ void	irc::sendNumeric(int fd, std::string msg) {
 /* 502 */ std::string	irc::ErrUsersDontMatch () { return (" :Cannot change mode for tohers users"); }
 
 
-void	irc::numericReply(int num_nb, User* user, std::vector<std::string>& s_params) {
+int	irc::numericReply(int num_nb, User* user, std::vector<std::string>& s_params) {
 	std::string					msg;
 	char		 				s_num_nb[4];
-	// TODO maybe modify following functions calls
 	int							fd = user->getFd();
 	std::string					nick = user->getNickname();
 	std::string					server = user->getServer()->getName();
@@ -406,5 +406,5 @@ void	irc::numericReply(int num_nb, User* user, std::vector<std::string>& s_param
 			break;
 	}
 	msg += END;
-	irc::sendNumeric(fd, msg);
+	return (irc::sendNumeric(fd, msg));
 }

@@ -152,8 +152,6 @@ int	Server::runServer() {
 		} else if (running == true) {
 			if (pfds[0].revents & POLLIN) {
 				this->createUser();
-				// std::cout << "UUUUUUUUSER1: " << users[0]->getUsername() << std::endl;
-
 			}
 			this->receiveDatas();
 		}
@@ -177,7 +175,9 @@ void	Server::createUser() {
 	client_fd = accept(this->server_socket, (struct sockaddr *)&client_addr, &addr_len);
 	if (this->users.size() == MAX_USERS) {
 		std::string	refused = "Too many users on server, your connection was refused";
-		send(client_fd, &refused, sizeof(refused), 0);
+		irc::sendString(client_fd, refused);
+		// No need to close connection if error with sendString, as User is not created
+		// and fd is closed anyway
 		std::cout << "A new connection was refused because there's already too many clients" << std::endl;
 		close(client_fd);
 		return ;
@@ -305,8 +305,6 @@ Server&	Server::getServer() {
 
 // Here, user_nb is from 0 to max - 1.
 User*	Server::getSpecificUser(size_t user_nb) {
-	// std::cout << "nb : " << user_nb << std::endl;
-	// std::cout << "users size : " << users.size() << std::endl;
 	if (user_nb < this->users.size())
 		return this->users[user_nb];
 	return NULL;
@@ -427,6 +425,7 @@ void	Server::checkUserCmd(User* user, std::string parameters) {
 void	Server::welcomeUser(User *user) {
 	std::vector<std::string>	params;
 
+	std::cout << "In welcome" << std::endl;
 	params.push_back(user->getUsername());
 	params.push_back(user->getHostname());
 	irc::numericReply(1, user, params);
@@ -536,7 +535,6 @@ void	Server::sendError (User* user, std::string parameter) {
 	parameter.insert(0, "ERROR :");
 	int res = irc::sendString(fd, parameter);
 	if (res == -1) {
-		std::cout << "Error: send()" << std::endl;
 		this->deleteUser(user);
 	}
 }
@@ -550,9 +548,8 @@ void	Server::sendPong (User* user, std::string parameter) {
 	parameter.insert(0, " PONG ");
 	parameter.insert(0, name);
 	parameter.insert(0, " :");
-	ssize_t bytes_send = send(fd, &parameter, sizeof(parameter), 0);
-	if (bytes_send == -1) {
-		std::cout << "Error: send()" << std::endl;
+	int ret = irc::sendString(fd, parameter);
+	if (ret == -1) {
 		this->deleteUser(user);
 	}
 }
