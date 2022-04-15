@@ -401,6 +401,10 @@ void	Command::intWallops()
 
 std::string left_trim(const std::string &s, std::string to_remove)
 {
+	std::cout << "s dans left: " << s << std::endl;
+
+	if (s.size() == 0)
+		return (NULL);
 	size_t start = s.find_first_not_of(to_remove);
 	if (start == std::string::npos)
 		return (NULL);
@@ -409,6 +413,10 @@ std::string left_trim(const std::string &s, std::string to_remove)
 
 std::string right_trim(const std::string &s, std::string to_remove)
 {
+	std::cout << "s dans right_trim: " << s << std::endl;
+
+	if (s.size() == 0)
+		return (NULL);
 	size_t end = s.find_last_not_of(to_remove);
 	if (end == std::string::npos)
 		return (NULL);
@@ -417,6 +425,9 @@ std::string right_trim(const std::string &s, std::string to_remove)
 
 std::string trim(const std::string &s, std::string to_remove)
 {
+	std::cout << "s dans trim: " << s << std::endl;
+	if (s.size() == 0)
+		return (NULL);
 	return (right_trim(left_trim(s, to_remove), to_remove));
 }
 
@@ -541,13 +552,13 @@ void Command::intJoin()
 			params.push_back(chan_found->getChanName());
 			users = chan_found->getVecChanUsers();
 			nicks = "";
-			i = 0;
-			while (i < users.size())
+			unsigned long j = 0;
+			while (j < users.size())
 			{
-				nicks += users[i].getNickname();
-				if (i < users.size() - 1)
+				nicks += users[j].getNickname();
+				if (j < users.size() - 1)
 					nicks += ", ";
-				i++;
+				j++;
 			}
 			params.push_back(nicks);
 			irc::numericReply(353, user, params);	// RPL_NAMREPLY           
@@ -670,7 +681,8 @@ void Command::intPart()
 	i = 0;
 	while (i < vec_chan_names.size())
 	{
-		trim(vec_chan_names[i], " ");
+		std::cout << "vec_chan_names[" << i << "]: " << vec_chan_names[i] << std::endl;
+		vec_chan_names[i] = trim(vec_chan_names[i], " ");
 		i++;
 	}
 	i = 0;
@@ -964,7 +976,6 @@ void Command::intKill()
 	std::vector<std::string>		vec;
 	std::string             		nickname;
 	std::string             		comment;
-	// int                         	ret;
 	User *                      	user_to_kill;
 	std::vector<User *>::iterator	found;
 	std::vector<std::string> 		params;
@@ -1007,9 +1018,11 @@ int 	HasInvalidMode(std::string letters)
 	unsigned long	i;
 
 	i = 0;
+	if (letters[i] == '+' || letters[i] == '-')
+		i++;
 	while (letters[i])
 	{
-		if (letters[i] != '0' && letters[i] != 'o' && letters[i] != 'i' &&
+		if (letters[i] != 'O' && letters[i] != 'o' && letters[i] != 'i' &&
 			letters[i] != 't' && letters[i] != 'k' && letters[i] != 'l')
 			return (1);
 		i++;
@@ -1018,7 +1031,7 @@ int 	HasInvalidMode(std::string letters)
 }	
 
 void	 Command::intMode()
-{	
+{
 	std::vector<std::string>	vec;
 	std::string             	name;
 	std::string             	mode;
@@ -1045,14 +1058,25 @@ void	 Command::intMode()
 		irc::numericReply(461, user, params);
 		return ;
 	}
-	name = vec[0];
+	name = vec[0];			// can be name of channel OR USER... :'(
 	if (name[0] != '&' && name[0] != '#' && name[0] != '+' && name[0] !=  '!')
 		name.insert(0, "#");
 	chan_found = server.getChannelByName(name);
+	if (chan_found == NULL)
+	{
+		name = trim(name, "#");
+		std::cout << std::endl << "NAME: " << name << std::endl <<std::endl;
+		user_found = server.getUserByNick(name);
+		if (user_found == NULL)
+		{
+			std::cout << "No such channel or user.\n";
+			return ;
+		}
+	}
 	mode = vec[1];
 	if (mode[0] != '-' && mode[0] != '+')
-		name.insert(0, "+");
-	letters = trim(name, "-+");
+		mode.insert(0, "+");
+	letters = trim(mode, "-+");
 	if (HasInvalidMode(letters))     // ERR_UNKNOWNMODE
 	{
 		params.push_back(letters);
@@ -1063,7 +1087,12 @@ void	 Command::intMode()
 	arg = "";
 	if (vec.size() > 2)
 		arg = vec[2];
-	chan_found->addMode(letters);
+	if (chan_found)
+	{
+		std::cout << "chan modes1: " << chan_found->getChanMode() << std::endl;
+		chan_found->addMode(letters);
+		std::cout << "chan modes2: " << chan_found->getChanMode() << std::endl;
+	}
 	if (irc::there_is_no('k', letters) == 0 && vec.size() == 3)
 	{
 		if (mode[0] == '-' && arg == chan_found->getChanPassword())
@@ -1110,6 +1139,7 @@ void	 Command::intMode()
 		}
 		return ;
 	}
+	std::cout << "\n\nEND OF MODE FUNCTION\n\n";
 }
 
 void		Command::intPass() {

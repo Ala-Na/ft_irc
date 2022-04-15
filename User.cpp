@@ -32,6 +32,7 @@ User::User(int fd, struct sockaddr_in address)
 	userModes.set_o(false);		// operator flag;
 	userModes.set_O(false);
 	_nickname = "";
+	_username = "";
 	this->_status = PASS;
 }
 
@@ -41,7 +42,8 @@ User::User(int fd, struct sockaddr_in address, Server *server)
 	_fd = fd;
 	_server = server;
 	_address = address;
-									// sizeof instead of std::string.size()
+	// TODO recuperate hostname in address
+	//_hostname = 
 	userModes.set_a(false);		// user is flagged as away;
 	userModes.set_i(false);		// marks a users as invisible; hides you if someone does a /WHO or /NAMES outside the channel
 	userModes.set_w(false);		// user receives wallops; Used by IRC operators, WALLOPS is a command utilized to send messages on an IRC network. WALLOPS messages are for broadcasting network information and its status to following users.
@@ -49,7 +51,7 @@ User::User(int fd, struct sockaddr_in address, Server *server)
 	userModes.set_o(false);		// operator flag;
 	userModes.set_O(false);
 	_nickname = "";
-	_username = "";
+	_username = ""; //  Par défaut oui mais le nom précis, il ne peut pas le deviner, faut que ça vienne du client !
 	this->_status = PASS;
 }
 
@@ -60,18 +62,21 @@ User::User(User const &src)
 
 User &User::operator=(User const &src)
 {
-	_server = src._server;
-	_nickname = src._nickname;
-	_username = src._username;
-	_real_name = src._real_name;
-	_hostname = src._hostname;
-	_channels = src._channels;
-	_params = src._params;
-	_fd = src._fd;
-	_address = src._address;
-	_away_message = src._away_message;
-	_status = src._status;
-	userModes = src.userModes;
+	if (this != &src)
+	{
+		_server = src._server;
+		_nickname = src._nickname;
+		_username = src._username;
+		_real_name = src._real_name;
+		_hostname = src._hostname;
+		_channels = src._channels;
+		_params = src._params;
+		_fd = src._fd;
+		_address = src._address;
+		_away_message = src._away_message;
+		_status = src._status;
+		userModes = src.userModes;
+	}
 	return (*this);
 }
 
@@ -303,6 +308,7 @@ void	User::privmsg(User usr, std::string msg) // pov de la pax qui recoit le msg
 	ret = irc::sendString(this->_fd, msg);
 	if (ret == -1) {
 		// TODO close connection
+		return ;
 	}
 
 }

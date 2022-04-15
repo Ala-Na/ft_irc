@@ -43,7 +43,7 @@ std::vector<std::string>	irc::split(std::string text, std::string space_delimite
 		text.erase(0, pos + nbDelimiters);
 	}
 	words.push_back(text.substr(0));
-	words.push_back("\0");
+	// words.push_back("\0");
 	return (words);
 }
 

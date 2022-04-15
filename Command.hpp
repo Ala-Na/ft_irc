@@ -72,7 +72,7 @@ namespace irc {
 			void		intChannelMode();
 			void		intSummon();
 			void		intUsers();
-			
+
 			int			isServerOperator(User & user);
 
 	};
