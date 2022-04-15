@@ -383,6 +383,7 @@ int Channel::addUser(User & user_to_add)
 	std::string					user_added;
 	int							ret;
 
+	// std::cout << "DANS ADDUSER\n";
 	if (vec_chan_users.size() == max_nb_users_in_chan)
 	{
 		ret = writeToAllChanUsers("Cannot add user: channel is full\n");
@@ -396,11 +397,13 @@ int Channel::addUser(User & user_to_add)
 	{
 		ret = writeToAllChanUsers("Cannot add user: already exists\n");
 		if (ret == -1)
-			return (1);
-		std::cerr << "Cannot add user: already exists\n";
+			return (-1);
+		// std::cout << "1 - vec_chan_users.size(): " << vec_chan_users.size() << std::endl << std::endl;
 		return (1);
 	}
 	i = 0;
+	// std::cout << "2 - vec_chan_users.size(): " << vec_chan_users.size() << std::endl << std::endl;
+	return 0;
 	while (i < vec_chan_users.size())
 	{
 		if (vec_chan_users[i].getUsername() == user_to_add.getUsername())

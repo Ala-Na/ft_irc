@@ -311,15 +311,24 @@ User*	Server::getSpecificUser(size_t user_nb) {
 }
 
 Channel*	Server::getChannelByName(std::string name) {
-	for (std::vector<Channel *>::iterator it = this->channels.begin(); \
-		it != this->channels.end(); it++)
+	// for (std::vector<Channel *>::iterator it = this->channels.begin(); it != this->channels.end(); it++)
+	// {
+	// 	// TODO
+	// 	// Check if (*it)->getname() == name;
+	// 	// If true, return channel;
+	// 	if ((*it)->getChanName() == name)
+	// 		return (*it);
+	// }
+	unsigned long	i;
+
+	i = 0;
+	while (i < channels.size())
 	{
-		// TODO
-		// Check if (*it)->getname() == name;
-		// If true, return channel;
-		(void)name;
+		if (channels[i]->getChanName() == name)
+			return (channels[i]);
+		i++;
 	}
-	return NULL;
+	return (NULL);
 }
 
 User*	Server::getUserByUsername(std::string name)
@@ -329,6 +338,8 @@ User*	Server::getUserByUsername(std::string name)
 	i = 0;
 	while (i < users.size())
 	{
+		std::cout << "users[" << i << "]->getusername(): " << users[i]->getUsername() << std::endl;
+		std::cout << "name: " << name << std::endl;
 		if (users[i]->getUsername() == name)
 			return (users[i]);
 		i++;
