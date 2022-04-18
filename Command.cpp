@@ -504,7 +504,9 @@ void Command::intJoin()
 		chan_found = server.getChannelByName(name);
 		if (chan_found == NULL)
 		{
-			chan_found = server.createChannel(name);
+			if ((chan_found = server.createChannel(name)) == NULL) {
+				return ;
+			}
 			user->set_o(true);
 			if (key.size() > 0)
 				chan_found->setChanPassword(key);
@@ -739,6 +741,8 @@ void    Command::intQuit()
 		chan_found->deleteUser(*user, "");
 		i++;
 	}
+	this->server.sendError(user, this->param);	
+	this->server.deleteUser(user);
 }
 
 void    Command::intNames()

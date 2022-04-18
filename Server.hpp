@@ -20,7 +20,6 @@
 #include <fcntl.h>
 #include <stdlib.h>
 
-// TODO modify following path
 #include "User.hpp"
 #include "Channel.hpp"
 #include "Command.hpp"
