@@ -170,6 +170,8 @@ void	Server::createUser() {
 	struct sockaddr_in	client_addr;
 	socklen_t			addr_len;
 	int					client_fd;
+	char				host[1024];
+	char 				service[20];
 
 	addr_len = sizeof(client_addr);
 	client_fd = accept(this->server_socket, (struct sockaddr *)&client_addr, &addr_len);
@@ -182,9 +184,16 @@ void	Server::createUser() {
 		close(client_fd);
 		return ;
 	}
+	if (getnameinfo((const sockaddr *)&client_addr, sizeof(client_addr), \
+		host, sizeof(host), service, sizeof(service), NI_NOFQDN) ==  -1) {
+			std::cout << "Error: getnameinfo()" << std::cerr;
+			close(client_fd);
+			return ;
+	}
+	std::string hostname(host);
 	this->addSocketToPoll(client_fd);
 	std::cout << "Accepting new connection from " << inet_ntoa(client_addr.sin_addr) << " on fd: " << client_fd << std::endl;
-	this->users.push_back(new User(client_fd, client_addr, this));
+	this->users.push_back(new User(client_fd, hostname, client_addr, this));
 	this->datas.push_back("");
 }
 

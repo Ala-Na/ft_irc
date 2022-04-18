@@ -6,7 +6,7 @@
 /*   By: anadege <anadege@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/04 09:41:08 by cboutier          #+#    #+#             */
-/*   Updated: 2022/04/15 11:38:02 by anadege          ###   ########.fr       */
+/*   Updated: 2022/04/18 16:33:42 by anadege          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,12 +19,11 @@ User::User()
 
 }
 
-User::User(int fd, struct sockaddr_in address)
+User::User(int fd, std::string& hostname, struct sockaddr_in& address)
 : _fd(fd)
 {
 	_address = address;
-	// TODO recuperate hostname in address
-	//_hostname = 
+	_hostname = hostname;
 	userModes.set_a(false);		// user is flagged as away;
 	userModes.set_i(false);		// marks a users as invisible; hides you if someone does a /WHO or /NAMES outside the channel
 	userModes.set_w(false);		// user receives wallops; Used by IRC operators, WALLOPS is a command utilized to send messages on an IRC network. WALLOPS messages are for broadcasting network information and its status to following users.
@@ -37,11 +36,12 @@ User::User(int fd, struct sockaddr_in address)
 }
 
 
-User::User(int fd, struct sockaddr_in address, Server *server)
+User::User(int fd, std::string& hostname, struct sockaddr_in& address, Server *server)
 {
 	_fd = fd;
 	_server = server;
 	_address = address;
+	_hostname = hostname;
 	// TODO recuperate hostname in address
 	//_hostname = 
 	userModes.set_a(false);		// user is flagged as away;
