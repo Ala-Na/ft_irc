@@ -6,7 +6,7 @@
 /*   By: anadege <anadege@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/31 11:14:35 by cboutier          #+#    #+#             */
-/*   Updated: 2022/04/18 16:40:35 by anadege          ###   ########.fr       */
+/*   Updated: 2022/04/18 18:55:45 by anadege          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -188,7 +188,7 @@ namespace irc
 			void		privmsg(User * usr, std::string msg);
 			void		notice(std::string msg);
 			void		wallops(std::string msg);
-			void		away(std::string msg = "");
+			int			away(std::string msg = "");
 			void		quit(void);
 			void		part();
 			// void		part(std::vector<std::string> params);
