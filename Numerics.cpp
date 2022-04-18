@@ -70,7 +70,7 @@ int	irc::sendNumeric(int fd, std::string msg) {
 /* 372 */ std::string	irc::RplMotd (std::string motd_line) { return (":- " + motd_line); }
 // Note : Max 80 char for each motd line
 /* 374 */ std::string	irc::RplEndOfInfo () { return (" :End of INFO list"); }
-/* 375 */ std::string	irc::RplMotdStart (std::string server) { return (" :- " + server + "Message of the day -"); }
+/* 375 */ std::string	irc::RplMotdStart (std::string server) { return (" :- " + server + " Message of the day -"); }
 /* 376 */ std::string	irc::RplEndOfMotd () { return (" :End of MOTD command"); }
 /* 381 */ std::string	irc::RplYourOper () { return ( " :You are now an IRC operator"); }
 // 382 - No need

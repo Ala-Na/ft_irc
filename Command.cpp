@@ -166,9 +166,9 @@ void	Command::intWhoIs()
 	arg.push_back(server.getName());
 	irc::numericReply(312, user, arg); // RPL_WHOISSERVER
 
-	if (user->userModes.get_a())
+	if (user->get_a())
 		irc::numericReply(301, user, arg); // RPL_AWAY
-	if (user->userModes.get_o())
+	if (user->get_o())
 		irc::numericReply(313, user, arg); // RPL_WHOISOPERATOR
 	irc::numericReply(318, user, arg); // RPL_ENDOFWHOIS
 }
@@ -192,10 +192,10 @@ void	Command::intUserhost()
 	while (i < params.size())
 	{
 		reply.append(user->getNickname());
-		if (user->userModes.get_o())
+		if (user->get_o())
 			reply.append("*");
 		reply.append("=");
-		if (user->userModes.get_a())
+		if (user->get_a())
 			reply.append("-");
 		else
 			reply.append("+");
@@ -216,7 +216,7 @@ void	Command::intAway()
 	std::string param = getParam();
 	user->away(param);
 	std::vector<std::string> arg;
-	if (user->userModes.get_a())
+	if (user->get_a())
 		irc::numericReply(306, user, arg); // NOWAWAY
 	else
 		irc::numericReply(305, user, arg); // UNAWAY
@@ -283,18 +283,25 @@ void	Command::intPrivMsg()
 	if (username.size() > 0)
 		recipient = server.getUserByUsername(username);
 	if (!recipient)
+	{
 		irc::numericReply(401, user, arg); // NOSUCHNICK
-
-	user->privmsg(*recipient, msg);
+		// return ;
+	}
+	user->privmsg(recipient, msg);
 	arg.clear();
-	arg.push_back(recipient->getNickname());
-	arg.push_back(recipient->getAwayMessage());
-	if (recipient->userModes.get_a())
+	if (recipient)
+	{
+		arg.push_back(recipient->getNickname());
+		arg.push_back(recipient->getAwayMessage());
+	}
+	if (recipient && recipient->get_a())
 		irc::numericReply(301, user, arg); // RPL_AWAY
-
-	recipient->setNickname(nickname);
-	recipient->setUsername(username);
-	recipient->setHostname(hostname);
+	if (recipient)
+	{
+		recipient->setNickname(nickname);
+		recipient->setUsername(username);
+		recipient->setHostname(hostname);
+	}
 
 	//    ERR_CANNOTSENDTOCHAN            ERR_NOTOPLEVEL
 		// ERR_WILDTOPLEVEL                ERR_TOOMANYTARGETS
@@ -367,7 +374,7 @@ void	Command::intNotice()
 	arg.clear();
 	arg.push_back(recipient->getNickname());
 	arg.push_back(recipient->getAwayMessage());
-	if (recipient->userModes.get_a())
+	if (recipient->get_a())
 		irc::numericReply(301, user, arg); // RPL_AWAY
 
 	recipient->setNickname(nickname);
@@ -389,7 +396,7 @@ void	Command::intWallops()
 	std::vector<User *>::iterator	it = users.begin();
 	while (it != users.end())
 	{
-		if ((*it)->userModes.get_w()) {
+		if ((*it)->get_w()) {
 			int res = irc::sendString((*it)->getFd(), sentence);
 			if (res == -1) {
 				//TODO close connection
@@ -401,8 +408,6 @@ void	Command::intWallops()
 
 std::string left_trim(const std::string &s, std::string to_remove)
 {
-	std::cout << "s dans left: " << s << std::endl;
-
 	if (s.size() == 0)
 		return (NULL);
 	size_t start = s.find_first_not_of(to_remove);
@@ -413,8 +418,6 @@ std::string left_trim(const std::string &s, std::string to_remove)
 
 std::string right_trim(const std::string &s, std::string to_remove)
 {
-	std::cout << "s dans right_trim: " << s << std::endl;
-
 	if (s.size() == 0)
 		return (NULL);
 	size_t end = s.find_last_not_of(to_remove);
@@ -425,7 +428,6 @@ std::string right_trim(const std::string &s, std::string to_remove)
 
 std::string trim(const std::string &s, std::string to_remove)
 {
-	std::cout << "s dans trim: " << s << std::endl;
 	if (s.size() == 0)
 		return (NULL);
 	return (right_trim(left_trim(s, to_remove), to_remove));
@@ -503,6 +505,7 @@ void Command::intJoin()
 		if (chan_found == NULL)
 		{
 			chan_found = server.createChannel(name);
+			user->set_o(true);
 			if (key.size() > 0)
 				chan_found->setChanPassword(key);
 		}
@@ -574,7 +577,6 @@ void Command::intInvite()
 	std::string                 nickname;
 	std::string                 chan_name;
 	Channel                     *chan_found;
-	// int                         ret;
 	User *                      user_asked;
 	std::vector<std::string> 	params;
 
@@ -621,7 +623,7 @@ void Command::intInvite()
 	params.push_back(nickname);
 	params.push_back(chan_name);
 	irc::numericReply(341, user, params);
-	if (user_asked->isAway())	// RPL_AWAY
+	if (user_asked->get_a())	// RPL_AWAY
 	{
 		params.push_back(nickname);
 		params.push_back(user_asked->getAwayMessage());
@@ -635,7 +637,6 @@ void Command::intOper()
 	std::vector<std::string>	vec;
 	std::string                 name;
 	std::string                 key;
-	// int                         ret;
 	std::vector<std::string> 	params;
 
 	vec = irc::split(param, " ");
@@ -652,7 +653,7 @@ void Command::intOper()
 	{
 		irc::numericReply(464, user, arg);
 		return ;
-	} else if (user->isOperator())  // RPL_YOUREOPER
+	} else if (user->get_o())  // RPL_YOUREOPER
 	{
 		irc::numericReply(481, user, arg);
 		return ;
@@ -897,7 +898,6 @@ void Command::intTopic()
 	std::string 	            name;
 	std::string                 new_topic;
 	Channel                     *chan_found;
-	// int                         ret;
 	std::vector<std::string>	params;
 
 	if (param.size() == 0)  // ERR_NEEDMOREPARAMS
