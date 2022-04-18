@@ -43,7 +43,7 @@ namespace irc
 			Channel & operator=(Channel const & other);
 			~Channel();
 
-			std::string 		getChanName();
+			std::string 		getChanName(); 
 			std::string 		getChanPassword();
 			std::string 		getChanTopic();
 			std::string 		getChanMode();
@@ -56,7 +56,6 @@ namespace irc
 			std::string			getChanNameAndTopic();
 			User *				getUserFromUsername(std::string username);
 
-			int					setChanName(std::string name);				// first character & % + !, <= 50 char, case insensitive, no space, coma, :
 			void				setChanPassword(std::string password);
 			int					isOperator(User & user);
 			void				setChanTopic(std::string topic, User & user_who_changes);
