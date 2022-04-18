@@ -90,7 +90,6 @@ namespace irc {
 
 			User*						getSpecificUser (size_t user_nb);
 			Channel*					getChannelByName (std::string name);
-			// User*					getUserByName (std::string name);
 
 			User *						getUserByUsername (std::string name);
 			User *						getUserByNick (std::string nick);

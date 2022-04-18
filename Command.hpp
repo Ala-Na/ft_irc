@@ -4,6 +4,7 @@
 #include <cstring>
 #include <algorithm>
 #include <vector>
+#include <stdlib.h>
 
 // TODO modify following
 #include "Server.hpp"
