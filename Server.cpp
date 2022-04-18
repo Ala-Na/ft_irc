@@ -362,12 +362,10 @@ User*	Server::getUserByUsername(std::string name)
 	unsigned long i;
 
 	i = 0;
-	while (i < users.size())
-	{
-		// std::cout << "users[" << i << "]->getusername(): " << users[i]->getUsername() << std::endl;
-		// std::cout << "name: " << name << std::endl;
-		if (users[i]->getUsername() == name)
+	while (i < users.size()) {
+		if (users[i]->getUsername() == name) {
 			return (users[i]);
+		}
 		i++;
 	}
 	return (NULL);
@@ -378,8 +376,7 @@ User*	Server::getUserByNick(std::string nick)
 	unsigned long i;
 
 	i = 0;
-	while (i < users.size())
-	{
+	while (i < users.size()) {
 		if (users[i]->getNickname() == nick)
 			return (users[i]);
 		i++;
@@ -436,7 +433,6 @@ void	Server::checkNick(User* user, std::string parameters) {
 	user->nick(params[0]);
 	if (user->get_r() == false)
 		user->setStatus(USER);
-	// We don't set the server as restricted so no ERR_RESTRICTED 484
 }
 
 void	Server::checkUserCmd(User* user, std::string parameters) {
@@ -479,6 +475,7 @@ void	Server::welcomeUser(User *user) {
 	this->getMotd(user, "");
 }
 
+// TODO finish this function
 void	Server::listChannels (User* user) {
 	(void)user;
 	// Maybe send 321 and 323 from intList ?
