@@ -450,9 +450,7 @@ int Channel::deleteUser(User & user_to_delete, std::string message)
 	ret = writeToAllChanUsers(message);
 	if (ret == -1)
 		return (1);
-	// if (vec_chan_users.size() == 0)
-	// 	server->deleteChannel(*this); //TODO
-	user_to_delete.deleteChannel(chan_name);		///////////////////////////////////
+	user_to_delete.deleteChannel(chan_name);
 	return (0);
 };
 

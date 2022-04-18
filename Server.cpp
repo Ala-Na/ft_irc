@@ -246,8 +246,12 @@ int	Server::isServOp(User & user)
 	return (0);
 }
 
-// TODO check parameters for channel creation
+
 Channel*	Server::createChannel(std::string name) {
+	if (name.find_first_of(" ,\007") != std::string::npos) {
+		std::cerr << "Incorrect channel name" << std::endl;
+		return NULL;
+	}
 	this->channels.push_back(new Channel(this, name));
 	return this->channels.back();
 }
@@ -320,14 +324,6 @@ User*	Server::getSpecificUser(size_t user_nb) {
 }
 
 Channel*	Server::getChannelByName(std::string name) {
-	// for (std::vector<Channel *>::iterator it = this->channels.begin(); it != this->channels.end(); it++)
-	// {
-	// 	// TODO
-	// 	// Check if (*it)->getname() == name;
-	// 	// If true, return channel;
-	// 	if ((*it)->getChanName() == name)
-	// 		return (*it);
-	// }
 	unsigned long	i;
 
 	i = 0;
@@ -445,7 +441,6 @@ void	Server::checkUserCmd(User* user, std::string parameters) {
 void	Server::welcomeUser(User *user) {
 	std::vector<std::string>	params;
 
-	std::cout << "In welcome" << std::endl;
 	params.push_back(user->getUsername());
 	params.push_back(user->getHostname());
 	irc::numericReply(1, user, params);
@@ -455,10 +450,10 @@ void	Server::welcomeUser(User *user) {
 	params.clear();
 	params.push_back(this->conf.find("creation")->second);
 	irc::numericReply(3, user, params);	
+	params.clear();
 	params.push_back(this->conf.find("version")->second);
 	params.push_back("aiwroO");
-	// TODO modify following
-	params.push_back("channel modes availables");
+	params.push_back("kloO");
 	irc::numericReply(4, user, params);
 	this->getMotd(user, "");
 }
