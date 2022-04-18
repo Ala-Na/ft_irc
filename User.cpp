@@ -6,7 +6,7 @@
 /*   By: anadege <anadege@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/04 09:41:08 by cboutier          #+#    #+#             */
-/*   Updated: 2022/04/19 17:13:58 by anadege          ###   ########.fr       */
+/*   Updated: 2022/04/19 17:15:34 by anadege          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -356,7 +356,7 @@ void	User::wallops(std::string msg) // pov de la pax qui recoit le msg, usr est 
 	}
 }
 
-void	User::away(std::string msg)
+int	User::away(std::string msg)
 {
 	int ret;
 	std::vector<std::string> params;
@@ -374,8 +374,10 @@ void	User::away(std::string msg)
 		ret = irc::numericReply(301, this, params);
 	}
 	if (ret == -1) {
-		// TODO close connection
+		this->_server->deleteUser(this);
+		return -1;
 	}
+	return 0;
 }
 
 void	User::quit(void)

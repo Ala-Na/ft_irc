@@ -12,7 +12,6 @@ Command::Command (Server& server, User* user, std::string& content) : server(ser
 	this->prefix = "";
 }
 
-// TODO check if memory is allocated and need to be free
 Command::~Command () {}
 
 void	Command::parseCommand () {
@@ -65,14 +64,15 @@ void	Command::goToExecution () {
 	for (unsigned long i = 0; i < nbr_cmd; i++) {
 		if (!this->prefix.compare(msg[i])) {
 			if (i >= 3 && this->user->isRegistered() == false) {
-				//TODO maybe send error message ? But there's not command code for it
 				return;
 			}
 			(this->*pmf[i])();
 			return ;
 		}
 	};
-	// TODO send error unknown code 421 if not found
+	std::vector<std::string> params;
+	params.push_back(this->prefix);
+	irc::numericReply(421, user, params);
 }
 
 // Intermediate Commands
@@ -214,7 +214,9 @@ void	Command::intUserhost()
 void	Command::intAway()
 {
 	std::string param = getParam();
-	user->away(param);
+	if (user->away(param) == -1) {
+		return ;
+	}
 	std::vector<std::string> arg;
 	if (user->get_a())
 		irc::numericReply(306, user, arg); // NOWAWAY

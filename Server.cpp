@@ -248,9 +248,26 @@ int	Server::isServOp(User & user)
 
 
 Channel*	Server::createChannel(std::string name) {
-	if (name.find_first_of(" ,\007") != std::string::npos) {
-		std::cerr << "Incorrect channel name" << std::endl;
-		return NULL;
+	srand(time(0));
+	if (name.find_first_of(" :,\007") != std::string::npos || name.find_first_of("&#!") != 0 || name.length() > 50) {
+		this->channels.push_back(new Channel(this, "#"));
+		return this->channels.back();
+	}
+	if (name[0] == '!')	{
+		int					random;
+		std::string			name;
+		std::string 		s;
+		std::stringstream	out;
+		int					i;
+		
+		i = 0;
+		while (i < 5) {
+			random = rand() % 10;
+			out << random;
+			s = out.str();
+			name.insert(0, s);
+			i++;
+		}
 	}
 	this->channels.push_back(new Channel(this, name));
 	return this->channels.back();
@@ -325,11 +342,15 @@ User*	Server::getSpecificUser(size_t user_nb) {
 
 Channel*	Server::getChannelByName(std::string name) {
 	unsigned long	i;
+	std::string		curr_chan;
 
 	i = 0;
+	std::transform(name.begin(), name.end(), name.begin(), ::toupper);
 	while (i < channels.size())
 	{
-		if (channels[i]->getChanName() == name)
+		curr_chan = channels[i]->getChanName();
+		transform(curr_chan.begin(), curr_chan.end(), curr_chan.begin(), ::toupper);
+		if (curr_chan == name)
 			return (channels[i]);
 		i++;
 	}

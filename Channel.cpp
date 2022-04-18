@@ -67,10 +67,7 @@ Channel & Channel::operator=(Channel const & other)
 	return (*this);
 };
 
-Channel::~Channel()
-{
-
-};
+Channel::~Channel() {};
 
 std::string	Channel::getChanName()
 {
@@ -144,52 +141,6 @@ User *Channel::getUserFromUsername(std::string username)
 	return (NULL);
 };
 
-int	Channel::setChanName(std::string original_name)	// first character & % + !, <= 50 char, case insensitive, no space, coma, :
-{
-	int					random;
-	std::string			name;
-	std::string 		s;
-	std::stringstream	out;
-	int					i;
-	
-	srand(time(0));
-	name = irc::ft_toupper_str(original_name);
-	if ((name[0] == '&' || name[0] == '#' || name[0] == '+' || name[0] == '!')
-		&& name.length() <= 50
-		&& irc::there_is_no(' ', name) && irc::there_is_no(',', name) && irc::there_is_no(':', name))
-	{
-		chan_name = original_name;
-		if (name[0] == '!')
-		{
-			i = 0;
-			while (i < 5)
-			{
-				random = rand() % 10;
-				out << random;
-				s = out.str();
-				chan_name.insert(0, s);
-				i++;
-			}
-		}
-		return (1);
-	}
-	else if (name[0] != '&' && name[0] != '#' && name[0] != '+' && name[0] != '!')
-	{
-		std::cerr << "Name of channel must begin with &, #, = or !\n";
-		return (2);
-	}
-	else if (name.length() > 50)
-	{
-		std::cerr << "Name of channel cannot be longer than 50 characters\n";
-		return (3);
-	}
-	else if (irc::there_is_no(' ', name) == 0 || irc::there_is_no(',', name) == 0 || irc::there_is_no(':', name) == 0)
-	{
-		std::cerr << "Name of channel cannot contain spaces, comas or colons\n";
-		return (4);
-	}
-	return (0);
-};
 
 void	Channel::setChanPassword(std::string password)
 {
