@@ -707,7 +707,6 @@ void Command::intPart()
 	i = 0;
 	while (i < vec_chan_names.size())
 	{
-		std::cout << "vec_chan_names[" << i << "]: " << vec_chan_names[i] << std::endl;
 		vec_chan_names[i] = trim(vec_chan_names[i], " ");
 		i++;
 	}
@@ -1066,7 +1065,6 @@ void	 Command::intMode()
 	if (chan_found == NULL)
 	{
 		name = trim(name, "#");
-		std::cout << std::endl << "NAME: " << name << std::endl <<std::endl;
 		user_found = server.getUserByNick(name);
 		if (user_found == NULL)
 		{
@@ -1089,11 +1087,7 @@ void	 Command::intMode()
 	if (vec.size() > 2)
 		arg = vec[2];
 	if (chan_found)
-	{
-		std::cout << "chan modes1: " << chan_found->getChanMode() << std::endl;
 		chan_found->addMode(letters);
-		std::cout << "chan modes2: " << chan_found->getChanMode() << std::endl;
-	}
 	if (irc::there_is_no('k', letters) == 0 && vec.size() == 3)
 	{
 		if (mode[0] == '-' && arg == chan_found->getChanPassword())
@@ -1140,7 +1134,6 @@ void	 Command::intMode()
 		}
 		return ;
 	}
-	std::cout << "\n\nEND OF MODE FUNCTION\n\n";
 }
 
 void		Command::intPass() {

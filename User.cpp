@@ -215,12 +215,12 @@ bool	User::get_O()
 // 	return (false);
 // }
 
-// bool 	User::isOperator()
-// {
-// 	if (User::userModes.get_o())
-// 		return (true);
-// 	return (false);
-// }
+bool 	User::isOperator()
+{
+	if (get_o())
+		return (true);
+	return (false);
+}
 
 bool	User::isRegistered()
 {

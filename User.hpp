@@ -159,7 +159,7 @@ namespace irc
 			// bool		isInvisible();
 			// bool		isWallops();
 			// bool		isRestricted();
-			// bool		isOperator();
+			bool		isOperator();
 			bool		isRegistered();
 
 			// Setters
