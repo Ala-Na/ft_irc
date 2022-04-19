@@ -78,12 +78,21 @@ void	Command::goToExecution () {
 // Intermediate Commands
 void	Command::intUser()
 {
+	std::cout << "\n\nINTUSER\n\n";
+
 	this->server.checkUserCmd(this->user, this->param);
 	// Made in server to make deletion of unregistered user easier
 }
 
+void	Command::intPing()
+{
+	std::cout << "\n\nINTPING\n\n";		// If NULL in function pointers tab, segfault... So empty function it is!
+}
+
 void	Command::intNick()
 {
+	std::cout << "\n\nINTNICK\n\n";
+
 	std::string param = getParam();
 	std::vector<std::string> arg;
 	arg.push_back(param);
@@ -123,6 +132,8 @@ void	Command::intNick()
 
 void	Command::intWhoIs()
 {
+	std::cout << "\n\nINTWHOIS\n\n";
+
 	std::string param = getParam();
 	std::vector<std::string>	arg;
 	unsigned long				i;
@@ -175,6 +186,8 @@ void	Command::intWhoIs()
 
 void	Command::intUserhost()
 {
+	std::cout << "\n\nINTUSERHOST\n\n";
+
 	std::string param = getParam();
 	std::vector<std::string>	params;
 	unsigned long				i;
@@ -213,6 +226,8 @@ void	Command::intUserhost()
 
 void	Command::intAway()
 {
+	std::cout << "\n\nINTAWAY\n\n";
+
 	std::string param = getParam();
 	if (user->away(param) == -1) {
 		return ;
@@ -227,6 +242,8 @@ void	Command::intAway()
 
 void	Command::intPrivMsg()
 {
+	std::cout << "\n\nINTPRIVMSG\n\n";
+
 	std::string username;
 	std::string nickname;
 	std::string hostname;
@@ -312,6 +329,8 @@ void	Command::intPrivMsg()
 
 void	Command::intNotice()
 {
+	std::cout << "\n\nINTNOTICE\n\n";
+
 	std::string username;
 	std::string nickname;
 	std::string hostname;
@@ -409,33 +428,6 @@ void	Command::intWallops()
 	}
 }
 
-std::string left_trim(const std::string &s, std::string to_remove)
-{
-	if (s.size() == 0)
-		return (NULL);
-	size_t start = s.find_first_not_of(to_remove);
-	if (start == std::string::npos)
-		return (NULL);
-	return (s.substr(start));
-}
-
-std::string right_trim(const std::string &s, std::string to_remove)
-{
-	if (s.size() == 0)
-		return (NULL);
-	size_t end = s.find_last_not_of(to_remove);
-	if (end == std::string::npos)
-		return (NULL);
-	return (s.substr(0, end + 1));
-}
-
-std::string trim(const std::string &s, std::string to_remove)
-{
-	if (s.size() == 0)
-		return (NULL);
-	return (right_trim(left_trim(s, to_remove), to_remove));
-}
-
 User *Command::getUser()
 {
 	return (user);
@@ -443,6 +435,8 @@ User *Command::getUser()
 
 void Command::intJoin()
 {
+	std::cout << "\n\nINTJOIN\n\n";
+
 	std::vector<std::string>	vec;
 	std::vector<std::string>	vec_chan_names;
 	std::vector<std::string>	vec_keys;
@@ -461,7 +455,7 @@ void Command::intJoin()
 	if (vec.size() > 1) {
 		vec_keys = irc::split(vec[1], ",");
 	}
-	if (vec_chan_names.size() == 1 && vec_keys.size() == 0 && vec_chan_names[0] == "0")    // JOIN 0
+	if (vec_chan_names.size() == 1 && vec_keys.size() == 0 && vec_chan_names[0] == "0")    // JOIN 0	// ????? Does not work
 	{
 		intQuit();
 		return ;
@@ -517,7 +511,8 @@ void Command::intJoin()
 			}
 			if (chan_found->addUser(user) == -1) {
 				return ;
-			}    
+			}   
+			chan_found->addOperator(user); 
 		} else if (vec_keys.size() > i && vec_keys[i] != chan_found->getChanPassword()) {  // ERR_BADCHANNELKEY
 			params.push_back(vec_chan_names[i]);
 			if (irc::numericReply(475, user, params) == -1) {
@@ -538,6 +533,8 @@ void Command::intJoin()
 
 void Command::intInvite()
 {
+	std::cout << "\n\nINTINVITE\n\n";
+
 	std::vector<std::string>	vec;
 	std::string                 nickname;
 	std::string                 chan_name;
@@ -616,8 +613,10 @@ void Command::intInvite()
 	}
 }
 
-void Command::intOper()
+void Command::intOper()			// ??? Server does not receive this command and user is asked key but there is none...
 {
+	std::cout << "\n\nINTOPER\n\n";
+
 	std::vector<std::string>	vec;
 	std::string                 name;
 	std::string                 key;
@@ -648,6 +647,8 @@ void Command::intOper()
 
 void Command::intPart()
 {
+	std::cout << "\n\nINTPART\n\n";
+
 	std::vector<std::string>	vec;
 	std::vector<std::string>	vec_chan_names;
 	std::string					name;
@@ -666,8 +667,7 @@ void Command::intPart()
 	i = 0;
 	while (i < vec_chan_names.size())
 	{
-		std::cout << "vec_chan_names[" << i << "]: " << vec_chan_names[i] << std::endl;
-		vec_chan_names[i] = trim(vec_chan_names[i], " ");
+		vec_chan_names[i] = irc::trim(vec_chan_names[i], " ");
 		i++;
 	}
 	i = 0;
@@ -706,14 +706,16 @@ void Command::intPart()
 
 void    Command::intQuit()
 {
+	std::cout << "\n\nINTQUIT\n\n";
+
 	std::string                 message;
 	unsigned long				i;
 	std::vector<Channel *>    	vec_chan;
 	Channel                     *chan_found;
 	std::string                 name;
 
-	message = trim(param, ":");
-	vec_chan = user->getChannels();
+	message = irc::trim(param, ":");
+	vec_chan_names = user->getChannels();
 	i = 0;
 	while (i < vec_chan.size())
 	{
@@ -853,7 +855,7 @@ void Command::intKick()
 	return ;
 }
 
-void Command::intTopic()
+void Command::intTopic()				// when client sends /topic or /topic channel, server gets no request... But irssi answers by giving topic
 {
 	std::vector<std::string>	vec;
 	std::string 	            name;
@@ -866,12 +868,14 @@ void Command::intTopic()
 	{
 		params.push_back(prefix);
 		irc::numericReply(461, user, params);
+		// std::cout << "JUST /topic\n";
 		return ;
 	}
 	if (param[param.size() - 1] == ':')
 		param += " ";
 	vec = irc::split(param, ":");
 	name = vec[0];
+	// std::cout << "vec[1] so new_topic: " << vec[1] << std::endl;
 	if (name[0] != '&' && name[0] != '#' && name[0] != '+' && name[0] !=  '!')
 		name.insert(0, "#");
 	chan_found = server.getChannelByName(name);
@@ -883,10 +887,6 @@ void Command::intTopic()
 		irc::numericReply(442, user, params);
 		return ;
 	}
-	if (vec.size() > 1 && vec[1] != " ")
-		new_topic = vec[1];
-	else
-		new_topic = "";
 	if (irc::there_is_no(':', param))    // RPL_TOPIC
 	{
 		params.push_back(name);
@@ -902,7 +902,12 @@ void Command::intTopic()
 	}
 	else
 	{
+		if (vec.size() > 1 && vec[1] != " ")
+			new_topic = irc::trim(vec[1], ":");
+		else
+			new_topic = "";
 		chan_found->setChanTopic(new_topic, user);
+		// std::cout << "chan_found->getChanTopic(): " << chan_found->getChanTopic() << std::endl;
 		if (new_topic.size() == 0)      // RPL_NOTOPIC
 		{
 			params.push_back(name);
@@ -933,8 +938,7 @@ int	Command::isServerOperator(User & user)
 	return (0);
 }
 
-void Command::intKill()
-{
+void Command::intKill() {
 	std::vector<std::string>		vec;
 	std::string             		nickname;
 	std::string             		comment;
@@ -992,8 +996,7 @@ int 	HasInvalidMode(std::string letters)
 	return (0);
 }	
 
-void	 Command::intMode()
-{
+void	 Command::intMode() {
 	std::vector<std::string>	vec;
 	std::string             	name;
 	std::string             	mode;
@@ -1026,8 +1029,7 @@ void	 Command::intMode()
 	chan_found = server.getChannelByName(name);
 	if (chan_found == NULL)
 	{
-		name = trim(name, "#");
-		std::cout << std::endl << "NAME: " << name << std::endl <<std::endl;
+		name = irc::trim(name, "#");
 		user_found = server.getUserByNick(name);
 		if (user_found == NULL)
 		{
@@ -1038,7 +1040,7 @@ void	 Command::intMode()
 	mode = vec[1];
 	if (mode[0] != '-' && mode[0] != '+')
 		mode.insert(0, "+");
-	letters = trim(mode, "-+");
+	letters = irc::trim(mode, "-+");
 	if (HasInvalidMode(letters))     // ERR_UNKNOWNMODE
 	{
 		params.push_back(letters);
@@ -1050,11 +1052,7 @@ void	 Command::intMode()
 	if (vec.size() > 2)
 		arg = vec[2];
 	if (chan_found)
-	{
-		std::cout << "chan modes1: " << chan_found->getChanMode() << std::endl;
 		chan_found->addMode(letters);
-		std::cout << "chan modes2: " << chan_found->getChanMode() << std::endl;
-	}
 	if (irc::there_is_no('k', letters) == 0 && vec.size() == 3)
 	{
 		if (mode[0] == '-' && arg == chan_found->getChanPassword())
@@ -1101,15 +1099,13 @@ void	 Command::intMode()
 		}
 		return ;
 	}
-	std::cout << "\n\nEND OF MODE FUNCTION\n\n";
 }
 
 void		Command::intPass() {
 	this->server.checkPassword(user, param);
 }
 
-void		Command::intSquit()
-{
+void		Command::intSquit() {
 	std::vector<std::string>	vec;
 	std::string					serv_name;
 	std::string					comment;
@@ -1145,8 +1141,7 @@ void		Command::intSquit()
    message SHOULD be encapsulated inside a NOTICE message, indicating
    that the client was not responsible for the error.
 */
-void		Command::intError()
-{
+void		Command::intError() {
 	std::vector<std::string> msg;
 	msg.push_back("The client was not responsible for the error.");
 	user->setParams(msg);
@@ -1167,6 +1162,7 @@ void	Command::intUsers() {
 
 void	Command::intList() {
 	std::vector<std::string>	params;
+	
 	if (this->param.empty()) {
 		this->server.listChannels(this->user);
 	} else {

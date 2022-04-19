@@ -71,6 +71,7 @@ namespace irc {
 			void		intError();
 			void		intSummon();
 			void		intUsers();
+			void		intPing();
 			// void		intUserMode();
 			// void		intChannelMode();
 			void		intPing();

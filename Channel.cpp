@@ -126,6 +126,7 @@ int	Channel::userIsInChanFromUsername(std::string username_to_search) {
 	unsigned long i;
 
 	i = 0;
+	// std::cout << "vec_chan_users.size() in Channel.cpp: " << vec_chan_users.size() << std::endl;
 	while (i < vec_chan_users.size())
 	{
 		if (vec_chan_users[i]->getUsername() == username_to_search)
@@ -208,12 +209,7 @@ int Channel::listAllUsersInChan(User* user_asking)
 	}
 	params.push_back(names);
 	ret = irc::numericReply(353, user_asking, params);
-<<<<<<< HEAD
 	if (ret == -1) {
-=======
-	if (ret == -1)
-	{
->>>>>>> 7af3657f068aff1f759e1c2bb39fc1d67234eaab
 		this->server->deleteUser(user_asking);
 		return (-1);
 	}

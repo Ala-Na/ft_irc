@@ -67,11 +67,7 @@ sockaddr_in	User::getAddr()
 	return (_address);
 }
 
-<<<<<<< HEAD
 std::vector<Channel *> User::getChannels()
-=======
-std::vector<std::string> User::getChannels()
->>>>>>> 7af3657f068aff1f759e1c2bb39fc1d67234eaab
 {
 	return (_channels);
 }
