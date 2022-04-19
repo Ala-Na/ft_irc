@@ -27,11 +27,11 @@ namespace irc
 			std::string			chan_password;
 			std::string			chan_topic;
 			std::string			chan_mode;
-			std::vector<User>	vec_chan_users;
+			std::vector<User *>	vec_chan_users;
 			unsigned long		max_nb_users_in_chan;
-			std::vector<User>	vec_chan_operators;		// @
+			std::vector<User *>	vec_chan_operators;		// @
 			std::string			chan_creator;
-			std::vector<User>	vec_chan_banned_users;
+			std::vector<User *>	vec_chan_banned_users;
 		
 			Channel();
 			Channel(Channel const & other);
@@ -46,24 +46,24 @@ namespace irc
 			std::string 		getChanPassword();
 			std::string 		getChanTopic();
 			std::string 		getChanMode();
-			std::vector<User>	getVecChanUsers();
+			std::vector<User *>	getVecChanUsers();
 			int					getNbUsersInChan();
 			int					getMaxNbUsersInChan();
-			std::vector<User> 	getChanOperators();
+			std::vector<User *> 	getChanOperators();
 			std::string 		getChanCreator();
-			std::vector<User>	getVecChanBannedUsers();
+			std::vector<User *>	getVecChanBannedUsers();
 			std::string			getChanNameAndTopic();
-			User *				getUserFromUsername(std::string username);
+			User*				getUserFromUsername(std::string username);
 
 			void				setChanPassword(std::string password);
 			int					isOperator(User* user);
 			void				setChanTopic(std::string topic, User* user_who_changes);
 			void				setChanMode(std::string mode);
-			void				setVecChanUsers(std::vector<User> vec_users);
+			void				setVecChanUsers(std::vector<User *> vec_users);
 			void				setMaxNbUsersInChan(int nb);
-			void				setChanOperators(std::vector<User> vec_operators);
+			void				setChanOperators(std::vector<User *> vec_operators);
 			void				setChanCreator(std::string creator);
-			void				setVecChanBannedUsers(std::vector<User> vec_banned_users);
+			void				setVecChanBannedUsers(std::vector<User *> vec_banned_users);
 
 			int					userIsInChanFromUsername(std::string username_to_search);
 			int					userIsInChanFromNickname(std::string nickname_to_search);
@@ -72,12 +72,12 @@ namespace irc
 			int					receivingAnInvitation(User* user_inviting, User* user_invited);
 			int					listAllUsersInChan(User* user_asking);
 			int					writeToAllChanUsers(std::string sentence_to_send);
-			int					addUser(User & user_to_add);
-			int					deleteUser(User & user_to_delete, std::string message);
-			int					addOperator(User & operator_to_add);
-			int					deleteOperator(User & operator_to_delete);
-			int					addBannedUser(User & user_to_ban);
-			int					deleteBannedUser(User & user_to_unban);
+			int					addUser(User* user_to_add);
+			int					deleteUser(User* user_to_delete, std::string message);
+			int					addOperator(User* operator_adding, User* operator_to_add);
+			int					deleteOperator(User* operator_deleting, User* operator_to_delete);
+			int					addBannedUser(User* user_banning, User* user_to_ban);
+			int					deleteBannedUser(User* user_unbanning, User* user_to_unban);
 	};
 }
 

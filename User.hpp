@@ -6,7 +6,11 @@
 /*   By: anadege <anadege@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/31 11:14:35 by cboutier          #+#    #+#             */
+<<<<<<< HEAD
 /*   Updated: 2022/04/19 17:15:40 by anadege          ###   ########.fr       */
+=======
+/*   Updated: 2022/04/19 16:36:32 by anadege          ###   ########.fr       */
+>>>>>>> 89ffa31 (Multiple modifications of Server, Channel and User .cpp file)
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +45,7 @@ namespace irc
 			std::string					_username; //max len 9
 			std::string					_real_name;
 			std::string					_hostname;
-			std::vector<std::string>	_channels;
+			std::vector<Channel *>		_channels;
 			std::vector<std::string>	_params;
 			int							_fd;
 			struct	sockaddr_in			_address;
@@ -57,6 +61,9 @@ namespace irc
 			bool						userModes_o;		// operator flag;
 			bool						userModes_O;		// local operator flag;
 
+			User();
+			User(const User &src);
+			User &operator=(const User &src);
 
 		// public: //? or private?
 			/*
@@ -124,11 +131,7 @@ namespace irc
 			// struct user_Modes	userModes;
 
 		public:
-			User();
-			User(int fd, struct sockaddr_in address);
-			User(int fd, struct sockaddr_in address, Server *server);
-			User(const User &src);
-			User &operator=(const User &src);
+			User(int fd, std::string& hostname, struct sockaddr_in& address, Server *server);
 			~User();
 
 			// Getters
@@ -141,7 +144,7 @@ namespace irc
 			std::string					getAwayMessage();
 			int							getFd();
 			sockaddr_in					getAddr();
-			std::vector<std::string>	getChannels();
+			std::vector<Channel *>		getChannels();
 			int							getNbOfChannels();
 			UserStatus					getStatus();
 
@@ -150,7 +153,6 @@ namespace irc
 			bool						get_w();
 			bool						get_r();
 			bool						get_o();
-			bool						get_O();
 
 				// UserModes Setters
 
@@ -178,8 +180,8 @@ namespace irc
 			void		set_o(bool val);
 			void		set_O(bool val);
 
-			void		addChannel(std::string const &chan);
-			void		deleteChannel(std::string const &chan);
+			void		addChannel(Channel* chan);
+			void		deleteChannel(Channel* chan);
 
 			// Commands
 			void		userCmd(std::vector<std::string>& params);
@@ -193,7 +195,7 @@ namespace irc
 			void		part();
 			// void		part(std::vector<std::string> params);
 			void		whois(User usr);
-			void		kick(std::string const &chan);
+			void		kick(Channel* chan);
 			void		mode(std::vector<std::string> params);
 
 			bool		operator==(User const &rhs) const;

@@ -225,7 +225,7 @@ void	Server::deleteUserFromChannels(User* user) {
 	{
 		if (channels[i]->userIsInChanFromUsername(user->getUsername()))
 		{
-			channels[i]->deleteUser(*user, "");
+			channels[i]->deleteUser(user, " PART");
 		}
 		i++;
 	}
@@ -469,8 +469,8 @@ void	Server::welcomeUser(User *user) {
 	irc::numericReply(3, user, params);	
 	params.clear();
 	params.push_back(this->conf.find("version")->second);
-	params.push_back("aiwroO");
-	params.push_back("kloO");
+	params.push_back("aiwro");
+	params.push_back("klo");
 	irc::numericReply(4, user, params);
 	this->getMotd(user, "");
 }

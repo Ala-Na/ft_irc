@@ -73,6 +73,7 @@ namespace irc {
 			void		intUsers();
 			// void		intUserMode();
 			// void		intChannelMode();
+			void		intPing();
 
 			int			isServerOperator(User & user);
 

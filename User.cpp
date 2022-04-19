@@ -6,35 +6,13 @@
 /*   By: anadege <anadege@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/04 09:41:08 by cboutier          #+#    #+#             */
-/*   Updated: 2022/04/19 17:15:34 by anadege          ###   ########.fr       */
+/*   Updated: 2022/04/19 17:16:04 by anadege          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "User.hpp"
 
 using namespace irc;
-
-User::User()
-{
-
-}
-
-User::User(int fd, std::string& hostname, struct sockaddr_in& address)
-: _fd(fd)
-{
-	_address = address;
-	_hostname = hostname;
-	userModes.set_a(false);		// user is flagged as away;
-	userModes.set_i(false);		// marks a users as invisible; hides you if someone does a /WHO or /NAMES outside the channel
-	userModes.set_w(false);		// user receives wallops; Used by IRC operators, WALLOPS is a command utilized to send messages on an IRC network. WALLOPS messages are for broadcasting network information and its status to following users.
-	userModes.set_r(false);		// restricted user connection;
-	userModes.set_o(false);		// operator flag;
-	userModes.set_O(false);
-	_nickname = "";
-	_username = "";
-	this->_status = PASS;
-}
-
 
 User::User(int fd, std::string& hostname, struct sockaddr_in& address, Server *server)
 {
@@ -55,42 +33,9 @@ User::User(int fd, std::string& hostname, struct sockaddr_in& address, Server *s
 	this->_status = PASS;
 }
 
-User::User(User const &src)
-{
-	*this = src;
-}
-
-User &User::operator=(User const &src)
-{
-	if (this != &src)
-	{
-		_server = src._server;
-		_nickname = src._nickname;
-		_username = src._username;
-		_real_name = src._real_name;
-		_hostname = src._hostname;
-		_channels = src._channels;
-		_params = src._params;
-		_fd = src._fd;
-		_address = src._address;
-		_away_message = src._away_message;
-		_status = src._status;
-		// userModes = src.userModes;
-		userModes_a = src.userModes_a;
-		userModes_i = src.userModes_i;
-		userModes_w = src.userModes_w;
-		userModes_r = src.userModes_r;
-		userModes_o = src.userModes_o;
-		userModes_O = src.userModes_O;
-	}
-	return (*this);
-}
-
-User::~User()
-{}
+User::~User() {}
 
 // GETTERS
-
 Server *	User::getServer()
 {
 	return (_server);	
@@ -136,21 +81,14 @@ sockaddr_in	User::getAddr()
 	return (_address);
 }
 
-std::vector<std::string> User::getChannels()
+std::vector<Channel *> User::getChannels()
 {
 	return (_channels);
 }
 
 int	User::getNbOfChannels()
 {
-	std::vector<std::string>::iterator it = _channels.begin();
-	int	counter = 0;
-	while (it != _channels.end())
-	{
-		counter++;
-		it++;
-	}
-	return (counter);
+	return (_channels.size());
 }
 
 UserStatus	User::getStatus() {
@@ -183,47 +121,7 @@ bool	User::get_o()
 	return (userModes_o);
 }
 
-bool	User::get_O()
-{
-	return (userModes_O);
-}
-
-// FLAGS BOOL
-// bool 	User::isAway()
-// {
-// 	if (User::get_a())
-// 		return (true);
-// 	return (false);
-// }
-
-// bool 	User::isInvisible()
-// {
-// 	if (User::userModes.get_i())
-// 		return (true);
-// 	return (false);
-// }
-
-// bool 	User::isWallops()
-// {
-// 	if (User::userModes.get_w())
-// 		return (true);
-// 	return (false);
-// }
-
-// bool 	User::isRestricted()
-// {
-// 	if (User::userModes.get_r())
-// 		return (true);
-// 	return (false);
-// }
-
-// bool 	User::isOperator()
-// {
-// 	if (User::userModes.get_o())
-// 		return (true);
-// 	return (false);
-// }
-
+// Get status
 bool	User::isRegistered()
 {
 	if (this->_status == REGISTERED)
@@ -297,16 +195,18 @@ void	User::set_O(bool val)
 	userModes_O = val;
 }
 
-void	User::addChannel(std::string const &chan)
+void	User::addChannel(Channel* chan)
 {
 	_channels.push_back(chan);
 }
 
-void	User::deleteChannel(std::string const &chan)
+void	User::deleteChannel(Channel* chan)
 {
-	std::vector<std::string>::iterator	it = std::find(_channels.begin(), _channels.end(), chan);
-	if (it != _channels.end())
-		_channels.erase(it);
+	for (std::vector<Channel *>::iterator it = _channels.begin(); it != _channels.end(); it++) {
+		if ((*it) == chan) {
+			_channels.erase(it);
+		}
+	}
 }
 
 // COMMANDS
@@ -382,12 +282,11 @@ int	User::away(std::string msg)
 
 void	User::quit(void)
 {
-	// std::vector<std::string>::iterator it = _channels.begin();
+	std::vector<Channel *>	channels = this->_channels;
+
 	unsigned long int i = 0;
-	while (i < _channels.size())
-	{
-		Channel *chan = getServer()->getChannelByName(_channels[i]);
-		chan->deleteUser(*this, ""); // ??delete the user from the channel
+	while (i < _channels.size()) {
+		channels[i]->deleteUser(this, " PART "); // ??delete the user from the channel
 		i++;
 	}
 }
@@ -398,21 +297,21 @@ void	User::part()
 	std::vector<std::string>::iterator it1 = _params.begin();
 	while (it1 != _params.end())
 	{
-		std::vector<std::string>::iterator it2 = _channels.begin();
-		while (*it2 != *it1 && it2 != _channels.end())
+		std::vector<Channel *>::iterator it2 = _channels.begin();
+		while ((*it2)->getChanName() != *it1 && it2 != _channels.end())
 		{
 			it2++;
 		}
-		if (*it1 == *it2)
+		if (*it1 == (*it2)->getChanName())
 		{
 			Channel *chan = getServer()->getChannelByName(*it1);
-			chan->deleteUser(*this, "");
+			chan->deleteUser(this, " PART ");
 		}
 		it1++;
 	}
 }
 
-void	User::kick(std::string const &chan)
+void	User::kick(Channel* chan)
 {
 	deleteChannel(chan);
 }
@@ -481,8 +380,8 @@ bool	User::operator==(User const &rhs) const
 			&& this->_username == rhs._username && this->_real_name == rhs._real_name
 			&& this->_hostname == rhs._hostname
 			&& this->_fd == rhs._fd)
-		return (1);
-	return (0);
+		return (true);
+	return (false);
 }
 
 bool	User::operator!=(User const &rhs) const
