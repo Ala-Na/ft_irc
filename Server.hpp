@@ -87,6 +87,7 @@ namespace irc {
 
 			std::string					getName ();
 			Server&						getServer ();
+			std::string					getInfos();
 
 			User*						getSpecificUser (size_t user_nb);
 			Channel*					getChannelByName (std::string name);
@@ -100,6 +101,7 @@ namespace irc {
 			
 			void						setServOperator (User* user);
 			void						deleteServOperator (User* user);
+			bool						isServOperator(User *user);
 
 			void						intWallops ();
 

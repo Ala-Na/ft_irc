@@ -326,13 +326,16 @@ void	Server::datasExtraction(std::string& buf, size_t pos) {
 	}
 }
 
-std::string	Server::getName()
-{
+std::string	Server::getName() {
 	return ((this->conf.find("name"))->second);
 }
 
 Server&	Server::getServer() {
 	return *this;
+}
+
+std::string	Server::getInfos() {
+	return ((this->conf.find("infos"))->second);
 }
 
 // Here, user_nb is from 0 to max - 1.
@@ -614,7 +617,6 @@ std::vector<User *>	Server::getServUsers()
 
 void	Server::setServOperator(User*	user) {
 	std::vector<User *>::iterator it = std::find(this->operators.begin(), this->operators.end(), user);
-
 	if (it == this->operators.end()) {
 		this->operators.push_back(user);
 	}
@@ -625,8 +627,15 @@ void	Server::setServOperator(User*	user) {
 
 void	Server::deleteServOperator(User* user) {
 	std::vector<User *>::iterator it = std::find(this->operators.begin(), this->operators.end(), user);
-
 	if (it != operators.end()) {
 		this->operators.erase(it);
 	}		
+}
+
+bool	Server::isServOperator(User *user) {
+	std::vector<User *>::iterator it = std::find(this->operators.begin(), this->operators.end(), user);
+	if (it != operators.end()) {
+		return true;
+	}		
+	return false;
 }

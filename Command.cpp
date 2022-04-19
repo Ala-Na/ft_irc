@@ -123,6 +123,8 @@ void	Command::intNick() {
 // 	*/
 // }
 
+// TODO modify to call User::whois(User* who) with User as current user and who as searched user
+// TODO only keep ERR verification here
 void	Command::intWhoIs() {
 	std::string param = getParam();
 	std::vector<std::string>	arg;
@@ -309,6 +311,7 @@ void	Command::intPrivMsg() {
 		// ERR_WILDTOPLEVEL                ERR_TOOMANYTARGETS
 }
 
+// TODO use noticeToUser and noticeToChannel of User
 void	Command::intNotice() {
 	std::string username;
 	std::string nickname;
@@ -371,7 +374,7 @@ void	Command::intNotice() {
 		// recipient = Channel::getUserFromUsername(username);
 	if (!recipient)
 		irc::numericReply(401, user, arg); // NOSUCHNICK
-	user->notice(msg);
+	//user->noticeToUser(msg);
 	arg.clear();
 	arg.push_back(recipient->getNickname());
 	arg.push_back(recipient->getAwayMessage());
