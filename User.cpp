@@ -6,7 +6,7 @@
 /*   By: anadege <anadege@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/04 09:41:08 by cboutier          #+#    #+#             */
-/*   Updated: 2022/04/19 17:16:32 by anadege          ###   ########.fr       */
+/*   Updated: 2022/04/19 17:17:47 by anadege          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,8 +20,6 @@ User::User(int fd, std::string& hostname, struct sockaddr_in& address, Server *s
 	_server = server;
 	_address = address;
 	_hostname = hostname;
-	// TODO recuperate hostname in address
-	//_hostname = 
 	userModes_a = false;		// user is flagged as away;
 	userModes_i = false;		// marks a users as invisible; hides you if someone does a /WHO or /NAMES outside the channel
 	userModes_w = false;		// user receives wallops; Used by IRC operators, WALLOPS is a command utilized to send messages on an IRC network. WALLOPS messages are for broadcasting network information and its status to following users.
@@ -237,7 +235,7 @@ void	User::privmsgToUser(User* dest, std::string msg) // pov de la pax qui recoi
 void	User::privmsgToChannel(Channel* channel, std::string msg) {
 	std::string	full_msg = ":" + this->getNickname() + "!" + this->getUsername() + "@" + this->getHostname();
 	full_msg += " PRIVMSG " + channel->getChanName() + " :" + msg + "\r\n";
-	for (std::vector<User *>::iterator it = channel->getVecChanUsers().begin(); it != channel->getVecChanUsers().end(); it++) {
+	for (std::vector<User *>::iterator it = (channel->getVecChanUsers()).begin(); it != channel->getVecChanUsers().end(); it++) {
 		irc::sendString((*it)->getFd(), full_msg);
 	}	
 }
