@@ -171,10 +171,9 @@ int	Channel::receivingAnInvitation(User* user_inviting, User* user_invited) {
 
 	message = ":" + user_inviting->getNickname() + "!" + user_inviting->getUsername() + "@" + user_inviting->getHostname();
 	message += " INVITE " + user_invited->getNickname() + " :" + this->chan_name;
+	message += "\r\n";
 	ret = irc::sendString(user_invited->getFd(), message);
-	if (ret == -1)
-	{
-		std::cerr << "Could not send invitation\n";
+	if (ret == -1) {
 		this->server->deleteUser(user_invited);
 		return (-1);
 	}
