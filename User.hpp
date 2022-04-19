@@ -173,14 +173,16 @@ namespace irc
 			void		quit(std::vector<std::string> channels);
 			void		privmsgToUser(User* dest, std::string msg);
 			void		privmsgToChannel(Channel* channel, std::string msg);
+			void		noticeToUser(User* dest, std::string msg);
+			void		noticeToChannel(Channel* channel, std::string msg);
 			void		notice(std::string msg);
-			void		wallops(std::string msg);
+			void		receiveWallops(std::string msg);
 			int			away(std::string msg = "");
-			void		quit(void);
-			void		part();
+			void		quit(std::string reason);
+			void		partChannel(Channel* channel, std::string reason);
 			// void		part(std::vector<std::string> params);
-			void		whois(User usr);
-			void		kick(Channel* chan);
+			void		whois(User* who);
+			void		kick(Channel* chan, std::string reason);
 			void		mode(std::vector<std::string> params);
 
 			bool		operator==(User const &rhs) const;

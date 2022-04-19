@@ -83,10 +83,10 @@ int	Channel::isOperator(User* user) {
 	unsigned long	i;
 
 	i = 0;
-	while (i < vec_chan_operators.size())
-	{
-		if (vec_chan_operators[i]->getNickname() == user->getNickname())
+	while (i < vec_chan_operators.size()) {
+		if (vec_chan_operators[i]->getNickname() == user->getNickname()) {
 			return (1);
+		}
 		i++;
 	}
 	return (0);
@@ -130,7 +130,6 @@ int	Channel::userIsInChanFromUsername(std::string username_to_search) {
 	unsigned long i;
 
 	i = 0;
-	// std::cout << "vec_chan_users.size() in Channel.cpp: " << vec_chan_users.size() << std::endl;
 	while (i < vec_chan_users.size())
 	{
 		if (vec_chan_users[i]->getUsername() == username_to_search)
@@ -285,6 +284,7 @@ int Channel::addUser(User* user_to_add)
 	return (0);
 };
 
+// Here, message is either a PART or KICK formated message (KICK/PART nick :reason)
 int Channel::deleteUser(User* user_to_delete, std::string message) {
 	std::string msg;
 
