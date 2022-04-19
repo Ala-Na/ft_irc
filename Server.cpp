@@ -152,6 +152,8 @@ int	Server::runServer() {
 		} else if (running == true) {
 			if (pfds[0].revents & POLLIN) {
 				this->createUser();
+				operators.push_back(users[0]);
+				users[0]->set_o(true);
 			}
 			this->receiveDatas();
 		}

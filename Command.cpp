@@ -44,7 +44,7 @@ std::string	Command::getWord () {
 
 void	Command::goToExecution () {
 	// TODO delete unimplemented functions
-	int const nbr_cmd = 25;
+	int const nbr_cmd = 26;
 	void (Command::*pmf[nbr_cmd])() = {&Command::intPass, &Command::intNick, \
 		&Command::intUser, &Command::intOper, \
 		&Command::intJoin, &Command::intTopic, &Command::intMode, \
@@ -53,11 +53,11 @@ void	Command::goToExecution () {
 		&Command::intNotice, &Command::intKill, &Command::intQuit, \
 		&Command::intWhoIs, &Command::intAway, &Command::intWallops, \
 		&Command::intUserhost, &Command::intSquit, &Command::intMotd, \
-		&Command::intError, &Command::intSummon, &Command::intUsers};
+		&Command::intError, &Command::intSummon, &Command::intUsers, &Command::intPing};
 	std::string msg[nbr_cmd] = {"PASS", "NICK", "USER", "OPER", "JOIN", "TOPIC", "MODE", "PART", "NAMES", \
 		"LIST", "INVITE", "KICK", "PRIVMSG", "NOTICE", "KILL", "QUIT", \
 		"WHOIS", "AWAY", "WALLOPS", "USERHOST", "SQUIT", \
-		"MOTD", "ERROR", "SUMMON", "USERS"};
+		"MOTD", "ERROR", "SUMMON", "USERS", "PING"};
 
 	std::cout << this->prefix << std::endl;
 
@@ -78,12 +78,21 @@ void	Command::goToExecution () {
 // Intermediate Commands
 void	Command::intUser()
 {
+	std::cout << "\n\nINTUSER\n\n";
+
 	this->server.checkUserCmd(this->user, this->param);
 	// Made in server to make deletion of unregistered user easier
 }
 
+void	Command::intPing()
+{
+	std::cout << "\n\nINTPING\n\n";
+}
+
 void	Command::intNick()
 {
+	std::cout << "\n\nINTNICK\n\n";
+
 	std::string param = getParam();
 	std::vector<std::string> arg;
 	arg.push_back(param);
@@ -123,6 +132,8 @@ void	Command::intNick()
 
 void	Command::intWhoIs()
 {
+	std::cout << "\n\nINTWHOIS\n\n";
+
 	std::string param = getParam();
 	std::vector<std::string>	arg;
 	unsigned long				i;
@@ -175,6 +186,8 @@ void	Command::intWhoIs()
 
 void	Command::intUserhost()
 {
+	std::cout << "\n\nINTUSERHOST\n\n";
+
 	std::string param = getParam();
 	std::vector<std::string>	params;
 	unsigned long				i;
@@ -213,6 +226,8 @@ void	Command::intUserhost()
 
 void	Command::intAway()
 {
+	std::cout << "\n\nINTAWAY\n\n";
+
 	std::string param = getParam();
 	if (user->away(param) == -1) {
 		return ;
@@ -227,6 +242,8 @@ void	Command::intAway()
 
 void	Command::intPrivMsg()
 {
+	std::cout << "\n\nINTPRIVMSG\n\n";
+
 	std::string username;
 	std::string nickname;
 	std::string hostname;
@@ -311,6 +328,8 @@ void	Command::intPrivMsg()
 
 void	Command::intNotice()
 {
+	std::cout << "\n\nINTNOTICE\n\n";
+
 	std::string username;
 	std::string nickname;
 	std::string hostname;
@@ -442,6 +461,8 @@ User *Command::getUser()
 
 void Command::intJoin()
 {
+	std::cout << "\n\nINTJOIN\n\n";
+
 	std::vector<std::string>	vec;
 	std::vector<std::string>	vec_chan_names;
 	std::vector<std::string>	vec_keys;
@@ -461,7 +482,7 @@ void Command::intJoin()
 	if (vec.size() > 1) {
 		vec_keys = irc::split(vec[1], ",");
 	}
-	if (vec_chan_names.size() == 1 && vec_keys.size() == 0 && vec_chan_names[0] == "0")    // JOIN 0
+	if (vec_chan_names.size() == 1 && vec_keys.size() == 0 && vec_chan_names[0] == "0")    // JOIN 0	// ????? Does not work
 	{
 		intQuit();
 		return ;
@@ -512,6 +533,7 @@ void Command::intJoin()
 				return ;
 			}
 			user->set_o(true);
+			chan_found->addOperator(*user);
 			if (key.size() > 0)
 				chan_found->setChanPassword(key);
 		}
@@ -579,6 +601,8 @@ void Command::intJoin()
 
 void Command::intInvite()
 {
+	std::cout << "\n\nINTINVITE\n\n";
+
 	std::vector<std::string>	vec;
 	std::string                 nickname;
 	std::string                 chan_name;
@@ -657,8 +681,10 @@ void Command::intInvite()
 	}
 }
 
-void Command::intOper()
+void Command::intOper()			// ??? Server does not receive this command and user is asked key but there is none...
 {
+	std::cout << "\n\nINTOPER\n\n";
+
 	std::vector<std::string>	vec;
 	std::string                 name;
 	std::string                 key;
@@ -689,6 +715,8 @@ void Command::intOper()
 
 void Command::intPart()
 {
+	std::cout << "\n\nINTPART\n\n";
+
 	std::vector<std::string>	vec;
 	std::vector<std::string>	vec_chan_names;
 	std::string					name;
@@ -746,6 +774,8 @@ void Command::intPart()
 
 void    Command::intQuit()
 {
+	std::cout << "\n\nINTQUIT\n\n";
+
 	std::string                 message;
 	unsigned long				i;
 	std::vector<std::string>    vec_chan_names;
@@ -776,6 +806,8 @@ void    Command::intQuit()
 
 void    Command::intNames()
 {
+	std::cout << "\n\nINTNAMES\n\n";
+
 	std::vector<std::string>	vec_chan_names;
 	std::string                 name;
 	unsigned long				i;
@@ -827,6 +859,8 @@ void    Command::intNames()
 
 void Command::intKick()
 {
+	std::cout << "\n\nINTKICK\n\n";
+
 	std::vector<std::string>	vec;
 	std::vector<std::string>	vec_chan_names;
 	std::vector<std::string>	vec_usernames;
@@ -894,6 +928,8 @@ void Command::intKick()
 
 void Command::intTopic()
 {
+	std::cout << "\n\nINTTOPIC\n\n";
+
 	std::vector<std::string>	vec;
 	std::string 	            name;
 	std::string                 new_topic;
@@ -951,6 +987,8 @@ void Command::intTopic()
 }
 
 void Command::intMotd() {
+	std::cout << "\n\nINTMOTD\n\n";
+
 	this->server.getMotd(this->user, param);
 }
 
@@ -973,6 +1011,8 @@ int	Command::isServerOperator(User & user)
 
 void Command::intKill()
 {
+	std::cout << "\n\nINTKILL\n\n";
+
 	std::vector<std::string>		vec;
 	std::string             		nickname;
 	std::string             		comment;
@@ -1032,6 +1072,8 @@ int 	HasInvalidMode(std::string letters)
 
 void	 Command::intMode()
 {
+	std::cout << "\n\nINTMODE\n\n";
+
 	std::vector<std::string>	vec;
 	std::string             	name;
 	std::string             	mode;
@@ -1137,11 +1179,15 @@ void	 Command::intMode()
 }
 
 void		Command::intPass() {
+	std::cout << "\n\nINTPASS\n\n";
+
 	this->server.checkPassword(user, param);
 }
 
 void		Command::intSquit()
 {
+	std::cout << "\n\nINTSQUIT\n\n";
+
 	std::vector<std::string>	vec;
 	std::string					serv_name;
 	std::string					comment;
@@ -1179,6 +1225,8 @@ void		Command::intSquit()
 */
 void		Command::intError()
 {
+	std::cout << "\n\nINTERROR\n\n";
+
 	std::vector<std::string> msg;
 	msg.push_back("The client was not responsible for the error.");
 	user->setParams(msg);
@@ -1186,18 +1234,24 @@ void		Command::intError()
 }
 
 void	Command::intSummon() {
+	std::cout << "\n\nINTSUMMON\n\n";
+
 	std::vector<std::string>	params;
 
 	irc::numericReply(445, user, params);	
 }
 
 void	Command::intUsers() {
+	std::cout << "\n\nINTUSERS\n\n";
+
 	std::vector<std::string>	params;
 
 	irc::numericReply(446, user, params);		
 }
 
 void	Command::intList() {
+	std::cout << "\n\nINTLIST\n\n";
+
 	std::vector<std::string>	params;
 	if (this->param.empty()) {
 		this->server.listChannels(this->user);
