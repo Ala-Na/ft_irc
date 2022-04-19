@@ -497,7 +497,7 @@ void Command::intJoin()
 		chan_found = NULL;
 		if (vec_chan_names[i].size() != 0)
 			name = vec_chan_names[i];
-		if (vec_keys[i].size() != 0)
+		if (vec_keys.empty() == 0 && i < vec_keys.size() && vec_keys[i].size() != 0)
 			key = vec_keys[i];
 		if (name[0] != '&' && name[0] != '#' && name[0] != '+' && name[0] !=  '!')
 			name.insert(0, "#");
@@ -530,7 +530,7 @@ void Command::intJoin()
 			i++;
 			continue ;
 		}
-		if (vec_keys[i] != chan_found->getChanPassword())   // ERR_BADCHANNELKEY
+		if (vec_keys.empty() == 0 && i < vec_keys.size() && vec_keys[i] != chan_found->getChanPassword())   // ERR_BADCHANNELKEY
 		{
 			params.push_back(vec_chan_names[i]);
 			irc::numericReply(475, user, params);
