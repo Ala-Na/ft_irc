@@ -4,6 +4,7 @@
 #include <cstring>
 #include <algorithm>
 #include <vector>
+#include <stdlib.h>
 
 // TODO modify following
 #include "Server.hpp"
@@ -45,6 +46,9 @@ namespace irc {
 			void		goToExecution();
 
 			// intermediate commands
+			void		intPass();
+			void		intNick();
+			void		intUser();
 			void		intOper();
 			void		intJoin();
 			void		intTopic();
@@ -54,24 +58,22 @@ namespace irc {
 			void		intList();
 			void		intInvite();
 			void		intKick();
+			void		intPrivMsg();
 			void		intNotice();
 			void		intKill();
 			void		intQuit();
+			void		intWhoIs();
+			void		intAway();
 			void		intWallops();
-			void		intPass();
+			void		intUserhost();
 			void		intSquit();
 			void		intMotd();
 			void		intError();
-			void		intUser();
-			void		intNick();
-			void		intUserMode();
-			void		intWhoIs();
-			void		intUserhost();
-			void		intAway();
-			void		intPrivMsg();
-			void		intChannelMode();
 			void		intSummon();
 			void		intUsers();
+			// void		intUserMode();
+			// void		intChannelMode();
+			void		intPing();
 
 			int			isServerOperator(User & user);
 

@@ -12,7 +12,6 @@ Command::Command (Server& server, User* user, std::string& content) : server(ser
 	this->prefix = "";
 }
 
-// TODO check if memory is allocated and need to be free
 Command::~Command () {}
 
 void	Command::parseCommand () {
@@ -45,7 +44,7 @@ std::string	Command::getWord () {
 
 void	Command::goToExecution () {
 	// TODO delete unimplemented functions
-	int const nbr_cmd = 25;
+	int const nbr_cmd = 26;
 	void (Command::*pmf[nbr_cmd])() = {&Command::intPass, &Command::intNick, \
 		&Command::intUser, &Command::intOper, \
 		&Command::intJoin, &Command::intTopic, &Command::intMode, \
@@ -54,25 +53,26 @@ void	Command::goToExecution () {
 		&Command::intNotice, &Command::intKill, &Command::intQuit, \
 		&Command::intWhoIs, &Command::intAway, &Command::intWallops, \
 		&Command::intUserhost, &Command::intSquit, &Command::intMotd, \
-		&Command::intError, &Command::intSummon, &Command::intUsers};
+		&Command::intError, &Command::intSummon, &Command::intUsers, &Command::intPing};
 	std::string msg[nbr_cmd] = {"PASS", "NICK", "USER", "OPER", "JOIN", "TOPIC", "MODE", "PART", "NAMES", \
 		"LIST", "INVITE", "KICK", "PRIVMSG", "NOTICE", "KILL", "QUIT", \
 		"WHOIS", "AWAY", "WALLOPS", "USERHOST", "SQUIT", \
-		"MOTD", "ERROR", "SUMMON", "USERS"};
+		"MOTD", "ERROR", "SUMMON", "USERS", "PING"};
 
 	std::cout << this->prefix << std::endl;
 
 	for (unsigned long i = 0; i < nbr_cmd; i++) {
 		if (!this->prefix.compare(msg[i])) {
 			if (i >= 3 && this->user->isRegistered() == false) {
-				//TODO maybe send error message ? But there's not command code for it
 				return;
 			}
 			(this->*pmf[i])();
 			return ;
 		}
 	};
-	// TODO send error unknown code 421 if not found
+	std::vector<std::string> params;
+	params.push_back(this->prefix);
+	irc::numericReply(421, user, params);
 }
 
 // Intermediate Commands
@@ -138,20 +138,20 @@ void	Command::intWhoIs()
 		irc::numericReply(431, user, arg);
 		// return ERR_NONICKNAMEGIVEN 431 ":No nickname given"
 	// check if user exists in the channel
-	if (user)
-		user->whois(*user);
+	//if (user)
+	//	user->whois(this->user);
 	if (!user)
 		irc::numericReply(401, user, arg); // NOSUCHNICK
 	irc::numericReply(311, user, arg); // WHOISUSER
 	arg.clear();
 	arg.push_back(user->getNickname());
 	// get channels
-	std::vector<std::string> channels = user->getChannels();
+	std::vector<Channel *> channels = user->getChannels();
 	std::string    chan_names = "";
 	i = 0;
 	while (i < channels.size())
 	{
-		chan_names += channels[i];
+		chan_names += channels[i]->getChanName();
 		if (i < channels.size() - 1)
 			chan_names += ", ";
 		i++;
@@ -166,9 +166,9 @@ void	Command::intWhoIs()
 	arg.push_back(server.getName());
 	irc::numericReply(312, user, arg); // RPL_WHOISSERVER
 
-	if (user->userModes.get_a())
+	if (user->get_a())
 		irc::numericReply(301, user, arg); // RPL_AWAY
-	if (user->userModes.get_o())
+	if (user->get_o())
 		irc::numericReply(313, user, arg); // RPL_WHOISOPERATOR
 	irc::numericReply(318, user, arg); // RPL_ENDOFWHOIS
 }
@@ -192,10 +192,10 @@ void	Command::intUserhost()
 	while (i < params.size())
 	{
 		reply.append(user->getNickname());
-		if (user->userModes.get_o())
+		if (user->get_o())
 			reply.append("*");
 		reply.append("=");
-		if (user->userModes.get_a())
+		if (user->get_a())
 			reply.append("-");
 		else
 			reply.append("+");
@@ -214,9 +214,11 @@ void	Command::intUserhost()
 void	Command::intAway()
 {
 	std::string param = getParam();
-	user->away(param);
+	if (user->away(param) == -1) {
+		return ;
+	}
 	std::vector<std::string> arg;
-	if (user->userModes.get_a())
+	if (user->get_a())
 		irc::numericReply(306, user, arg); // NOWAWAY
 	else
 		irc::numericReply(305, user, arg); // UNAWAY
@@ -283,18 +285,26 @@ void	Command::intPrivMsg()
 	if (username.size() > 0)
 		recipient = server.getUserByUsername(username);
 	if (!recipient)
+	{
 		irc::numericReply(401, user, arg); // NOSUCHNICK
-
-	user->privmsg(*recipient, msg);
+		// return ;
+	}
+	user->privmsgToUser(recipient, msg);
+	// TODO user privmsgToChannel
 	arg.clear();
-	arg.push_back(recipient->getNickname());
-	arg.push_back(recipient->getAwayMessage());
-	if (recipient->userModes.get_a())
+	if (recipient)
+	{
+		arg.push_back(recipient->getNickname());
+		arg.push_back(recipient->getAwayMessage());
+	}
+	if (recipient && recipient->get_a())
 		irc::numericReply(301, user, arg); // RPL_AWAY
-
-	recipient->setNickname(nickname);
-	recipient->setUsername(username);
-	recipient->setHostname(hostname);
+	if (recipient)
+	{
+		recipient->setNickname(nickname);
+		recipient->setUsername(username);
+		recipient->setHostname(hostname);
+	}
 
 	//    ERR_CANNOTSENDTOCHAN            ERR_NOTOPLEVEL
 		// ERR_WILDTOPLEVEL                ERR_TOOMANYTARGETS
@@ -367,7 +377,7 @@ void	Command::intNotice()
 	arg.clear();
 	arg.push_back(recipient->getNickname());
 	arg.push_back(recipient->getAwayMessage());
-	if (recipient->userModes.get_a())
+	if (recipient->get_a())
 		irc::numericReply(301, user, arg); // RPL_AWAY
 
 	recipient->setNickname(nickname);
@@ -389,7 +399,7 @@ void	Command::intWallops()
 	std::vector<User *>::iterator	it = users.begin();
 	while (it != users.end())
 	{
-		if ((*it)->userModes.get_w()) {
+		if ((*it)->get_w()) {
 			int res = irc::sendString((*it)->getFd(), sentence);
 			if (res == -1) {
 				//TODO close connection
@@ -401,8 +411,6 @@ void	Command::intWallops()
 
 std::string left_trim(const std::string &s, std::string to_remove)
 {
-	std::cout << "s dans left: " << s << std::endl;
-
 	if (s.size() == 0)
 		return (NULL);
 	size_t start = s.find_first_not_of(to_remove);
@@ -413,8 +421,6 @@ std::string left_trim(const std::string &s, std::string to_remove)
 
 std::string right_trim(const std::string &s, std::string to_remove)
 {
-	std::cout << "s dans right_trim: " << s << std::endl;
-
 	if (s.size() == 0)
 		return (NULL);
 	size_t end = s.find_last_not_of(to_remove);
@@ -425,7 +431,6 @@ std::string right_trim(const std::string &s, std::string to_remove)
 
 std::string trim(const std::string &s, std::string to_remove)
 {
-	std::cout << "s dans trim: " << s << std::endl;
 	if (s.size() == 0)
 		return (NULL);
 	return (right_trim(left_trim(s, to_remove), to_remove));
@@ -448,13 +453,14 @@ void Command::intJoin()
 	std::string                 key;
 	Channel                     *chan_found;
 	std::string                 message;
-	ssize_t                     ret;
 	std::vector<User> 			users;
 	std::string 				nicks;
 
 	vec = irc::split(param, " ");
 	vec_chan_names = irc::split(vec[0], ",");
-	vec_keys = irc::split(vec[1], ",");
+	if (vec.size() > 1) {
+		vec_keys = irc::split(vec[1], ",");
+	}
 	if (vec_chan_names.size() == 1 && vec_keys.size() == 0 && vec_chan_names[0] == "0")    // JOIN 0
 	{
 		intQuit();
@@ -495,73 +501,35 @@ void Command::intJoin()
 		chan_found = NULL;
 		if (vec_chan_names[i].size() != 0)
 			name = vec_chan_names[i];
-		if (vec_keys[i].size() != 0)
+		if (vec_keys.size() > i && vec_keys[i].size() != 0)
 			key = vec_keys[i];
 		if (name[0] != '&' && name[0] != '#' && name[0] != '+' && name[0] !=  '!')
 			name.insert(0, "#");
 		chan_found = server.getChannelByName(name);
-		if (chan_found == NULL)
-		{
-			chan_found = server.createChannel(name);
-			if (key.size() > 0)
-				chan_found->setChanPassword(key);
-		}
-		if (chan_found->userIsBannedFromChan(user->getUsername()))    // ERR_BANNEDFROMCHAN
-		{
-			params.push_back(vec_chan_names[i]);
-			irc::numericReply(474, user, params);
-			i++;
-			continue ;
-		}
-		if (chan_found->getMaxNbUsersInChan() == chan_found->getNbUsersInChan())    // ERR_CHANNELISFULL
-		{
-			params.push_back(vec_chan_names[i]);
-			irc::numericReply(471, user, params);
-			i++;
-			continue ;
-		}
-		if (irc::there_is_no('i', chan_found->getChanMode()) == 0)   // ERR_INVITEONLYCHAN
-		{
-			params.push_back(vec_chan_names[i]);
-			irc::numericReply(473, user, params);
-			i++;
-			continue ;
-		}
-		if (vec_keys[i] != chan_found->getChanPassword())   // ERR_BADCHANNELKEY
-		{
-			params.push_back(vec_chan_names[i]);
-			irc::numericReply(475, user, params);
-			i++;
-			continue ;
-		}
-		else
-		{
-			message = chan_found->getChanName() + ": channel joined\n";
-			ret = irc::sendString(user->getFd(), message);
-			if (ret == -1)
-			{
-				//TODO close connection
+		if (chan_found == NULL) {
+			if ((chan_found = server.createChannel(name)) == NULL) {
 				return ;
 			}
-			chan_found->addUser(*user);
-			params.push_back(chan_found->getChanName());
-			params.push_back(chan_found->getChanTopic());
-			irc::numericReply(332, user, params);
-			params.clear();
-			params.push_back("=");
-			params.push_back(chan_found->getChanName());
-			users = chan_found->getVecChanUsers();
-			nicks = "";
-			unsigned long j = 0;
-			while (j < users.size())
-			{
-				nicks += users[j].getNickname();
-				if (j < users.size() - 1)
-					nicks += ", ";
-				j++;
+			// TODO modify to user be channel operator
+			//user->set_o(true);
+			if (key.size() > 0) {
+				chan_found->setChanPassword(key);
 			}
-			params.push_back(nicks);
-			irc::numericReply(353, user, params);	// RPL_NAMREPLY           
+			if (chan_found->addUser(user) == -1) {
+				return ;
+			}    
+		} else if (vec_keys.size() > i && vec_keys[i] != chan_found->getChanPassword()) {  // ERR_BADCHANNELKEY
+			params.push_back(vec_chan_names[i]);
+			if (irc::numericReply(475, user, params) == -1) {
+				this->server.deleteUser(user);
+				return ;				
+			}
+			i++;
+			continue ;
+		} else {
+			if (chan_found->addUser(user) == -1) {
+				return ;
+			}      
 		}
 		i++;
 	}
@@ -574,7 +542,6 @@ void Command::intInvite()
 	std::string                 nickname;
 	std::string                 chan_name;
 	Channel                     *chan_found;
-	// int                         ret;
 	User *                      user_asked;
 	std::vector<std::string> 	params;
 
@@ -582,52 +549,71 @@ void Command::intInvite()
 	if (vec.size() < 2)  // ERR_NEEDMOREPARAMS
 	{
 		params.push_back(prefix);
-		irc::numericReply(461, user, params);
+		if (irc::numericReply(461, user, params) == -1) {
+			this->server.deleteUser(user);
+		}
 		return ;
 	}
 	nickname = vec[0];
 	chan_name = vec[1];
 	chan_found = NULL;
-	if (chan_name[0] != '&' && chan_name[0] != '#' && chan_name[0] != '+' && chan_name[0] !=  '!')
+	if (chan_name[0] != '&' && chan_name[0] != '#' && chan_name[0] != '+' && chan_name[0] !=  '!') {
 		chan_name.insert(0, "#");
+	}
 	chan_found = server.getChannelByName(chan_name);
 	user_asked = server.getUserByNick(nickname);
 	if (user_asked == NULL) // ERR_NOSUCHNICK
 	{
 		params.push_back(nickname);
-		irc::numericReply(401, user, params);
+		if (irc::numericReply(401, user, params) == -1) {
+			this->server.deleteUser(user);
+		}
 		return ;
 	}
-	if (chan_found->userIsInChanFromUsername(user->getUsername()) == 0) // ERR_NOTONCHANNEL
+	if (chan_found->userIsInChanFromNickname(user->getNickname()) == 0) // ERR_NOTONCHANNEL
 	{
 		params.push_back(chan_name);
-		irc::numericReply(442, user, params);
+		if (irc::numericReply(442, user, params) == -1) {
+			this->server.deleteUser(user);
+		}
 		return ;
 	}
-	if (irc::there_is_no('i', chan_found->getChanMode()) == 0 && chan_found->isOperator(*user) == 0)  // ERR_CHANOPRIVSNEEDED
+	if (irc::there_is_no('i', chan_found->getChanMode()) == 0 && chan_found->isOperator(user) == 0)  // ERR_CHANOPRIVSNEEDED
 	{
 		params.push_back(chan_name);
-		irc::numericReply(482, user, params);
+		if (irc::numericReply(482, user, params) == -1) {
+			this->server.deleteUser(user);
+		}
 		return ;
 	}
 	if (chan_found->userIsInChanFromNickname(nickname)) // ERR_USERONCHANNEL
 	{
 		params.push_back(nickname);
 		params.push_back(chan_name);
-		irc::numericReply(443, user, params);
+		if (irc::numericReply(443, user, params) == -1) {
+			this->server.deleteUser(user);
+		}
 		return ;
 	}
-	chan_found->receivingAnInvitation(*user, *user_asked);    // RPL_INVITING
+	if (chan_found->receivingAnInvitation(user, user_asked) == -1) {
+		this->server.deleteUser(user);
+		return ;
+	}
 	params.push_back(nickname);
 	params.push_back(chan_name);
-	irc::numericReply(341, user, params);
-	if (user_asked->isAway())	// RPL_AWAY
+	if (irc::numericReply(341, user, params) == -1) {
+		this->server.deleteUser(user);
+		return ;
+	}
+	if (user_asked->get_a())
 	{
 		params.push_back(nickname);
 		params.push_back(user_asked->getAwayMessage());
-		irc::numericReply(301, user, params);
+		if (irc::numericReply(301, user, params) == -1) {
+			this->server.deleteUser(user);
+		}
+		return ;
 	}
-	return ;
 }
 
 void Command::intOper()
@@ -635,7 +621,6 @@ void Command::intOper()
 	std::vector<std::string>	vec;
 	std::string                 name;
 	std::string                 key;
-	// int                         ret;
 	std::vector<std::string> 	params;
 
 	vec = irc::split(param, " ");
@@ -652,7 +637,7 @@ void Command::intOper()
 	{
 		irc::numericReply(464, user, arg);
 		return ;
-	} else if (user->isOperator())  // RPL_YOUREOPER
+	} else if (user->get_o())  // RPL_YOUREOPER
 	{
 		irc::numericReply(481, user, arg);
 		return ;
@@ -709,7 +694,10 @@ void Command::intPart()
 		}
 		else
 		{
-			chan_found->writeToAllChanUsers(vec[1]);
+			if (chan_found->writeToAllChanUsers(vec[1]) == -1) {
+				this->server.deleteUser(user);
+				return ;
+			}
 		}
 		i++;
 	}
@@ -720,28 +708,35 @@ void    Command::intQuit()
 {
 	std::string                 message;
 	unsigned long				i;
-	std::vector<std::string>    vec_chan_names;
+	std::vector<Channel *>    	vec_chan;
 	Channel                     *chan_found;
 	std::string                 name;
 
 	message = trim(param, ":");
-	vec_chan_names = user->getChannels();
+	vec_chan = user->getChannels();
 	i = 0;
-	while (i < vec_chan_names.size())
+	while (i < vec_chan.size())
 	{
 		chan_found = NULL;
-		name = vec_chan_names[i];
+		name = vec_chan[i]->getChanName();
 		if (name[0] != '&' && name[0] != '#' && name[0] != '+' && name[0] !=  '!')
 			name.insert(0, "#");
 		chan_found = server.getChannelByName(name);
-		chan_found->writeToAllChanUsers(message);
-		chan_found->deleteUser(*user, "");
+		std::cout << message << std::endl;
+		if (chan_found->writeToAllChanUsers(message) == -1) {
+			this->server.deleteUser(user);
+			return ;
+		}
+		chan_found->deleteUser(user, "PART " + chan_found->getChanName() + ":" + message);
 		i++;
 	}
+	this->server.sendError(user, this->param);	
+	this->server.deleteUser(user);
 }
 
 void    Command::intNames()
 {
+	std::vector<Channel *>		vec_chan;
 	std::vector<std::string>	vec_chan_names;
 	std::string                 name;
 	unsigned long				i;
@@ -750,11 +745,13 @@ void    Command::intNames()
 	if (param.empty())
 	{
 		i = 0;
-		vec_chan_names = user->getChannels();
-		while (i < vec_chan_names.size())
+		vec_chan = user->getChannels();
+		while (i < vec_chan.size())
 		{
-			chan_found = server.getChannelByName(vec_chan_names[i]);
-			chan_found->listAllUsersInChan(*user);
+			if (vec_chan[i]->listAllUsersInChan(user) == -1) {
+				this->server.deleteUser(user);
+				return ;
+			}
 			i++;
 		}
 	}
@@ -768,60 +765,24 @@ void    Command::intNames()
 			chan_found = NULL;
 			if (vec_chan_names[i].size() != 0)
 				name = vec_chan_names[i];
-			if (name[0] != '&' && name[0] != '#' && name[0] != '+' && name[0] !=  '!')
+			if (name[0] != '&' && name[0] != '#' && name[0] != '+' && name[0] !=  '!') {
 				name.insert(0, "#");
+			}
 			chan_found = server.getChannelByName(name);
 			if (chan_found == NULL)
 			{
 				i++;
 				continue ;
 			}
-			else
-				chan_found->listAllUsersInChan(*user);
+			else {
+				if (chan_found->listAllUsersInChan(user) == -1) {
+					this->server.deleteUser(user);
+					return;
+				}
+			}
 			i++;
 		}
 	}
-}
-
-void Command::intList()
-{
-	std::vector<std::string>	vec_chan_names;
-	std::string                 name;
-	unsigned long				i;
-	Channel                     *chan_found;
-
-	if (param.empty())
-	{
-		i = 0;
-		vec_chan_names = user->getChannels();
-		while (i < vec_chan_names.size())
-		{
-			chan_found = server.getChannelByName(vec_chan_names[i]);
-			chan_found->getChanNameAndTopic();
-			i++;
-		}
-	}
-	else
-	{
-		vec_chan_names = irc::split(param, ",");
-		i = 0;
-		while (i < vec_chan_names.size())
-		{
-			name = "";
-			chan_found = NULL;
-			if (vec_chan_names[i].size() != 0)
-				name = vec_chan_names[i];
-			if (name[0] != '&' && name[0] != '#' && name[0] != '+' && name[0] !=  '!')
-				name.insert(0, "#");
-			chan_found = server.getChannelByName(name);
-			if (chan_found == NULL)
-				return ;
-			else
-				chan_found->getChanNameAndTopic();
-			i++;
-		}
-	}
-	return ;
 }
 
 void Command::intKick()
@@ -883,7 +844,8 @@ void Command::intKick()
 			}
 			else
 			{
-				chan_found->deleteUser(*(chan_found->getUserFromUsername(user_str)), message);
+				chan_found->deleteUser((chan_found->getUserFromUsername(user_str)), message);
+				// TODO : modify message to : "KICK chan_name user_kicking :reason"
 			}
 			i++;
 		}
@@ -897,9 +859,9 @@ void Command::intTopic()
 	std::string 	            name;
 	std::string                 new_topic;
 	Channel                     *chan_found;
-	// int                         ret;
 	std::vector<std::string>	params;
 
+	std::cout << "Here" << std::endl;
 	if (param.size() == 0)  // ERR_NEEDMOREPARAMS
 	{
 		params.push_back(prefix);
@@ -932,7 +894,7 @@ void Command::intTopic()
 		irc::numericReply(332, user, params);
 		return ;
 	}
-	if (irc::there_is_no('t', chan_found->getChanMode()) == 0 && chan_found->isOperator(*user) == 0) // ERR_CHANOPRIVSNEEDED
+	if (irc::there_is_no('t', chan_found->getChanMode()) == 0 && chan_found->isOperator(user) == 0) // ERR_CHANOPRIVSNEEDED
 	{
 		params.push_back(name);
 		irc::numericReply(482, user, params);
@@ -940,7 +902,7 @@ void Command::intTopic()
 	}
 	else
 	{
-		chan_found->setChanTopic(new_topic, *user);
+		chan_found->setChanTopic(new_topic, user);
 		if (new_topic.size() == 0)      // RPL_NOTOPIC
 		{
 			params.push_back(name);
@@ -1124,9 +1086,9 @@ void	 Command::intMode()
 			return ;
 		}
 		if (mode[0] == '-')
-			chan_found->deleteOperator(*user_found);
+			chan_found->deleteOperator(this->user, user_found);
 		else if (mode[0] == '+')
-			chan_found->addOperator(*user_found);
+			chan_found->addOperator(this->user, user_found);
 	}
 	if (irc::there_is_no('O', letters) == 0 && vec.size() == 2)
 	{
@@ -1201,4 +1163,38 @@ void	Command::intUsers() {
 	std::vector<std::string>	params;
 
 	irc::numericReply(446, user, params);		
+}
+
+void	Command::intList() {
+	std::vector<std::string>	params;
+	if (this->param.empty()) {
+		this->server.listChannels(this->user);
+	} else {
+		std::vector<std::string>	split = irc::split(param, " ");
+		std::vector<std::string>	channels = irc::split(split[0], ",");
+		for (size_t i = 0; i < channels.size(); i++) {
+			Channel* curr_chan = this->server.getChannelByName(channels[i]);
+			if (curr_chan != NULL) {
+				params.push_back(curr_chan->getChanName());
+				char nb[3];
+				sprintf(nb, "%d", curr_chan->getNbUsersInChan());
+				params.push_back(std::string(nb));
+				params.push_back(curr_chan->getChanTopic());
+				if (irc::numericReply(322, this->user, params) == -1) {
+					this->server.deleteUser(user);
+					return;
+				}
+				params.clear();
+
+			}
+		}
+	}
+	if (irc::numericReply(323, this->user, params) == -1) {
+		this->server.deleteUser(user);
+		return ;
+	}
+}
+
+void Command::intPing() {
+	//Response with PONG
 }

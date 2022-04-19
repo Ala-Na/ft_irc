@@ -170,6 +170,8 @@ void	Server::createUser() {
 	struct sockaddr_in	client_addr;
 	socklen_t			addr_len;
 	int					client_fd;
+	char				host[1024];
+	char 				service[20];
 
 	addr_len = sizeof(client_addr);
 	client_fd = accept(this->server_socket, (struct sockaddr *)&client_addr, &addr_len);
@@ -182,9 +184,16 @@ void	Server::createUser() {
 		close(client_fd);
 		return ;
 	}
+	if (getnameinfo((const sockaddr *)&client_addr, sizeof(client_addr), \
+		host, sizeof(host), service, sizeof(service), NI_NOFQDN) ==  -1) {
+			std::cout << "Error: getnameinfo()" << std::cerr;
+			close(client_fd);
+			return ;
+	}
+	std::string hostname(host);
 	this->addSocketToPoll(client_fd);
 	std::cout << "Accepting new connection from " << inet_ntoa(client_addr.sin_addr) << " on fd: " << client_fd << std::endl;
-	this->users.push_back(new User(client_fd, client_addr, this));
+	this->users.push_back(new User(client_fd, hostname, client_addr, this));
 	this->datas.push_back("");
 }
 
@@ -216,7 +225,7 @@ void	Server::deleteUserFromChannels(User* user) {
 	{
 		if (channels[i]->userIsInChanFromUsername(user->getUsername()))
 		{
-			channels[i]->deleteUser(*user, "");
+			channels[i]->deleteUser(user, " PART");
 		}
 		i++;
 	}
@@ -237,8 +246,29 @@ int	Server::isServOp(User & user)
 	return (0);
 }
 
-// TODO check parameters for channel creation
+
 Channel*	Server::createChannel(std::string name) {
+	srand(time(0));
+	if (name.find_first_of(" :,\007") != std::string::npos || name.find_first_of("&#!") != 0 || name.length() > 50) {
+		this->channels.push_back(new Channel(this, "#"));
+		return this->channels.back();
+	}
+	if (name[0] == '!')	{
+		int					random;
+		std::string			name;
+		std::string 		s;
+		std::stringstream	out;
+		int					i;
+		
+		i = 0;
+		while (i < 5) {
+			random = rand() % 10;
+			out << random;
+			s = out.str();
+			name.insert(0, s);
+			i++;
+		}
+	}
 	this->channels.push_back(new Channel(this, name));
 	return this->channels.back();
 }
@@ -263,7 +293,7 @@ void	Server::receiveDatas() {
 				break ;
 			} else {
 				buf[bytes_recv] = 0;
-				std::cout << "From client (fd = " << (*it).fd << "): " << buf << std::endl;
+				std::cout << "\n\n-----------------\n\nFrom client (fd = " << (*it).fd << "): " << buf << std::endl;
 				s_buf = buf;
 				this->datasExtraction(s_buf, it - pfds.begin() - 1);
 				break ;
@@ -287,7 +317,7 @@ void	Server::datasExtraction(std::string& buf, size_t pos) {
 			datas[pos].erase(0, cmd_end + 2);
 			cmd_end = datas[pos].find("\r\n");
 		}
-		std::cout << "Creating new command with: " << content << std::endl;
+		std::cout << "\nCreating new command with: " << content << std::endl;
 		Command* cmd = new Command(getServer(), user, content);
 		cmd->parseCommand();
 		delete cmd;
@@ -311,20 +341,16 @@ User*	Server::getSpecificUser(size_t user_nb) {
 }
 
 Channel*	Server::getChannelByName(std::string name) {
-	// for (std::vector<Channel *>::iterator it = this->channels.begin(); it != this->channels.end(); it++)
-	// {
-	// 	// TODO
-	// 	// Check if (*it)->getname() == name;
-	// 	// If true, return channel;
-	// 	if ((*it)->getChanName() == name)
-	// 		return (*it);
-	// }
 	unsigned long	i;
+	std::string		curr_chan;
 
 	i = 0;
+	std::transform(name.begin(), name.end(), name.begin(), ::toupper);
 	while (i < channels.size())
 	{
-		if (channels[i]->getChanName() == name)
+		curr_chan = channels[i]->getChanName();
+		transform(curr_chan.begin(), curr_chan.end(), curr_chan.begin(), ::toupper);
+		if (curr_chan == name)
 			return (channels[i]);
 		i++;
 	}
@@ -336,12 +362,10 @@ User*	Server::getUserByUsername(std::string name)
 	unsigned long i;
 
 	i = 0;
-	while (i < users.size())
-	{
-		std::cout << "users[" << i << "]->getusername(): " << users[i]->getUsername() << std::endl;
-		std::cout << "name: " << name << std::endl;
-		if (users[i]->getUsername() == name)
+	while (i < users.size()) {
+		if (users[i]->getUsername() == name) {
 			return (users[i]);
+		}
 		i++;
 	}
 	return (NULL);
@@ -352,8 +376,7 @@ User*	Server::getUserByNick(std::string nick)
 	unsigned long i;
 
 	i = 0;
-	while (i < users.size())
-	{
+	while (i < users.size()) {
 		if (users[i]->getNickname() == nick)
 			return (users[i]);
 		i++;
@@ -364,7 +387,7 @@ User*	Server::getUserByNick(std::string nick)
 void	Server::checkPassword(User* user, std::string parameters) {
 	std::vector<std::string>	params;
 
-	if (user->isRegistered() == true) {
+	if (user->get_r() == true) {
 		irc::numericReply(462, user, params);
 		return ;
 	 } else if (parameters.empty()) {
@@ -388,14 +411,14 @@ void	Server::checkNick(User* user, std::string parameters) {
 		return ;
 	} else if (parameters.empty()) {
 		irc::numericReply(431, user, params);
-		if (user->isRegistered() == false)
+		if (user->get_r() == false)
 			this->deleteUser(user);
 		return ;
 	}
 	params = irc::split(parameters, " ");
 	if (this->getUserByNick(params[0]) != NULL) {
 		irc::numericReply(433, user, params);
-		if (user->isRegistered() == false)
+		if (user->get_r() == false)
 			this->deleteUser(user);
 		return ;
 	} else if (params[0].size() > 8 ||
@@ -403,20 +426,19 @@ void	Server::checkNick(User* user, std::string parameters) {
 		((params[0].find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ;[]\\`_^{}|")) == 0))
 	{
 			irc::numericReply(432, user, params);
-			if (user->isRegistered() == false)
+			if (user->get_r() == false)
 				this->deleteUser(user);
 			return ;
 	}
 	user->nick(params[0]);
-	if (user->isRegistered() == false)
+	if (user->get_r() == false)
 		user->setStatus(USER);
-	// We don't set the server as restricted so no ERR_RESTRICTED 484
 }
 
 void	Server::checkUserCmd(User* user, std::string parameters) {
 	std::vector<std::string>	params;
 
-	if (user->isRegistered() == true) {
+	if (user->get_r() == true) {
 		irc::numericReply(462, user, params);
 		return ;
 	}
@@ -436,7 +458,6 @@ void	Server::checkUserCmd(User* user, std::string parameters) {
 void	Server::welcomeUser(User *user) {
 	std::vector<std::string>	params;
 
-	std::cout << "In welcome" << std::endl;
 	params.push_back(user->getUsername());
 	params.push_back(user->getHostname());
 	irc::numericReply(1, user, params);
@@ -446,14 +467,15 @@ void	Server::welcomeUser(User *user) {
 	params.clear();
 	params.push_back(this->conf.find("creation")->second);
 	irc::numericReply(3, user, params);	
+	params.clear();
 	params.push_back(this->conf.find("version")->second);
-	params.push_back("aiwroO");
-	// TODO modify following
-	params.push_back("channel modes availables");
+	params.push_back("aiwro");
+	params.push_back("klo");
 	irc::numericReply(4, user, params);
 	this->getMotd(user, "");
 }
 
+// TODO finish this function
 void	Server::listChannels (User* user) {
 	(void)user;
 	// Maybe send 321 and 323 from intList ?
@@ -470,6 +492,7 @@ void	Server::getMotd(User* user, std::string parameters) {
 	std::vector<std::string> param = irc::split(parameters, " ");
 	std::string motd = (this->conf.find("motd"))->second;
 
+	// std::cout << "START OF MOTD FUNCTION !!!!!!!!!!!!!!!!\n";
 	if (!param[0].empty() && param[0].compare((this->conf.find("name"))->second)) {
 		irc::numericReply(402, user, param);
 		return ;

@@ -6,7 +6,7 @@
 /*   By: anadege <anadege@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/04 09:41:08 by cboutier          #+#    #+#             */
-/*   Updated: 2022/04/15 11:38:02 by anadege          ###   ########.fr       */
+/*   Updated: 2022/04/19 17:17:47 by anadege          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,76 +14,31 @@
 
 using namespace irc;
 
-User::User()
-{
-
-}
-
-User::User(int fd, struct sockaddr_in address)
-: _fd(fd)
-{
-	_address = address;
-	// TODO recuperate hostname in address
-	//_hostname = 
-	userModes.set_a(false);		// user is flagged as away;
-	userModes.set_i(false);		// marks a users as invisible; hides you if someone does a /WHO or /NAMES outside the channel
-	userModes.set_w(false);		// user receives wallops; Used by IRC operators, WALLOPS is a command utilized to send messages on an IRC network. WALLOPS messages are for broadcasting network information and its status to following users.
-	userModes.set_r(false);		// restricted user connection;
-	userModes.set_o(false);		// operator flag;
-	userModes.set_O(false);
-	_nickname = "";
-	_username = "";
-	this->_status = PASS;
-}
-
-
-User::User(int fd, struct sockaddr_in address, Server *server)
+User::User(int fd, std::string& hostname, struct sockaddr_in& address, Server *server)
 {
 	_fd = fd;
 	_server = server;
 	_address = address;
-	// TODO recuperate hostname in address
-	//_hostname = 
-	userModes.set_a(false);		// user is flagged as away;
-	userModes.set_i(false);		// marks a users as invisible; hides you if someone does a /WHO or /NAMES outside the channel
-	userModes.set_w(false);		// user receives wallops; Used by IRC operators, WALLOPS is a command utilized to send messages on an IRC network. WALLOPS messages are for broadcasting network information and its status to following users.
-	userModes.set_r(false);		// restricted user connection;
-	userModes.set_o(false);		// operator flag;
-	userModes.set_O(false);
+	_hostname = hostname;
+	userModes_a = false;		// user is flagged as away;
+	userModes_i = false;		// marks a users as invisible; hides you if someone does a /WHO or /NAMES outside the channel
+	userModes_w = false;		// user receives wallops; Used by IRC operators, WALLOPS is a command utilized to send messages on an IRC network. WALLOPS messages are for broadcasting network information and its status to following users.
+	userModes_r = false;		// restricted user connection;
+	userModes_o = false;		// operator flag;
+	userModes_O = false;
 	_nickname = "";
 	_username = ""; //  Par défaut oui mais le nom précis, il ne peut pas le deviner, faut que ça vienne du client !
 	this->_status = PASS;
 }
 
-User::User(User const &src)
-{
-	*this = src;
-}
-
-User &User::operator=(User const &src)
-{
-	if (this != &src)
-	{
-		_server = src._server;
-		_nickname = src._nickname;
-		_username = src._username;
-		_real_name = src._real_name;
-		_hostname = src._hostname;
-		_channels = src._channels;
-		_params = src._params;
-		_fd = src._fd;
-		_address = src._address;
-		_away_message = src._away_message;
-		_status = src._status;
-		userModes = src.userModes;
-	}
-	return (*this);
-}
-
-User::~User()
-{}
+User::~User() {}
 
 // GETTERS
+Server *	User::getServer()
+{
+	return (_server);	
+}
+
 std::string	User::getNickname()
 {
 	return (_nickname);
@@ -119,26 +74,19 @@ int		User::getFd()
 	return (_fd);
 }
 
-std::vector<std::string> User::getChannels()
-{
-	return (_channels);
-}
-
 sockaddr_in	User::getAddr()
 {
 	return (_address);
 }
 
+std::vector<Channel *> User::getChannels()
+{
+	return (_channels);
+}
+
 int	User::getNbOfChannels()
 {
-	std::vector<std::string>::iterator it = _channels.begin();
-	int	counter = 0;
-	while (it != _channels.end())
-	{
-		counter++;
-		it++;
-	}
-	return (counter);
+	return (_channels.size());
 }
 
 UserStatus	User::getStatus() {
@@ -146,72 +94,32 @@ UserStatus	User::getStatus() {
 }
 
 // USERMODES GETTERS
-bool	User::user_Modes::get_a()
+bool	User::get_a()
 {
-	return (a);
+	return (userModes_a);
 }
 
-bool	User::user_Modes::get_i()
+bool	User::get_i()
 {
-	return (i);
+	return (userModes_i);
 }
 
-bool	User::user_Modes::get_w()
+bool	User::get_w()
 {
-	return (w);
+	return (userModes_w);
 }
 
-bool	User::user_Modes::get_r()
+bool	User::get_r()
 {
-	return (r);
+	return (userModes_r);
 }
 
-bool	User::user_Modes::get_o()
+bool	User::get_o()
 {
-	return (o);
+	return (userModes_o);
 }
 
-bool	User::user_Modes::get_O()
-{
-	return (O);
-}
-
-// FLAGS BOOL
-bool 	User::isAway()
-{
-	if (User::userModes.get_a())
-		return (true);
-	return (false);
-}
-
-bool 	User::isInvisible()
-{
-	if (User::userModes.get_i())
-		return (true);
-	return (false);
-}
-
-bool 	User::isWallops()
-{
-	if (User::userModes.get_w())
-		return (true);
-	return (false);
-}
-
-bool 	User::isRestricted()
-{
-	if (User::userModes.get_r())
-		return (true);
-	return (false);
-}
-
-bool 	User::isOperator()
-{
-	if (User::userModes.get_o())
-		return (true);
-	return (false);
-}
-
+// Get status
 bool	User::isRegistered()
 {
 	if (this->_status == REGISTERED)
@@ -255,36 +163,49 @@ void	User::setStatus(UserStatus status) {
 }
 
 // USERMODES SETTERS
-void	User::user_Modes::set_a(bool val)
+void	User::set_a(bool val)
 {
-	a = val;
+	userModes_a = val;
 }
 
-void	User::user_Modes::set_i(bool val)
+void	User::set_i(bool val)
 {
-	i = val;
+	userModes_i = val;
 }
 
-void	User::user_Modes::set_w(bool val)
+void	User::set_w(bool val)
 {
-	w = val;
+	userModes_w = val;
 }
 
-void	User::user_Modes::set_r(bool val)
+void	User::set_r(bool val)
 {
-	r = val;
+	userModes_r = val;
 }
 
-void	User::user_Modes::set_o(bool val)
+void	User::set_o(bool val)
 {
-	o = val;
+	userModes_o = val;
 }
 
-void	User::user_Modes::set_O(bool val)
+void	User::set_O(bool val)
 {
-	O = val;
+	userModes_O = val;
 }
 
+void	User::addChannel(Channel* chan)
+{
+	_channels.push_back(chan);
+}
+
+void	User::deleteChannel(Channel* chan)
+{
+	for (std::vector<Channel *>::iterator it = _channels.begin(); it != _channels.end(); it++) {
+		if ((*it) == chan) {
+			_channels.erase(it);
+		}
+	}
+}
 
 // COMMANDS
 void	User::nick(std::string nickname)
@@ -292,25 +213,31 @@ void	User::nick(std::string nickname)
 	setNickname(nickname);
 }
 
-void	User::privmsg(User usr, std::string msg) // pov de la pax qui recoit le msg, usr est la pax qui veut lui envoyer un msg
+void	User::privmsgToUser(User* dest, std::string msg) // pov de la pax qui recoit le msg, usr est la pax qui veut lui envoyer un msg
 {
-	int ret;
-	
-	if (usr.userModes.get_a())
-	{
-		ret = irc::sendString(usr._fd, this->getAwayMessage());
-		if (ret == -1) {
-			// TODO close connection
-			return ;
-		}
-		std::string reply = getNickname() + " :" + getAwayMessage();
-	}
-	ret = irc::sendString(this->_fd, msg);
+	std::string	full_msg = ":" + this->getNickname() + "!" + this->getUsername() + "@" + this->getHostname();
+	full_msg += " PRIVMSG " + dest->getNickname() + " :" + msg + "\r\n";
+	int ret = irc::sendString(dest->getFd(), full_msg);
 	if (ret == -1) {
-		// TODO close connection
-		return ;
+		return (this->_server->deleteUser(this));
 	}
+	if (dest->get_a())
+	{
+		std::vector<std::string>	params;
+		params.push_back(dest->getNickname());
+		params.push_back(dest->getAwayMessage());
+		if (irc::numericReply(301, this, params) == -1) {
+			return (this->_server->deleteUser(this));
+		}
+	}
+}
 
+void	User::privmsgToChannel(Channel* channel, std::string msg) {
+	std::string	full_msg = ":" + this->getNickname() + "!" + this->getUsername() + "@" + this->getHostname();
+	full_msg += " PRIVMSG " + channel->getChanName() + " :" + msg + "\r\n";
+	for (std::vector<User *>::iterator it = (channel->getVecChanUsers()).begin(); it != channel->getVecChanUsers().end(); it++) {
+		irc::sendString((*it)->getFd(), full_msg);
+	}	
 }
 
 void	User::notice(std::string msg)
@@ -323,7 +250,7 @@ void	User::notice(std::string msg)
 
 void	User::wallops(std::string msg) // pov de la pax qui recoit le msg, usr est la pax qui veut lui envoyer un msg
 {
-	if(userModes.get_w() == true) {
+	if(get_w() == true) {
 		int ret = irc::sendString(this->_fd, msg);
 		if (ret == -1) {
 			// TODO close connection
@@ -331,54 +258,37 @@ void	User::wallops(std::string msg) // pov de la pax qui recoit le msg, usr est 
 	}
 }
 
-void	User::away(std::string msg)
+int	User::away(std::string msg)
 {
 	int ret;
 	std::vector<std::string> params;
-	
-	if (userModes.get_a())
-	{
-		userModes.set_a(false);
-		ret = irc::numericReply(305, this, params);
 
+	if (get_a())
+	{
+		set_a(false);
+		ret = irc::numericReply(305, this, params);
 	}
 	else
 	{
-		userModes.set_a(true);
+		set_a(true);
 		setAwayMessage(msg);
 		params.push_back(msg);
 		ret = irc::numericReply(301, this, params);
 	}
 	if (ret == -1) {
-		// TODO close connection
+		this->_server->deleteUser(this);
+		return -1;
 	}
-}
-
-void	User::addChannel(std::string const &chan)
-{
-	_channels.push_back(chan);
-}
-
-void	User::deleteChannel(std::string const &chan)
-{
-	std::vector<std::string>::iterator	it = std::find(_channels.begin(), _channels.end(), chan);
-	if (it != _channels.end())
-		_channels.erase(it);
-}
-
-Server *	User::getServer()
-{
-	return (_server);	
+	return 0;
 }
 
 void	User::quit(void)
 {
-	// std::vector<std::string>::iterator it = _channels.begin();
+	std::vector<Channel *>	channels = this->_channels;
+
 	unsigned long int i = 0;
-	while (i < _channels.size())
-	{
-		Channel *chan = getServer()->getChannelByName(_channels[i]);
-		chan->deleteUser(*this, ""); // ??delete the user from the channel
+	while (i < _channels.size()) {
+		channels[i]->deleteUser(this, " PART "); // ??delete the user from the channel
 		i++;
 	}
 }
@@ -389,21 +299,21 @@ void	User::part()
 	std::vector<std::string>::iterator it1 = _params.begin();
 	while (it1 != _params.end())
 	{
-		std::vector<std::string>::iterator it2 = _channels.begin();
-		while (*it2 != *it1 && it2 != _channels.end())
+		std::vector<Channel *>::iterator it2 = _channels.begin();
+		while ((*it2)->getChanName() != *it1 && it2 != _channels.end())
 		{
 			it2++;
 		}
-		if (*it1 == *it2)
+		if (*it1 == (*it2)->getChanName())
 		{
 			Channel *chan = getServer()->getChannelByName(*it1);
-			chan->deleteUser(*this, "");
+			chan->deleteUser(this, " PART ");
 		}
 		it1++;
 	}
 }
 
-void	User::kick(std::string const &chan)
+void	User::kick(Channel* chan)
 {
 	deleteChannel(chan);
 }
@@ -429,24 +339,24 @@ void	User::mode(std::vector<std::string> params)
 		if (it[0][0] == '+')
 		{
 			if (it[0][1] == 'i')
-				userModes.set_i(true);
+				set_i(true);
 			if (it[0][1] == 'w')
-				userModes.set_w(true);
+				set_w(true);
 			if (it[0][1] == 'r')
-				userModes.set_r(true);
+				set_r(true);
 		}
 		else if (it[0][0] == '-')
 		{
 			if (it[0][1] == 'i')
-				userModes.set_i(false);
+				set_i(false);
 			if (it[0][1] == 'w')
-				userModes.set_w(false);
+				set_w(false);
 			if (it[0][1] == 'r')
-				userModes.set_r(false);
+				set_r(false);
 			if (it[0][1] == 'o')
-				userModes.set_o(false);
+				set_o(false);
 			if (it[0][1] == 'O')
-				userModes.set_O(false);
+				set_O(false);
 		}
 		it++;
 	}
@@ -459,10 +369,10 @@ void	User::userCmd(std::vector<std::string>& params)
 	int bit = 0;
 	bit = mask >> 2; // bit shifting to the right
 	if (bit &1) // check if 2nd bit is set, returns a 1 in each bit position for which the corresponding bits of both operands are 1s
-		userModes.set_w(true);
+		set_w(true);
 	bit = bit >> 1;
 	if (bit &1)
-		userModes.set_i(true);
+		set_i(true);
 	_real_name = params[3];
 }
 
@@ -472,8 +382,8 @@ bool	User::operator==(User const &rhs) const
 			&& this->_username == rhs._username && this->_real_name == rhs._real_name
 			&& this->_hostname == rhs._hostname
 			&& this->_fd == rhs._fd)
-		return (1);
-	return (0);
+		return (true);
+	return (false);
 }
 
 bool	User::operator!=(User const &rhs) const
