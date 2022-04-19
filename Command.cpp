@@ -289,7 +289,8 @@ void	Command::intPrivMsg()
 		irc::numericReply(401, user, arg); // NOSUCHNICK
 		// return ;
 	}
-	user->privmsg(recipient, msg);
+	user->privmsgToUser(recipient, msg);
+	// TODO user privmsgToChannel
 	arg.clear();
 	if (recipient)
 	{

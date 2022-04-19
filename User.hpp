@@ -1,19 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   User.hpp                                           :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: anadege <anadege@student.42.fr>            +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/03/31 11:14:35 by cboutier          #+#    #+#             */
-<<<<<<< HEAD
-/*   Updated: 2022/04/19 17:15:40 by anadege          ###   ########.fr       */
-=======
-/*   Updated: 2022/04/19 16:36:32 by anadege          ###   ########.fr       */
->>>>>>> 89ffa31 (Multiple modifications of Server, Channel and User .cpp file)
-/*                                                                            */
-/* ************************************************************************** */
-
 #ifndef USER_HPP
 # define USER_HPP
 
@@ -187,7 +171,8 @@ namespace irc
 			void		userCmd(std::vector<std::string>& params);
 			void		nick(std::string nickname);
 			void		quit(std::vector<std::string> channels);
-			void		privmsg(User * usr, std::string msg);
+			void		privmsgToUser(User* dest, std::string msg);
+			void		privmsgToChannel(Channel* channel, std::string msg);
 			void		notice(std::string msg);
 			void		wallops(std::string msg);
 			int			away(std::string msg = "");

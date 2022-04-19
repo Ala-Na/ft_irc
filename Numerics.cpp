@@ -8,7 +8,6 @@ using namespace irc;
 int	irc::sendNumeric(int fd, std::string msg) {
 	int res = irc::sendString(fd, msg);
 	if (res == -1) {
-		// TODO close connection
 		return -1;
 	}
 	return 0;

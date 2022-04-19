@@ -6,7 +6,7 @@
 /*   By: anadege <anadege@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/04 09:41:08 by cboutier          #+#    #+#             */
-/*   Updated: 2022/04/19 17:16:04 by anadege          ###   ########.fr       */
+/*   Updated: 2022/04/19 17:16:32 by anadege          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -215,27 +215,31 @@ void	User::nick(std::string nickname)
 	setNickname(nickname);
 }
 
-void	User::privmsg(User * usr, std::string msg) // pov de la pax qui recoit le msg, usr est la pax qui veut lui envoyer un msg
+void	User::privmsgToUser(User* dest, std::string msg) // pov de la pax qui recoit le msg, usr est la pax qui veut lui envoyer un msg
 {
-	int ret;
-	if (!usr)
-		return ;
-	std::cout << "\n\n\nusr->getFd(): " << usr->getFd() << std::endl << std::endl;
-
-	if (usr->get_a())
-	{
-		ret = irc::sendString(usr->getFd(), this->getAwayMessage());
-		if (ret == -1) {
-			// TODO close connection
-			return ;
-		}
-		std::string reply = getNickname() + " :" + getAwayMessage();
-	}
-	ret = irc::sendString(this->_fd, msg);
+	std::string	full_msg = ":" + this->getNickname() + "!" + this->getUsername() + "@" + this->getHostname();
+	full_msg += " PRIVMSG " + dest->getNickname() + " :" + msg + "\r\n";
+	int ret = irc::sendString(dest->getFd(), full_msg);
 	if (ret == -1) {
-		// TODO close connection
-		return ;
+		return (this->_server->deleteUser(this));
 	}
+	if (dest->get_a())
+	{
+		std::vector<std::string>	params;
+		params.push_back(dest->getNickname());
+		params.push_back(dest->getAwayMessage());
+		if (irc::numericReply(301, this, params) == -1) {
+			return (this->_server->deleteUser(this));
+		}
+	}
+}
+
+void	User::privmsgToChannel(Channel* channel, std::string msg) {
+	std::string	full_msg = ":" + this->getNickname() + "!" + this->getUsername() + "@" + this->getHostname();
+	full_msg += " PRIVMSG " + channel->getChanName() + " :" + msg + "\r\n";
+	for (std::vector<User *>::iterator it = channel->getVecChanUsers().begin(); it != channel->getVecChanUsers().end(); it++) {
+		irc::sendString((*it)->getFd(), full_msg);
+	}	
 }
 
 void	User::notice(std::string msg)
