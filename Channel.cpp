@@ -93,8 +93,12 @@ int	Channel::isOperator(User* user) {
 }
 
 void	Channel::setChanTopic(std::string topic, User* user_who_changes) {
-	if (irc::there_is_no('t', chan_mode) || (irc::there_is_no('t', chan_mode) == 0 && isOperator(user_who_changes)))
+	if (irc::there_is_no('t', chan_mode) || (irc::there_is_no('t', chan_mode) == 0 && isOperator(user_who_changes))) {
 		chan_topic = topic;
+		std::string	msg = ":" + user_who_changes->getNickname() + "!" + user_who_changes->getUsername() + "@" + user_who_changes->getHostname();
+		msg += " TOPIC " + this->chan_name + " :" + topic + "\r\n";
+		writeToAllChanUsers(msg);
+	}
 };
 
 void	Channel::setChanMode(std::string mode) {
@@ -305,12 +309,14 @@ int Channel::addOperator(User* operator_adding, User* operator_to_add) {
 		if ((*it) == operator_to_add) {
 			return (0); // User was already an operator
 		}
-	} 
-	vec_chan_operators.push_back(operator_to_add);
-	msg = ":"+ operator_adding->getNickname() + "!" + operator_adding->getUsername() + "@" + operator_adding->getHostname();
-	msg += " MODE " + this->chan_name + " +o " + operator_to_add->getNickname() + "\r\n";
-	if (writeToAllChanUsers(msg) == -1) {
-		return (-1);
+	}
+	if (operator_adding != operator_to_add) { 
+		vec_chan_operators.push_back(operator_to_add);
+		msg = ":"+ operator_adding->getNickname() + "!" + operator_adding->getUsername() + "@" + operator_adding->getHostname();
+		msg += " MODE " + this->chan_name + " +o " + operator_to_add->getNickname() + "\r\n";
+		if (writeToAllChanUsers(msg) == -1) {
+			return (-1);
+		}
 	}
 	return (0);
 };
