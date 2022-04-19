@@ -20,7 +20,6 @@
 #include <fcntl.h>
 #include <stdlib.h>
 
-// TODO modify following path
 #include "User.hpp"
 #include "Channel.hpp"
 #include "Command.hpp"
@@ -91,7 +90,6 @@ namespace irc {
 
 			User*						getSpecificUser (size_t user_nb);
 			Channel*					getChannelByName (std::string name);
-			// User*					getUserByName (std::string name);
 
 			User *						getUserByUsername (std::string name);
 			User *						getUserByNick (std::string nick);

@@ -33,17 +33,16 @@ namespace irc
 			std::string			chan_creator;
 			std::vector<User>	vec_chan_banned_users;
 		
-		public :
-
 			Channel();
-			Channel(std::string name);
-			Channel(Server *server_ptr, std::string name);
-			Channel(Server *server_ptr, std::string name, std::string passwd);
 			Channel(Channel const & other);
 			Channel & operator=(Channel const & other);
+
+		public :
+
+			Channel(Server *server_ptr, std::string name);
 			~Channel();
 
-			std::string 		getChanName();
+			std::string 		getChanName(); 
 			std::string 		getChanPassword();
 			std::string 		getChanTopic();
 			std::string 		getChanMode();
@@ -56,10 +55,9 @@ namespace irc
 			std::string			getChanNameAndTopic();
 			User *				getUserFromUsername(std::string username);
 
-			int					setChanName(std::string name);				// first character & % + !, <= 50 char, case insensitive, no space, coma, :
 			void				setChanPassword(std::string password);
-			int					isOperator(User & user);
-			void				setChanTopic(std::string topic, User & user_who_changes);
+			int					isOperator(User* user);
+			void				setChanTopic(std::string topic, User* user_who_changes);
 			void				setChanMode(std::string mode);
 			void				setVecChanUsers(std::vector<User> vec_users);
 			void				setMaxNbUsersInChan(int nb);
@@ -71,8 +69,8 @@ namespace irc
 			int					userIsInChanFromNickname(std::string nickname_to_search);
 			int					userIsBannedFromChan(std::string username_to_search);
 			void				addMode(std::string mode);
-			int					receivingAnInvitation(User & user_inviting, User & user_invited);
-			int					listAllUsersInChan(User & user_asking);
+			int					receivingAnInvitation(User* user_inviting, User* user_invited);
+			int					listAllUsersInChan(User* user_asking);
 			int					writeToAllChanUsers(std::string sentence_to_send);
 			int					addUser(User & user_to_add);
 			int					deleteUser(User & user_to_delete, std::string message);

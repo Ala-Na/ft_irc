@@ -3,30 +3,7 @@
 
 using namespace irc;
 
-Channel::Channel()
-{
-	server = NULL;
-	chan_name = "";
-	chan_password = "";
-	chan_topic = "";
-	chan_mode = "";
-	max_nb_users_in_chan = 10;
-	chan_creator = "";
-};
-
-Channel::Channel(std::string name)
-{
-	server = NULL;
-	chan_name = name;
-	chan_password = "";
-	chan_topic = "";
-	chan_mode = "";
-	max_nb_users_in_chan = 10;
-	chan_creator = "";
-};
-
-Channel::Channel(Server *server_ptr, std::string name)
-{
+Channel::Channel(Server *server_ptr, std::string name) {
 	server = server_ptr;
 	chan_name = name;
 	chan_password = "";
@@ -36,102 +13,56 @@ Channel::Channel(Server *server_ptr, std::string name)
 	chan_creator = "";
 };
 
-Channel::Channel(Server *server_ptr, std::string name, std::string passwd)
-{
-	server = server_ptr;
-	chan_name = name;
-	chan_password = passwd;
-	chan_topic = "";
-	chan_mode = "";
-	max_nb_users_in_chan = 10;
-	chan_creator = "";
-};
+Channel::~Channel() {};
 
-Channel::Channel(Channel const & other)
-{
-	*this = other;
-};
-
-Channel & Channel::operator=(Channel const & other)
-{
-	server = other.server;
-	chan_name = other.chan_name;
-	chan_password = other.chan_password;
-	chan_topic = other.chan_topic;
-	chan_mode = other.chan_mode;
-	vec_chan_users = other.vec_chan_users;
-	max_nb_users_in_chan = other.max_nb_users_in_chan;
-	vec_chan_operators = other.vec_chan_operators;
-	chan_creator = other.chan_creator;
-	vec_chan_banned_users = other.vec_chan_banned_users;
-	return (*this);
-};
-
-Channel::~Channel()
-{
-
-};
-
-std::string	Channel::getChanName()
-{
+std::string	Channel::getChanName() {
 	return (chan_name);
 };
 
-std::string	Channel::getChanPassword()
-{
+std::string	Channel::getChanPassword() {
 	return (chan_password);
 };
 
-std::string	Channel::getChanTopic()
-{
+std::string	Channel::getChanTopic() {
 	return (chan_topic);
 };
 
-std::string	Channel::getChanMode()
-{
+std::string	Channel::getChanMode() {
 	return (chan_mode);
 };
 
-std::vector<User>	Channel::getVecChanUsers()
-{
+std::vector<User>	Channel::getVecChanUsers() {
 	return (vec_chan_users);
 };
 
-int	Channel::getNbUsersInChan()
-{
+int	Channel::getNbUsersInChan() {
 	return (vec_chan_users.size());
 };
 
-int	Channel::getMaxNbUsersInChan()
-{
+int	Channel::getMaxNbUsersInChan() {
 	return (max_nb_users_in_chan);
 };
 
-std::vector<User>	Channel::getChanOperators()
-{
+std::vector<User>	Channel::getChanOperators() {
 	return (vec_chan_operators);
 };
 
-std::string	Channel::getChanCreator()
-{
+std::string	Channel::getChanCreator() {
 	return (chan_creator);
 };
 
-std::vector<User>	Channel::getVecChanBannedUsers()
-{
+std::vector<User>	Channel::getVecChanBannedUsers() {
 	return (vec_chan_banned_users);
 };
 
-std::string	Channel::getChanNameAndTopic()
-{
+std::string	Channel::getChanNameAndTopic() {
 	std::string ret;
 
 	ret = "NAME: " + chan_name + " - TOPIC: " + chan_topic;
 	return (ret);
 };
 
-User *Channel::getUserFromUsername(std::string username)
-{
+User *Channel::getUserFromUsername(std::string username) {
 	unsigned long i;
 
 	i = 0;
@@ -144,111 +75,54 @@ User *Channel::getUserFromUsername(std::string username)
 	return (NULL);
 };
 
-int	Channel::setChanName(std::string original_name)	// first character & % + !, <= 50 char, case insensitive, no space, coma, :
-{
-	int					random;
-	std::string			name;
-	std::string 		s;
-	std::stringstream	out;
-	int					i;
-	
-	srand(time(0));
-	name = irc::ft_toupper_str(original_name);
-	if ((name[0] == '&' || name[0] == '#' || name[0] == '+' || name[0] == '!')
-		&& name.length() <= 50
-		&& irc::there_is_no(' ', name) && irc::there_is_no(',', name) && irc::there_is_no(':', name))
-	{
-		chan_name = original_name;
-		if (name[0] == '!')
-		{
-			i = 0;
-			while (i < 5)
-			{
-				random = rand() % 10;
-				out << random;
-				s = out.str();
-				chan_name.insert(0, s);
-				i++;
-			}
-		}
-		return (1);
-	}
-	else if (name[0] != '&' && name[0] != '#' && name[0] != '+' && name[0] != '!')
-	{
-		std::cerr << "Name of channel must begin with &, #, = or !\n";
-		return (2);
-	}
-	else if (name.length() > 50)
-	{
-		std::cerr << "Name of channel cannot be longer than 50 characters\n";
-		return (3);
-	}
-	else if (irc::there_is_no(' ', name) == 0 || irc::there_is_no(',', name) == 0 || irc::there_is_no(':', name) == 0)
-	{
-		std::cerr << "Name of channel cannot contain spaces, comas or colons\n";
-		return (4);
-	}
-	return (0);
-};
-
-void	Channel::setChanPassword(std::string password)
-{
+void	Channel::setChanPassword(std::string password) {
 	chan_password = password;
 };
 
-int	Channel::isOperator(User & user)
-{
+int	Channel::isOperator(User* user) {
 	unsigned long	i;
 
 	i = 0;
 	while (i < vec_chan_operators.size())
 	{
-		if (vec_chan_operators[i].getNickname() == user.getNickname())
+		if (vec_chan_operators[i].getNickname() == user->getNickname())
 			return (1);
 		i++;
 	}
 	return (0);
 }
 
-void	Channel::setChanTopic(std::string topic, User & user_who_changes)
-{
+void	Channel::setChanTopic(std::string topic, User* user_who_changes) {
 	if (irc::there_is_no('t', chan_mode) || (irc::there_is_no('t', chan_mode) == 0 && isOperator(user_who_changes)))
 		chan_topic = topic;
 };
 
-void	Channel::setChanMode(std::string mode)
-{
+void	Channel::setChanMode(std::string mode) {
 	chan_mode += mode;
 };
 
-void	Channel::setVecChanUsers(std::vector<User> vec_users)
-{
+void	Channel::setVecChanUsers(std::vector<User> vec_users) {
 	vec_chan_users = vec_users;
 };
 
-void	Channel::setMaxNbUsersInChan(int max_nb)
-{
+void	Channel::setMaxNbUsersInChan(int max_nb) {
 	if (max_nb > 0)
 		max_nb_users_in_chan = max_nb;
 };
 
-void	Channel::setChanOperators(std::vector<User> vec_operators)
-{
+void	Channel::setChanOperators(std::vector<User> vec_operators) {
 	vec_chan_operators = vec_operators;
 };
 
-void	Channel::setChanCreator(std::string creator)
-{
+void	Channel::setChanCreator(std::string creator) {
 	chan_creator = creator;
 };
 
-void	Channel::setVecChanBannedUsers(std::vector<User> vec_banned_users)
-{
+void	Channel::setVecChanBannedUsers(std::vector<User> vec_banned_users) {
 	vec_chan_banned_users = vec_banned_users;
 };
 
-int	Channel::userIsInChanFromUsername(std::string username_to_search)
-{
+int	Channel::userIsInChanFromUsername(std::string username_to_search) {
 	unsigned long i;
 
 	i = 0;
@@ -261,8 +135,7 @@ int	Channel::userIsInChanFromUsername(std::string username_to_search)
 	return (0);
 };
 
-int	Channel::userIsInChanFromNickname(std::string nickname_to_search)
-{
+int	Channel::userIsInChanFromNickname(std::string nickname_to_search) {
 	unsigned long i;
 
 	i = 0;
@@ -275,8 +148,7 @@ int	Channel::userIsInChanFromNickname(std::string nickname_to_search)
 	return (0);
 };
 
-int	Channel::userIsBannedFromChan(std::string username_to_search)
-{
+int	Channel::userIsBannedFromChan(std::string username_to_search) {
 	unsigned long i;
 
 	i = 0;
@@ -289,68 +161,52 @@ int	Channel::userIsBannedFromChan(std::string username_to_search)
 	return (0);
 };
 
-void	Channel::addMode(std::string mode)
-{
+void	Channel::addMode(std::string mode) {
 	chan_mode += mode;
 };
 
-int	Channel::receivingAnInvitation(User & user_inviting, User & user_invited)
-{
+int	Channel::receivingAnInvitation(User* user_inviting, User* user_invited) {
 	std::string	message;
 	int			ret;
 
-	if (irc::there_is_no('i', chan_mode) == 0 && isOperator(user_inviting) == 0)
-	{
-		message = "Only an operator can invite on channel " + chan_name;
-		ret = irc::sendString(user_inviting.getFd(), message);
-		if (ret == -1)
-		{
-			std::cerr << "Could not send :Only an operator can invite on channel " << chan_name << "\n";
-			// TODO close connection here or in calling function
-			return (-1);
-		}
-		return (1);
-	}
-	message = "Invitation sent to " + user_invited.getNickname() + " to join channel " + chan_name;
-	ret = irc::sendString(user_inviting.getFd(), message);
+	message = ":" + user_inviting->getNickname() + "!" + user_inviting->getUsername() + "@" + user_inviting->getHostname();
+	message += " INVITE " + user_invited->getNickname() + " :" + this->chan_name;
+	ret = irc::sendString(user_invited->getFd(), message);
 	if (ret == -1)
 	{
 		std::cerr << "Could not send invitation\n";
-		// TODO close connection here or in calling function
-		return (-1);
-	}
-	message = "Invitation coming from " + user_inviting.getNickname() + " to join channel " + chan_name;
-	ret = irc::sendString(user_inviting.getFd(), message);
-	if (ret == -1)
-	{
-		// TODO close connection here or in calling function
-		std::cerr << "Could not receive invitation\n";
+		this->server->deleteUser(user_invited);
 		return (-1);
 	}
 	return (0);
 };
 
-int Channel::listAllUsersInChan(User & user_asking)
+// TODO modify for RPL_NAMREPLY response 
+int Channel::listAllUsersInChan(User* user_asking)
 {
-	unsigned long	i;
-	int				ret;
-	std::string		name;
+	unsigned long				i;
+	int							ret;
+	std::string					names;
+	std::vector<std::string>	params;
 
 	i = 0;
+	// Channel name after = if public, @ if secret, * if private
+	// =/*/@channel :
+	// params.push_back(channel_type);
 	while (i < vec_chan_users.size())
 	{
-		name += vec_chan_users[i].getNickname();
+		//In front of nick: @ if operator, + if permission to speak on moderated channel
+		names += vec_chan_users[i].getNickname();
 		if (i < vec_chan_users.size() - 1)
-			name += ", ";
-		else
-			name += ".";
+			names += " ";
 		i++;
+		params.push_back(names);
 	}
-	ret = irc::sendString(user_asking.getFd(), name);
+	params.push_back(names);
+	ret = irc::numericReply(353, user_asking, params);
 	if (ret == -1)
 	{
-		std::cerr << "Could not send list of users to user " << user_asking.getNickname() << "\n";
-		// TODO close connection
+		this->server->deleteUser(user_asking);
 		return (-1);
 	}
 	return (0);
@@ -368,7 +224,6 @@ int	Channel::writeToAllChanUsers(std::string sentence_to_send)
 		if (ret == -1)
 		{
 			std::cerr << "Could not send message to user " << vec_chan_users[i].getNickname() << "\n";
-			// TODO close connection
 			return (-1);
 		}
 		i++;
@@ -450,9 +305,7 @@ int Channel::deleteUser(User & user_to_delete, std::string message)
 	ret = writeToAllChanUsers(message);
 	if (ret == -1)
 		return (1);
-	// if (vec_chan_users.size() == 0)
-	// 	server->deleteChannel(*this); //TODO
-	user_to_delete.deleteChannel(chan_name);		///////////////////////////////////
+	user_to_delete.deleteChannel(chan_name);
 	return (0);
 };
 

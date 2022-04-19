@@ -6,7 +6,7 @@
 /*   By: anadege <anadege@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/04 09:41:08 by cboutier          #+#    #+#             */
-/*   Updated: 2022/04/15 11:38:02 by anadege          ###   ########.fr       */
+/*   Updated: 2022/04/18 18:55:37 by anadege          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,12 +19,11 @@ User::User()
 
 }
 
-User::User(int fd, struct sockaddr_in address)
+User::User(int fd, std::string& hostname, struct sockaddr_in& address)
 : _fd(fd)
 {
 	_address = address;
-	// TODO recuperate hostname in address
-	//_hostname = 
+	_hostname = hostname;
 	userModes_a = false;		// user is flagged as away;
 	userModes_i = false;		// marks a users as invisible; hides you if someone does a /WHO or /NAMES outside the channel
 	userModes_w = false;		// user receives wallops; Used by IRC operators, WALLOPS is a command utilized to send messages on an IRC network. WALLOPS messages are for broadcasting network information and its status to following users.
@@ -37,13 +36,12 @@ User::User(int fd, struct sockaddr_in address)
 }
 
 
-User::User(int fd, struct sockaddr_in address, Server *server)
+User::User(int fd, std::string& hostname, struct sockaddr_in& address, Server *server)
 {
 	_fd = fd;
 	_server = server;
 	_address = address;
-	// TODO recuperate hostname in address
-	//_hostname = 
+	_hostname = hostname;
 	userModes_a = false;		// user is flagged as away;
 	userModes_i = false;		// marks a users as invisible; hides you if someone does a /WHO or /NAMES outside the channel
 	userModes_w = false;		// user receives wallops; Used by IRC operators, WALLOPS is a command utilized to send messages on an IRC network. WALLOPS messages are for broadcasting network information and its status to following users.
@@ -356,7 +354,7 @@ void	User::wallops(std::string msg) // pov de la pax qui recoit le msg, usr est 
 	}
 }
 
-void	User::away(std::string msg)
+int	User::away(std::string msg)
 {
 	int ret;
 	std::vector<std::string> params;
@@ -374,8 +372,10 @@ void	User::away(std::string msg)
 		ret = irc::numericReply(301, this, params);
 	}
 	if (ret == -1) {
-		// TODO close connection
+		this->_server->deleteUser(this);
+		return -1;
 	}
+	return 0;
 }
 
 void	User::quit(void)
