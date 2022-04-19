@@ -347,11 +347,13 @@ Channel*	Server::getChannelByName(std::string name) {
 	std::string		curr_chan;
 
 	i = 0;
+	name = irc::trim(name, " ");
 	std::transform(name.begin(), name.end(), name.begin(), ::toupper);
 	while (i < channels.size())
 	{
 		curr_chan = channels[i]->getChanName();
 		transform(curr_chan.begin(), curr_chan.end(), curr_chan.begin(), ::toupper);
+		// std::cout << "chan_name to find: " << name << " - chan_names in vec: " << curr_chan << std::endl;
 		if (curr_chan == name)
 			return (channels[i]);
 		i++;

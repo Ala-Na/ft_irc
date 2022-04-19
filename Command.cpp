@@ -86,7 +86,7 @@ void	Command::intUser()
 
 void	Command::intPing()
 {
-	std::cout << "\n\nINTPING\n\n";
+	std::cout << "\n\nINTPING\n\n";		// If NULL in function pointers tab, segfault... So empty function it is!
 }
 
 void	Command::intNick()
@@ -427,33 +427,6 @@ void	Command::intWallops()
 	}
 }
 
-std::string left_trim(const std::string &s, std::string to_remove)
-{
-	if (s.size() == 0)
-		return (NULL);
-	size_t start = s.find_first_not_of(to_remove);
-	if (start == std::string::npos)
-		return (NULL);
-	return (s.substr(start));
-}
-
-std::string right_trim(const std::string &s, std::string to_remove)
-{
-	if (s.size() == 0)
-		return (NULL);
-	size_t end = s.find_last_not_of(to_remove);
-	if (end == std::string::npos)
-		return (NULL);
-	return (s.substr(0, end + 1));
-}
-
-std::string trim(const std::string &s, std::string to_remove)
-{
-	if (s.size() == 0)
-		return (NULL);
-	return (right_trim(left_trim(s, to_remove), to_remove));
-}
-
 User *Command::getUser()
 {
 	return (user);
@@ -533,6 +506,8 @@ void Command::intJoin()
 				return ;
 			}
 			user->set_o(true);
+			chan_found->addUser(*user);
+			std::cout << "chan_found->getNbUsersInChan() in Command.cpp: " << chan_found->getNbUsersInChan() << std::endl;
 			chan_found->addOperator(*user);
 			if (key.size() > 0)
 				chan_found->setChanPassword(key);
@@ -735,7 +710,7 @@ void Command::intPart()
 	i = 0;
 	while (i < vec_chan_names.size())
 	{
-		vec_chan_names[i] = trim(vec_chan_names[i], " ");
+		vec_chan_names[i] = irc::trim(vec_chan_names[i], " ");
 		i++;
 	}
 	i = 0;
@@ -782,7 +757,7 @@ void    Command::intQuit()
 	Channel                     *chan_found;
 	std::string                 name;
 
-	message = trim(param, ":");
+	message = irc::trim(param, ":");
 	vec_chan_names = user->getChannels();
 	i = 0;
 	while (i < vec_chan_names.size())
@@ -926,7 +901,7 @@ void Command::intKick()
 	return ;
 }
 
-void Command::intTopic()
+void Command::intTopic()				// when client sends /topic or /topic channel, server gets no request... But irssi answers by giving topic
 {
 	std::cout << "\n\nINTTOPIC\n\n";
 
@@ -940,12 +915,14 @@ void Command::intTopic()
 	{
 		params.push_back(prefix);
 		irc::numericReply(461, user, params);
+		// std::cout << "JUST /topic\n";
 		return ;
 	}
 	if (param[param.size() - 1] == ':')
 		param += " ";
 	vec = irc::split(param, ":");
 	name = vec[0];
+	// std::cout << "vec[1] so new_topic: " << vec[1] << std::endl;
 	if (name[0] != '&' && name[0] != '#' && name[0] != '+' && name[0] !=  '!')
 		name.insert(0, "#");
 	chan_found = server.getChannelByName(name);
@@ -957,10 +934,6 @@ void Command::intTopic()
 		irc::numericReply(442, user, params);
 		return ;
 	}
-	if (vec.size() > 1 && vec[1] != " ")
-		new_topic = vec[1];
-	else
-		new_topic = "";
 	if (irc::there_is_no(':', param))    // RPL_TOPIC
 	{
 		params.push_back(name);
@@ -976,7 +949,12 @@ void Command::intTopic()
 	}
 	else
 	{
+		if (vec.size() > 1 && vec[1] != " ")
+			new_topic = irc::trim(vec[1], ":");
+		else
+			new_topic = "";
 		chan_found->setChanTopic(new_topic, user);
+		// std::cout << "chan_found->getChanTopic(): " << chan_found->getChanTopic() << std::endl;
 		if (new_topic.size() == 0)      // RPL_NOTOPIC
 		{
 			params.push_back(name);
@@ -1106,7 +1084,7 @@ void	 Command::intMode()
 	chan_found = server.getChannelByName(name);
 	if (chan_found == NULL)
 	{
-		name = trim(name, "#");
+		name = irc::trim(name, "#");
 		user_found = server.getUserByNick(name);
 		if (user_found == NULL)
 		{
@@ -1117,7 +1095,7 @@ void	 Command::intMode()
 	mode = vec[1];
 	if (mode[0] != '-' && mode[0] != '+')
 		mode.insert(0, "+");
-	letters = trim(mode, "-+");
+	letters = irc::trim(mode, "-+");
 	if (HasInvalidMode(letters))     // ERR_UNKNOWNMODE
 	{
 		params.push_back(letters);

@@ -126,8 +126,10 @@ int	Channel::userIsInChanFromUsername(std::string username_to_search) {
 	unsigned long i;
 
 	i = 0;
+	// std::cout << "vec_chan_users.size() in Channel.cpp: " << vec_chan_users.size() << std::endl;
 	while (i < vec_chan_users.size())
 	{
+		// std::cout << "username to search: " << username_to_search << " - vec_chan_users[i].getUsername(): " << vec_chan_users[i].getUsername() << std::endl;
 		if (vec_chan_users[i].getUsername() == username_to_search)
 			return (1);
 		i++;
@@ -237,8 +239,6 @@ int Channel::addUser(User & user_to_add)
 	unsigned long				i;
 	std::string					user_added;
 	int							ret;
-
-	// std::cout << "DANS ADDUSER\n";
 	if (vec_chan_users.size() == max_nb_users_in_chan)
 	{
 		ret = writeToAllChanUsers("Cannot add user: channel is full\n");
@@ -248,17 +248,14 @@ int Channel::addUser(User & user_to_add)
 		return (1);
 	}
 	found = std::find(vec_chan_users.begin(), vec_chan_users.end(), user_to_add);
-	if (found == vec_chan_users.end())
+	if (found != vec_chan_users.end())
 	{
 		ret = writeToAllChanUsers("Cannot add user: already exists\n");
 		if (ret == -1)
 			return (-1);
-		// std::cout << "1 - vec_chan_users.size(): " << vec_chan_users.size() << std::endl << std::endl;
 		return (1);
 	}
 	i = 0;
-	// std::cout << "2 - vec_chan_users.size(): " << vec_chan_users.size() << std::endl << std::endl;
-	return 0;
 	while (i < vec_chan_users.size())
 	{
 		if (vec_chan_users[i].getUsername() == user_to_add.getUsername())
@@ -354,7 +351,6 @@ int Channel::addBannedUser(User & user_to_ban)
 {
 	std::vector<User>::iterator	found;
 	std::string					user_banned;
-	// int							ret;
 
 	found = std::find(vec_chan_banned_users.begin(), vec_chan_banned_users.end(), user_to_ban);
 	if (found != vec_chan_banned_users.end())

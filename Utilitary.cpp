@@ -2,6 +2,32 @@
 
 using namespace irc;
 
+std::string irc::left_trim(const std::string &s, std::string to_remove)
+{
+	if (s.size() == 0)
+		return (NULL);
+	size_t start = s.find_first_not_of(to_remove);
+	if (start == std::string::npos)
+		return (NULL);
+	return (s.substr(start));
+}
+
+std::string irc::right_trim(const std::string &s, std::string to_remove)
+{
+	if (s.size() == 0)
+		return (NULL);
+	size_t end = s.find_last_not_of(to_remove);
+	if (end == std::string::npos)
+		return (NULL);
+	return (s.substr(0, end + 1));
+}
+
+std::string irc::trim(const std::string &s, std::string to_remove)
+{
+	if (s.size() == 0)
+		return (NULL);
+	return (irc::right_trim(irc::left_trim(s, to_remove), to_remove));
+}
 
 std::string irc::ft_toupper_str(std::string& str)
 {
