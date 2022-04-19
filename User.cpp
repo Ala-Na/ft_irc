@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   User.cpp                                           :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: anadege <anadege@student.42.fr>            +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/04/04 09:41:08 by cboutier          #+#    #+#             */
-/*   Updated: 2022/04/19 17:17:47 by anadege          ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "User.hpp"
 
 using namespace irc;
@@ -79,7 +67,11 @@ sockaddr_in	User::getAddr()
 	return (_address);
 }
 
+<<<<<<< HEAD
 std::vector<Channel *> User::getChannels()
+=======
+std::vector<std::string> User::getChannels()
+>>>>>>> 7af3657f068aff1f759e1c2bb39fc1d67234eaab
 {
 	return (_channels);
 }

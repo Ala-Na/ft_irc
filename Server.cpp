@@ -186,7 +186,7 @@ void	Server::createUser() {
 	}
 	if (getnameinfo((const sockaddr *)&client_addr, sizeof(client_addr), \
 		host, sizeof(host), service, sizeof(service), NI_NOFQDN) ==  -1) {
-			std::cout << "Error: getnameinfo()" << std::cerr;
+			std::cerr << "Error: getnameinfo()" << std::endl;
 			close(client_fd);
 			return ;
 	}

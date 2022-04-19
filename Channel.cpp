@@ -93,7 +93,6 @@ int	Channel::isOperator(User* user) {
 }
 
 void	Channel::setChanTopic(std::string topic, User* user_who_changes) {
-	std::cout << "here" << std::endl;
 	if (irc::there_is_no('t', chan_mode) || (irc::there_is_no('t', chan_mode) == 0 && isOperator(user_who_changes)))
 		chan_topic = topic;
 };
@@ -205,10 +204,16 @@ int Channel::listAllUsersInChan(User* user_asking)
 		} // NOTE : Moderated channel not taken into account, but if permission to speak + in front of nickname
 		names += vec_chan_users[i]->getNickname();
 		i++;
+		params.push_back(names);
 	}
 	params.push_back(names);
 	ret = irc::numericReply(353, user_asking, params);
+<<<<<<< HEAD
 	if (ret == -1) {
+=======
+	if (ret == -1)
+	{
+>>>>>>> 7af3657f068aff1f759e1c2bb39fc1d67234eaab
 		this->server->deleteUser(user_asking);
 		return (-1);
 	}
