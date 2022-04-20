@@ -49,7 +49,7 @@ namespace irc
 			std::vector<User *>	getVecChanUsers();
 			int					getNbUsersInChan();
 			int					getMaxNbUsersInChan();
-			std::vector<User *> 	getChanOperators();
+			std::vector<User *> getChanOperators();
 			std::string 		getChanCreator();
 			std::vector<User *>	getVecChanBannedUsers();
 			std::string			getChanNameAndTopic();

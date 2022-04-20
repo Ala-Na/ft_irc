@@ -84,7 +84,7 @@ void	Command::intUser() {
 }
 
 void	Command::intPing() {
-	std::cout << "\n\nINTPING\n\n";		// If NULL in function pointers tab, segfault... So empty function it is!
+	this->server.sendPong(this->user, this->param);
 }
 
 void	Command::intNick() {
@@ -992,6 +992,13 @@ int 	HasInvalidMode(std::string letters)
 	return (0);
 }	
 
+// TODO :
+// Do verification for ERR_NEEDMOREPARAMS
+// Check if CHANNEL or USER MODE
+// For User : Check that user calling MODE is either modified user or ope
+// If not : ERR_USERSDONTMATCH
+// Go to User->mode()
+// For Channel : LOOK UP RFC
 void	 Command::intMode() {
 	std::vector<std::string>	vec;
 	std::string             	name;
@@ -1005,7 +1012,7 @@ void	 Command::intMode() {
 	std::vector<std::string> 	params;
 
 	vec = irc::split(param, " ");
-	user->mode(vec);
+	//user->mode(vec);
 	/*
 	221    RPL_UMODEIS
 			"<user mode string>"
