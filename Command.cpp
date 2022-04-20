@@ -59,6 +59,8 @@ void	Command::goToExecution () {
 		"WHOIS", "AWAY", "WALLOPS", "USERHOST", "SQUIT", \
 		"MOTD", "ERROR", "SUMMON", "USERS", "PING"};
 
+	// std::cout << "SERVER REACTS AFTER JOIN - PART\n";
+
 	std::cout << this->prefix << std::endl;
 
 	for (unsigned long i = 0; i < nbr_cmd; i++) {
@@ -278,6 +280,7 @@ void	Command::intPrivMsg() {
 	if (msg.size() == 0)
 		irc::numericReply(412, user, arg); // NOTEXTTOSEND
 	arg.push_back(user->getNickname());
+	std::cout << "ICI username: " << username << std::endl;
 	if (username.size() == 0)
 		irc::numericReply(411, user, arg); // NORECIPIENT
 	arg.clear();
@@ -426,8 +429,8 @@ void Command::intJoin() {
 	std::string                 key;
 	Channel                     *chan_found;
 	std::string                 message;
-	std::vector<User> 			users;
-	std::string 				nicks;
+	// std::vector<User> 			users;
+	// std::string 				nicks;
 
 	vec = irc::split(param, " ");
 	vec_chan_names = irc::split(vec[0], ",");
@@ -496,17 +499,26 @@ void Command::intJoin() {
 			params.push_back(vec_chan_names[i]);
 			if (irc::numericReply(475, user, params) == -1) {
 				this->server.deleteUser(user);
-				return ;				
+				return ;
 			}
 			i++;
 			continue ;
 		} else {
 			if (chan_found->addUser(user) == -1) {
 				return ;
-			}      
+			}
 		}
 		i++;
 	}
+	std::cout << "BEFORE LEAVING INTJOIN FUNCTION\n";
+	std::vector<User *> users_end = chan_found->getVecChanUsers();
+	i = 0;
+	while (i < users_end.size())
+	{
+		std::cout << "users_end[" << i << "]: " << users_end[i]->getNickname() << std::endl;
+		i++;
+	}
+	std::cout << "LEAVING INTJOIN FUNCTION\n";
 	return ;
 }
 
@@ -629,18 +641,23 @@ void Command::intPart() {
 
 	vec = irc::split(param, ":");
 	vec_chan_names = irc::split(vec[0], ",");
+	std::cout << "INTPART 1\n";
 	if (vec_chan_names.size() == 0)  // ERR_NEEDMOREPARAMS
 	{
 		params.push_back(prefix);
 		irc::numericReply(461, user, params);
 		return ;
 	}
+	std::cout << "INTPART 2\n";
+
 	i = 0;
 	while (i < vec_chan_names.size())
 	{
 		vec_chan_names[i] = irc::trim(vec_chan_names[i], " ");
 		i++;
 	}
+	std::cout << "INTPART 3\n";
+
 	i = 0;
 	while (i < vec_chan_names.size())
 	{
@@ -654,6 +671,7 @@ void Command::intPart() {
 			params.push_back(name);
 			irc::numericReply(403, user, params);
 			i++;
+			std::cout << "INTPART 4\n";
 			continue ;
 		}
 		if (chan_found->userIsInChanFromUsername(user->getUsername()) == 0) // ERR_NOTONCHANNEL
@@ -661,17 +679,35 @@ void Command::intPart() {
 			params.push_back(name);
 			irc::numericReply(442, user, params);
 			i++;
+			std::cout << "INTPART 5\n";
 			continue ;
 		}
 		else
 		{
-			if (vec.size() > 1 && chan_found->writeToAllChanUsers(vec[1]) == -1) {
-				this->server.deleteUser(user);
-				return ;
+			std::cout << "INTPART 5,5\nuser : " << user->getNickname() << std::endl;
+
+			chan_found->deleteUser(user, "");
+			if (vec.size() > 1) {
+				std::cout << "INTPART 6\n";
+				if (chan_found->writeToAllChanUsers(vec[1]) == -1)
+					return ;
 			}
 		}
 		i++;
 	}
+	// this->server.deleteUser(user);
+	std::cout << "INTPART 7\n";
+
+	std::cout << "BEFORE LEAVING INTPART FUNCTION\n";
+	std::vector<User *> users_end = chan_found->getVecChanUsers();
+	std::cout << "users_end.size(): " << users_end.size() << std::endl;
+	i = 0;
+	while (i < users_end.size())
+	{
+		std::cout << "users_end[" << i << "]: " << users_end[i]->getNickname() << std::endl;
+		i++;
+	}
+	std::cout << "LEAVING INTPART FUNCTION\n";
 	return ;
 }
 

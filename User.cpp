@@ -190,6 +190,7 @@ void	User::deleteChannel(Channel* chan)
 {
 	for (std::vector<Channel *>::iterator it = _channels.begin(); it != _channels.end(); it++) {
 		if ((*it) == chan) {
+			// std::cout << "IN DELETECHANNEL: " << chan->getChanName() << std::endl;
 			_channels.erase(it);
 			return ;
 		}
@@ -204,6 +205,8 @@ void	User::nick(std::string nickname)
 
 void	User::privmsgToUser(User* dest, std::string msg) // pov de la pax qui recoit le msg, usr est la pax qui veut lui envoyer un msg
 {
+	if (!dest)
+		return ;
 	std::string	full_msg = ":" + this->getNickname() + "!" + this->getUsername() + "@" + this->getHostname();
 	full_msg += " PRIVMSG " + dest->getNickname() + " :" + msg + "\r\n";
 	int ret = irc::sendString(dest->getFd(), full_msg);
