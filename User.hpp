@@ -43,7 +43,6 @@ namespace irc
 			bool						userModes_w;		// user receives wallops; Used by IRC operators, WALLOPS is a command utilized to send messages on an IRC network. WALLOPS messages are for broadcasting network information and its status to following users.
 			bool						userModes_r;		// restricted user connection;
 			bool						userModes_o;		// operator flag;
-			bool						userModes_O;		// local operator flag;
 
 			User();
 			User(const User &src);
@@ -138,6 +137,8 @@ namespace irc
 			bool						get_r();
 			bool						get_o();
 
+			std::string					getModesString();
+
 				// UserModes Setters
 
 			// flags bool
@@ -162,7 +163,6 @@ namespace irc
 			void		set_w(bool val);
 			void		set_r(bool val);
 			void		set_o(bool val);
-			void		set_O(bool val);
 
 			void		addChannel(Channel* chan);
 			void		deleteChannel(Channel* chan);
@@ -183,7 +183,8 @@ namespace irc
 			// void		part(std::vector<std::string> params);
 			void		whois(User* who);
 			void		kick(Channel* chan, std::string reason);
-			void		mode(std::vector<std::string> params);
+			void		mode(User* ope, std::string params);
+			void		sendMode(User* ope, std::string mode_msg);
 
 			bool		operator==(User const &rhs) const;
 			bool		operator!=(User const &rhs) const;

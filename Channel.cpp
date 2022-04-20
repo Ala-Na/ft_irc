@@ -293,6 +293,7 @@ int Channel::deleteUser(User* user_to_delete, std::string message) {
 	for (std::vector<User *>::iterator it = vec_chan_users.begin(); it != vec_chan_users.end(); it++) {
 		if ((*it) == user_to_delete) {
 			writeToAllChanUsers(msg);
+			// std::cout << "IN DELETEUSER nickname:/top " << user_to_delete->getNickname() << std::endl;
 			vec_chan_users.erase(it);
 			user_to_delete->deleteChannel(this);
 			return (0);

@@ -573,23 +573,34 @@ void	Server::getAdmin(User* user, std::string parameters) {
 void	Server::sendError (User* user, std::string parameter) {
 	int fd = user->getFd();
 
+	// TODO check
 	parameter.insert(0, "ERROR :");
+	parameter += "\r\n";
 	int res = irc::sendString(fd, parameter);
 	if (res == -1) {
 		this->deleteUser(user);
 	}
 }
 
-void	Server::sendPong (User* user, std::string parameter) {
-	int	fd = user->getFd();
-	std::string name = this->conf.find("name")->second;
+void	Server::sendPong (User* user, std::string server_name) {
+	std::vector<std::string>	params;
+	int							ret;
+	std::string 				name = this->conf.find("name")->second;
 
-	parameter.insert(0, " :");
-	parameter.insert(0, name);
-	parameter.insert(0, " PONG ");
-	parameter.insert(0, name);
-	parameter.insert(0, " :");
-	int ret = irc::sendString(fd, parameter);
+	if (server_name.empty()) {
+		ret = irc::numericReply(409, user, params);
+	} else if (server_name != name) {
+		params.push_back(server_name);
+		ret = irc::numericReply(402, user, params);
+	} else {
+		server_name.insert(0, " :");
+		server_name.insert(0, name);
+		server_name.insert(0, " PONG ");
+		server_name.insert(0, name);
+		server_name.insert(0, ":");
+		server_name += "\r\n";
+		ret = irc::sendString(user->getFd(), server_name);
+	}
 	if (ret == -1) {
 		this->deleteUser(user);
 	}

@@ -13,7 +13,6 @@ User::User(int fd, std::string& hostname, struct sockaddr_in& address, Server *s
 	userModes_w = false;		// user receives wallops; Used by IRC operators, WALLOPS is a command utilized to send messages on an IRC network. WALLOPS messages are for broadcasting network information and its status to following users.
 	userModes_r = false;		// restricted user connection;
 	userModes_o = false;		// operator flag;
-	userModes_O = false;
 	_nickname = "";
 	_username = ""; //  Par défaut oui mais le nom précis, il ne peut pas le deviner, faut que ça vienne du client !
 	this->_status = PASS;
@@ -107,6 +106,29 @@ bool	User::get_o()
 	return (userModes_o);
 }
 
+std::string	User::getModesString() {
+	std::string	modes = "";
+	if (this->get_a() == true) {
+		modes += "a";
+	}
+	if (this->get_i() == true) {
+		modes += "i";
+	} 
+	if (this->get_w() == true) {
+		modes += "w";
+	} 
+	if (this->get_o() == true) {
+		modes += "o";
+	} 
+	if (this->get_r() == true) {
+		modes += "r";
+	} 		
+	if (!modes.empty()) {
+		modes.insert(modes.begin(), '+');
+	}
+	return modes;
+}
+
 // Get status
 bool	User::isRegistered()
 {
@@ -176,11 +198,6 @@ void	User::set_o(bool val)
 	userModes_o = val;
 }
 
-void	User::set_O(bool val)
-{
-	userModes_O = val;
-}
-
 void	User::addChannel(Channel* chan)
 {
 	_channels.push_back(chan);
@@ -190,6 +207,7 @@ void	User::deleteChannel(Channel* chan)
 {
 	for (std::vector<Channel *>::iterator it = _channels.begin(); it != _channels.end(); it++) {
 		if ((*it) == chan) {
+			// std::cout << "IN DELETECHANNEL: " << chan->getChanName() << std::endl;
 			_channels.erase(it);
 			return ;
 		}
@@ -204,6 +222,8 @@ void	User::nick(std::string nickname)
 
 void	User::privmsgToUser(User* dest, std::string msg) // pov de la pax qui recoit le msg, usr est la pax qui veut lui envoyer un msg
 {
+	if (!dest)
+		return ;
 	std::string	full_msg = ":" + this->getNickname() + "!" + this->getUsername() + "@" + this->getHostname();
 	full_msg += " PRIVMSG " + dest->getNickname() + " :" + msg + "\r\n";
 	int ret = irc::sendString(dest->getFd(), full_msg);
@@ -340,33 +360,61 @@ void	User::whois(User* who)
 	}		
 }
 
-//TODO continue check following
-void	User::mode(std::vector<std::string> params)
-{
-	std::vector<std::string>::iterator it = params.begin();
-	while (it != params.end())
-	{
-		if (it[0][0] == '+')
-		{
-			if (it[0][1] == 'i')
-				set_i(true);
-			if (it[0][1] == 'w')
-				set_w(true);
-			if (it[0][1] == 'r')
-				set_r(true);
+void	User::sendMode(User* ope, std::string mode_msg) {
+	mode_msg += "\r\n";
+	sendString(this->getFd(), mode_msg);
+	if (this != ope) {
+		sendString(ope->getFd(), mode_msg);
+	}
+}
+
+// this = changing user
+// ope = operator who change this user mode; can be operator or same user than this
+void	User::mode(User* ope, std::string new_modes) {
+	std::vector<std::string>	params;
+
+	if (new_modes.empty()) {
+		params.push_back(this->getModesString());
+		if (irc::numericReply(221, ope, params) == -1) {
+			return (ope->getServer()->deleteUser(ope));
 		}
-		else if (it[0][0] == '-')
-		{
-			if (it[0][1] == 'i')
-				set_i(false);
-			if (it[0][1] == 'w')
-				set_w(false);
-			if (it[0][1] == 'r')
-				set_r(false);
-			if (it[0][1] == 'o')
-				set_o(false);
-			if (it[0][1] == 'O')
-				set_O(false);
+	}
+
+	std::string::iterator	it = new_modes.begin();
+	std::string				mode_msg = ":" + ope->getNickname() + " MODE " + this->getNickname() + " :";
+	bool					plus = true;
+	std::string				valid = "+-iwroa";
+
+	while (it != new_modes.end()) {
+		if (*it == '+') {
+			plus = true;
+		} else if (*it == 'i' && plus == true && get_i() == false) {
+			set_i(true);
+			sendMode(ope, mode_msg + "+i");
+		} else if (*it == 'w' && plus == true && get_w() == false) {
+			set_w(true);
+			sendMode(ope, mode_msg + "+w");
+		} else if (*it == 'r' && plus == true && get_r() == false) {
+			set_r(true);
+			sendMode(ope, mode_msg + "+r");
+		} else if (*it == '-') {
+			plus = false;
+		} else if (*it == 'i' && plus == false && get_i() == true) {
+			set_i(false);
+			sendMode(ope, mode_msg + "-i");
+		} else if (*it == 'w' && plus == false && get_w() == true) {
+			set_w(false);
+			sendMode(ope, mode_msg + "-w");
+		} else if (*it == 'r' && plus == false && get_r() == true) {
+			set_r(false);
+			sendMode(ope, mode_msg + "-r");
+		} else if (*it == 'o' && plus == false && get_o() == true) {
+			set_o(false);
+			sendMode(ope, mode_msg + "-o");
+		} else if (valid.find_first_of(*it)) {
+			params.push_back(std::string(*it, 1));
+			irc::numericReply(472, ope, params);
+			params.clear();
 		}
 		it++;
 	}
