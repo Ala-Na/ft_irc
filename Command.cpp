@@ -339,8 +339,6 @@ void Command::intJoin() {
 				return ;
 			}
 		}
-		// NAMES is sent automatically after joining
-		intNames();
 		i++;
 	}
 }
@@ -520,20 +518,6 @@ void Command::intPart() {
 		}
 		i++;
 	}
-	// this->server.deleteUser(user);
-
-////////////////////////////////////////////////////////////////////////////////
-	std::cout << "BEFORE LEAVING INTPART FUNCTION\n";
-	std::vector<User *> users_end = chan_found->getVecChanUsers();
-	std::cout << "users_end.size(): " << users_end.size() << std::endl;
-	i = 0;
-	while (i < users_end.size())
-	{
-		std::cout << "users_end[" << i << "]: " << users_end[i]->getNickname() << std::endl;
-		i++;
-	}
-	std::cout << "LEAVING INTPART FUNCTION\n";
-////////////////////////////////////////////////////////////////////////////////
 	return ;
 }
 
@@ -590,8 +574,6 @@ void    Command::intNames() {
 	{
 		vec_chan_names = irc::split(param, ",", 0);
 		i = 0;
-		// std::cout << "vec_chan_names[0]: " << vec_chan_names[0] << std::endl;
-		// std::cout << "vec_chan_names.size(): " << vec_chan_names.size() << std::endl;
 		while (i < vec_chan_names.size())
 		{
 			name = "";
@@ -604,14 +586,11 @@ void    Command::intNames() {
 			chan_found = server.getChannelByName(name);
 			if (chan_found == NULL)
 			{
-				// std::cout << "NOT FOUND\n";	// GOTTA CHANGE ^^
 				i++;
 				continue ;
 			}
 			else {
-				// std::cout << "FOUND\n";
 				if (chan_found->listAllUsersInChan(user) == -1) {				// sent on welcome page? Not in channel just joined? Like motd
-					// std::cout << "FOUND BUT PROBLEM WITH LIST FUNCTION\n";
 					this->server.deleteUser(user);
 					return;
 				}
