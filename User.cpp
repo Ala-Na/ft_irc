@@ -160,7 +160,8 @@ void	User::setHostname(std::string hostname)
 
 void	User::setAwayMessage(std::string msg)
 {
-	_away_message = msg;
+	std::vector<std::string> trimmed = split(msg, ":", 1);
+	_away_message = trimmed[1];
 }
 
 void	User::setParams(std::vector<std::string> params)
@@ -431,7 +432,7 @@ void	User::userCmd(std::vector<std::string>& params)
 	bit = bit >> 1;
 	if (bit &1)
 		set_i(true);
-	_real_name = params[3];
+	_real_name = left_trim(params[3], ":");
 }
 
 bool	User::operator==(User const &rhs) const
