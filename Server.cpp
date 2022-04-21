@@ -178,7 +178,7 @@ void	Server::createUser() {
 	addr_len = sizeof(client_addr);
 	client_fd = accept(this->server_socket, (struct sockaddr *)&client_addr, &addr_len);
 	if (this->users.size() == MAX_USERS) {
-		std::string	refused = "Too many users on server, your connection was refused";
+		std::string	refused = "Too many users on server, your connection was refused\r\n";
 		irc::sendString(client_fd, refused);
 		// No need to close connection if error with sendString, as User is not created
 		// and fd is closed anyway
@@ -251,7 +251,7 @@ int	Server::isServOp(User & user)
 
 Channel*	Server::createChannel(std::string name) {
 	srand(time(0));
-	if (name.find_first_of(" :,\007") != std::string::npos || name.find_first_of("&#!") != 0 || name.length() > 50) {
+	if (name.find_first_of(" :,\007") != std::string::npos || name.find_first_of("#+!") != 0 || name.length() > 50) {
 		this->channels.push_back(new Channel(this, "#"));
 		return this->channels.back();
 	}
@@ -338,6 +338,10 @@ std::string	Server::getInfos() {
 	return ((this->conf.find("infos"))->second);
 }
 
+int	Server::getMaxChannelbyUser() const {
+	return 10;
+}
+
 // Here, user_nb is from 0 to max - 1.
 User*	Server::getSpecificUser(size_t user_nb) {
 	if (user_nb < this->users.size())
@@ -394,8 +398,10 @@ User*	Server::getUserByNick(std::string nick)
 void	Server::checkPassword(User* user, std::string parameters) {
 	std::vector<std::string>	params;
 
-	if (user->get_r() == true) {
-		irc::numericReply(462, user, params);
+	if (user->isRegistered() == true) {
+		if (irc::numericReply(462, user, params) == -1) {
+			this->deleteUser(user);
+		}
 		return ;
 	 } else if (parameters.empty()) {
 		params.push_back("PASS");
@@ -417,36 +423,41 @@ void	Server::checkNick(User* user, std::string parameters) {
 		this->checkPassword(user, "");
 		return ;
 	} else if (parameters.empty()) {
-		irc::numericReply(431, user, params);
-		if (user->get_r() == false)
+		if (irc::numericReply(431, user, params) == -1 || user->isRegistered() == false) {
 			this->deleteUser(user);
+		}
 		return ;
 	}
 	params = irc::split(parameters, " ");
 	if (this->getUserByNick(params[0]) != NULL) {
-		irc::numericReply(433, user, params);
-		if (user->get_r() == false)
+		if (irc::numericReply(433, user, params) == -1 || user->isRegistered() == false) {
 			this->deleteUser(user);
+		}
 		return ;
 	} else if (params[0].size() > 8 ||
 		(params[0].find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789;[]\\`_^{}|") != std::string::npos) ||
 		((params[0].find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ;[]\\`_^{}|")) == 0))
 	{
-			irc::numericReply(432, user, params);
-			if (user->get_r() == false)
-				this->deleteUser(user);
-			return ;
+		if (irc::numericReply(432, user, params) == -1 || user->isRegistered() == false) {
+			this->deleteUser(user);
+		}
+		return ;
 	}
-	user->nick(params[0]);
-	if (user->get_r() == false)
+	if (user->isRegistered() == false) {
+		user->nick(params[0], false);
 		user->setStatus(USER);
+	} else {
+		user->nick(params[0], true);
+	}
 }
 
 void	Server::checkUserCmd(User* user, std::string parameters) {
 	std::vector<std::string>	params;
 
-	if (user->get_r() == true) {
-		irc::numericReply(462, user, params);
+	if (user->isRegistered() == true) {
+		if (irc::numericReply(462, user, params) == -1) {
+			this->deleteUser(user);
+		}
 		return ;
 	}
 	params = irc::split(parameters, " ");
@@ -467,18 +478,30 @@ void	Server::welcomeUser(User *user) {
 
 	params.push_back(user->getUsername());
 	params.push_back(user->getHostname());
-	irc::numericReply(1, user, params);
+	if (irc::numericReply(1, user, params) == -1) {
+		this->deleteUser(user);
+		return ;
+	}
 	params.clear();
 	params.push_back(this->conf.find("version")->second);
-	irc::numericReply(2, user, params);
+	if (irc::numericReply(2, user, params) == -1) {
+		this->deleteUser(user);
+		return ;
+	}
 	params.clear();
 	params.push_back(this->conf.find("creation")->second);
-	irc::numericReply(3, user, params);	
+	if (irc::numericReply(3, user, params) == -1) {
+		this->deleteUser(user);
+		return ;
+	}	
 	params.clear();
 	params.push_back(this->conf.find("version")->second);
 	params.push_back("aiwro");
 	params.push_back("klo");
-	irc::numericReply(4, user, params);
+	if (irc::numericReply(4, user, params) == -1) {
+		this->deleteUser(user);
+		return ;
+	}	
 	this->getMotd(user, "");
 }
 
@@ -499,22 +522,33 @@ void	Server::getMotd(User* user, std::string parameters) {
 	std::vector<std::string> param = irc::split(parameters, " ");
 	std::string motd = (this->conf.find("motd"))->second;
 
-	// std::cout << "START OF MOTD FUNCTION !!!!!!!!!!!!!!!!\n";
 	if (!param[0].empty() && param[0].compare((this->conf.find("name"))->second)) {
-		irc::numericReply(402, user, param);
+		if (irc::numericReply(402, user, param) == -1) {
+			this->deleteUser(user);
+		}
 		return ;
 	} else if (motd.empty()) {
-		irc::numericReply(422, user, param);
+		if (irc::numericReply(422, user, param) == -1) {
+			this->deleteUser(user);
+		}
 		return ;
 	}
-	irc::numericReply(375, user, param);
+	if (irc::numericReply(375, user, param) == -1) {
+		this->deleteUser(user);
+		return ;
+	}
 	param.clear();
 	for (size_t i = 0; i < motd.size(); i += 80) {
     	param.push_back(motd.substr(i, 80));
-		irc::numericReply(372, user, param);
+		if (irc::numericReply(372, user, param) == -1) {
+			this->deleteUser(user);
+			return ;
+		}
 		param.clear();	
 	}
-	irc::numericReply(376, user, param);
+	if (irc::numericReply(376, user, param) == -1) {
+		this->deleteUser(user);
+	}
 }
 
 void	Server::retrieveTime(User* user, std::string parameters) {
@@ -523,7 +557,9 @@ void	Server::retrieveTime(User* user, std::string parameters) {
 	if (!parameters.empty() && parameters.compare(name)) {
 		std::vector<std::string> params;
 		params.push_back(name);
-		irc::numericReply(402, user, params);
+		if (irc::numericReply(402, user, params) == -1) {
+			this->deleteUser(user);
+		}
 		return ;
 	}
 	std::time_t time;
@@ -532,7 +568,10 @@ void	Server::retrieveTime(User* user, std::string parameters) {
 	std::vector<std::string> params;
 	params.push_back(name);
 	params.push_back(s_time);
-	irc::numericReply(391, user, params);
+	if (irc::numericReply(391, user, params) == -1) {
+		this->deleteUser(user);
+	}	
+	return ;
 }
 
 void	Server::retrieveVersion(User* user, std::string parameters) {
@@ -541,13 +580,17 @@ void	Server::retrieveVersion(User* user, std::string parameters) {
 
 	if (!parameters.empty() && parameters.compare(name)) {
 		params.push_back(name);
-		irc::numericReply(402, user, params);
+		if (irc::numericReply(402, user, params) == -1) {
+			this->deleteUser(user);
+		}
 		return ;
 	}
 	params.push_back(this->conf.find("version")->second);
 	params.push_back("");
 	params.push_back("");
-	irc::numericReply(351, user, params);
+	if (irc::numericReply(351, user, params) == -1) {
+		this->deleteUser(user);
+	}
 }
 
 void	Server::getAdmin(User* user, std::string parameters) {
@@ -649,4 +692,17 @@ bool	Server::isServOperator(User *user) {
 		return true;
 	}		
 	return false;
+}
+
+void	Server::sendWallops(std::string msg) {
+	std::string	pref_msg = ":" + this->getName();
+	std::vector<User *>::iterator	it = this->users.begin();
+	while (it != this->users.end())
+	{
+		std::string full_msg = pref_msg + " NOTICE " +(*it)->getNickname() + " :" + msg + "\r\n";
+		if ((*it)->get_w()) {
+			irc::sendString((*it)->getFd(), full_msg);
+		}
+		it++;
+	}	
 }

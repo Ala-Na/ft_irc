@@ -6,6 +6,7 @@ using namespace irc;
 #define END "\r\n"
 
 int	irc::sendNumeric(int fd, std::string msg) {
+	std::cout << msg << std::endl;
 	int res = irc::sendString(fd, msg);
 	if (res == -1) {
 		return -1;
@@ -88,7 +89,7 @@ int	irc::sendNumeric(int fd, std::string msg) {
 // 408 - No nedd
 /* 409 */ std::string	irc::ErrNoOrigin () { return (" :No origin specified"); }
 /* 411 */ std::string	irc::ErrNoRecipient (std::string command) { return (" : No recicipent given (" + command + ")"); }
-/* 412 */ std::string	irc::ErrNoTextToSend () { return (" : NO text to send"); }
+/* 412 */ std::string	irc::ErrNoTextToSend () { return (" : No text to send"); }
 /* 413 */ std::string	irc::ErrNoTopLevel (std::string mask) { return (" " + mask + " :No toplevel domain specified"); }
 /* 414 */ std::string	irc::ErrWildTopLevel (std::string mask) { return (" " + mask + " :Wildcard in toplevel domain"); }
 /* 415 */ std::string	irc::ErrBadMask (std::string mask) { return (" " + mask + " :Bad Server/host mask"); }
@@ -133,10 +134,9 @@ int	irc::sendNumeric(int fd, std::string msg) {
 /* 502 */ std::string	irc::ErrUsersDontMatch () { return (" :Cannot change mode for tohers users"); }
 
 
-int	irc::numericReply(int num_nb, User* user, std::vector<std::string>& s_params) {
+std::string	irc::replyString(int num_nb, User* user, std::vector<std::string>& s_params) {
 	std::string					msg;
 	char		 				s_num_nb[4];
-	int							fd = user->getFd();
 	std::string					nick = user->getNickname();
 	std::string					server = user->getServer()->getName();
 
@@ -405,5 +405,12 @@ int	irc::numericReply(int num_nb, User* user, std::vector<std::string>& s_params
 			break;
 	}
 	msg += END;
+	return msg;
+}
+
+int	irc::numericReply(int num_nb, User* user, std::vector<std::string>& s_params) {
+	std::string					msg = irc::replyString(num_nb, user, s_params);
+	int							fd = user->getFd();
+
 	return (irc::sendNumeric(fd, msg));
 }

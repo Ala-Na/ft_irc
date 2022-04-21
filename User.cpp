@@ -215,9 +215,17 @@ void	User::deleteChannel(Channel* chan)
 }
 
 // COMMANDS
-void	User::nick(std::string nickname)
-{
+void	User::nick(std::string nickname, bool send_msg) {
+	std::string	nick_msg;
+
 	setNickname(nickname);
+	if (send_msg == true) {
+		nick_msg = ":" + this->_nickname + "!" + this->_username + "@" + this->_hostname;
+		nick_msg += " NICK :" + nickname + "\r\n";
+		if (irc::sendString(this->getFd(), nick_msg) == -1) {
+			return (this->_server->deleteUser(this));
+		}	
+	}
 }
 
 void	User::privmsgToUser(User* dest, std::string msg) // pov de la pax qui recoit le msg, usr est la pax qui veut lui envoyer un msg
@@ -244,7 +252,7 @@ void	User::privmsgToUser(User* dest, std::string msg) // pov de la pax qui recoi
 void	User::privmsgToChannel(Channel* channel, std::string msg) {
 	std::string	full_msg = ":" + this->getNickname() + "!" + this->getUsername() + "@" + this->getHostname();
 	full_msg += " PRIVMSG " + channel->getChanName() + " :" + msg + "\r\n";
-	channel->writeToAllChanUsers(full_msg);
+	channel->writeToAllChanUsers(full_msg, this);
 }
 
 void	User::noticeToUser(User* dest, std::string msg) {
@@ -259,7 +267,7 @@ void	User::noticeToUser(User* dest, std::string msg) {
 void	User::noticeToChannel(Channel* channel, std::string msg) {
 	std::string	full_msg = ":" + this->getNickname() + "!" + this->getUsername() + "@" + this->getHostname();
 	full_msg += " NOTICE " + channel->getChanName() + " :" + msg + "\r\n";
-	channel->writeToAllChanUsers(full_msg);
+	channel->writeToAllChanUsers(full_msg, this);
 }
 
 void	User::receiveWallops(std::string msg) {
@@ -271,16 +279,13 @@ void	User::receiveWallops(std::string msg) {
 
 int	User::away(std::string msg)
 {
-	int ret;
+	int 					ret;
 	std::vector<std::string> params;
 
-	if (get_a())
-	{
+	if (msg.empty()) {
 		set_a(false);
 		ret = irc::numericReply(305, this, params);
-	}
-	else
-	{
+	} else {
 		set_a(true);
 		setAwayMessage(msg);
 		params.push_back(msg);
@@ -309,7 +314,7 @@ void	User::kick(Channel* chan, std::string reason)
 	chan->deleteUser(this, " KICK " + chan->getChanName() + _nickname + " :" + reason);
 }
 
-void	User::whois(User* who)
+int	User::whois(User* who)
 {
 	std::vector<std::string>	params;
 
@@ -318,7 +323,7 @@ void	User::whois(User* who)
 	params.push_back(who->getHostname());
 	params.push_back(who->getRealName());
 	if (irc::numericReply(311, this, params) == -1) {
-		return (this->_server->deleteUser(this));
+		return (-1);
 	}
 	params.clear();
 	params.push_back(who->getNickname());
@@ -332,32 +337,33 @@ void	User::whois(User* who)
 	params.push_back(channels);
 	std::cout << "here 3" << std::endl;
 	if (irc::numericReply(319, this, params) == -1) {
-		return (this->_server->deleteUser(this));
+		return (-1);
 	}
 	params.clear();
 	params.push_back(this->_server->getName());
 	params.push_back(this->_server->getInfos());
 	if (irc::numericReply(312, this, params) == -1) {
-		return (this->_server->deleteUser(this));
+		return (-1);
 	}
 	params.clear();
 	if (this->get_a() == true) {
 		params.push_back(this->_nickname);
 		params.push_back(this->_away_message);
 		if (irc::numericReply(301, this, params) == -1) {
-			return (this->_server->deleteUser(this));
+			return (-1);
 		}	
 		params.clear();	
 	}
 	if (this->_server->isServOperator(this) == true) {
 		params.push_back(this->_nickname);
 		if (irc::numericReply(313, this, params) == -1) {
-			return (this->_server->deleteUser(this));
+			return (-1);
 		}	
 	}
 	if (irc::numericReply(318, this, params) == -1) {
-		return (this->_server->deleteUser(this));
-	}		
+		return (-1);
+	}	
+	return 0;	
 }
 
 void	User::sendMode(User* ope, std::string mode_msg) {
