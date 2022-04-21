@@ -289,7 +289,7 @@ int	User::away(std::string msg)
 		set_a(true);
 		setAwayMessage(msg);
 		params.push_back(msg);
-		ret = irc::numericReply(301, this, params);
+		ret = irc::numericReply(306, this, params);
 	}
 	return ret;
 }
