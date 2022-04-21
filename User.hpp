@@ -181,7 +181,7 @@ namespace irc
 			void		quit(std::string reason);
 			void		partChannel(Channel* channel, std::string reason);
 			// void		part(std::vector<std::string> params);
-			void		whois(User* who);
+			int			whois(User* who);
 			void		kick(Channel* chan, std::string reason);
 			void		mode(User* ope, std::string params);
 			void		sendMode(User* ope, std::string mode_msg);

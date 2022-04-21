@@ -3,8 +3,7 @@
 
 using namespace irc;
 
-std::string Command::getParam()
-{
+std::string Command::getParam() {
 	return (param);
 }
 
@@ -87,64 +86,50 @@ void	Command::intPing() {
 }
 
 void	Command::intNick() {
-	std::string param = getParam();
-	std::vector<std::string> arg;
-	arg.push_back(param);
-
 	this->server.checkNick(this->user, this->param);
 }
 
 // TODO modify to call User::whois(User* who) with User as current user and who as searched user
 // TODO only keep ERR verification here
 void	Command::intWhoIs() {
-	std::string param = getParam();
 	std::vector<std::string>	arg;
+	std::vector<std::string>	names;
 	unsigned long				i;
-	arg.push_back(user->getNickname());
-	arg.push_back(user->getUsername());
-	arg.push_back(user->getHostname());
-	arg.push_back(user->getRealName());
 
-	// ERR_NOSUCHSERVER    RPL_WHOISSERVER
-
-
-	if (param.size() == 0)
-		irc::numericReply(431, user, arg);
-		// return ERR_NONICKNAMEGIVEN 431 ":No nickname given"
-	// check if user exists in the channel
-	//if (user)
-	//	user->whois(this->user);
-	if (!user)
-		irc::numericReply(401, user, arg); // NOSUCHNICK
-	irc::numericReply(311, user, arg); // WHOISUSER
-	arg.clear();
-	arg.push_back(user->getNickname());
-	// get channels
-	std::vector<Channel *> channels = user->getChannels();
-	std::string    chan_names = "";
-	i = 0;
-	while (i < channels.size())
-	{
-		chan_names += channels[i]->getChanName();
-		if (i < channels.size() - 1)
-			chan_names += ", ";
-		i++;
+	if (param.empty()) {
+		if (irc::numericReply(431, this->user, arg) == -1) {
+			this->server.deleteUser(this->user);
+		}
+		return ;
 	}
-	arg.push_back(chan_names);
-	irc::numericReply(319, user, arg); // WHOISCHANNELS
-
-	//whoisserver
-	arg.clear();
-	arg.push_back(user->getNickname());
-	arg.push_back(user->getAwayMessage());
-	arg.push_back(server.getName());
-	irc::numericReply(312, user, arg); // RPL_WHOISSERVER
-
-	if (user->get_a())
-		irc::numericReply(301, user, arg); // RPL_AWAY
-	if (user->get_o())
-		irc::numericReply(313, user, arg); // RPL_WHOISOPERATOR
-	irc::numericReply(318, user, arg); // RPL_ENDOFWHOIS
+	arg = irc::split(this->param, " ");
+	if (arg.size() >= 2 && arg[0] != this->server.getName()) {
+		if (irc::numericReply(402, this->user, arg) == -1) {
+			this->server.deleteUser(this->user);
+		}
+		return ;
+	}
+	if (arg.size() == 1) {
+		names = irc::split(arg[0], ",");
+	} else {
+		names = irc::split(arg[1], ",");
+	}
+	for (int i = 0; i < names.size(); i++) {
+		arg.clear();
+		User* who = this->server.getUserByNick(names[i]);
+		if (who == NULL) {
+			arg.push_back(names[i]);
+			if (irc::numericReply(401, user, arg) == -1) {
+				this->server.deleteUser(this->user);
+				return;
+			}
+			continue;
+		}
+		if (this->user->whois(who) == -1) {
+			this->server.deleteUser(this->user);
+			return ;
+		}
+	}
 }
 
 void	Command::intUserhost() {
