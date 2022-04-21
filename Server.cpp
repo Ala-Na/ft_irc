@@ -178,7 +178,7 @@ void	Server::createUser() {
 	addr_len = sizeof(client_addr);
 	client_fd = accept(this->server_socket, (struct sockaddr *)&client_addr, &addr_len);
 	if (this->users.size() == MAX_USERS) {
-		std::string	refused = "Too many users on server, your connection was refused";
+		std::string	refused = "Too many users on server, your connection was refused\r\n";
 		irc::sendString(client_fd, refused);
 		// No need to close connection if error with sendString, as User is not created
 		// and fd is closed anyway

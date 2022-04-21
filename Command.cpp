@@ -171,17 +171,9 @@ void	Command::intUserhost() {
 }
 
 void	Command::intAway() {
-	std::string param = getParam();
-
-	if (user->away(param) == -1) {
-		return ;
+	if (this->user->away(this->param) == -1) {
+		this->server.deleteUser(this->user);
 	}
-	std::vector<std::string> arg;
-	if (user->get_a())
-		irc::numericReply(306, user, arg); // NOWAWAY
-	else
-		irc::numericReply(305, user, arg); // UNAWAY
-
 }
 
 void	Command::intPrivMsg() {

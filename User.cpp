@@ -279,16 +279,13 @@ void	User::receiveWallops(std::string msg) {
 
 int	User::away(std::string msg)
 {
-	int ret;
+	int 					ret;
 	std::vector<std::string> params;
 
-	if (get_a())
-	{
+	if (msg.empty()) {
 		set_a(false);
 		ret = irc::numericReply(305, this, params);
-	}
-	else
-	{
+	} else {
 		set_a(true);
 		setAwayMessage(msg);
 		params.push_back(msg);
