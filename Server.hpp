@@ -89,6 +89,8 @@ namespace irc {
 			Server&						getServer ();
 			std::string					getInfos();
 
+			int							getMaxChannelbyUser() const;
+
 			User*						getSpecificUser (size_t user_nb);
 			Channel*					getChannelByName (std::string name);
 

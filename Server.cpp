@@ -251,7 +251,7 @@ int	Server::isServOp(User & user)
 
 Channel*	Server::createChannel(std::string name) {
 	srand(time(0));
-	if (name.find_first_of(" :,\007") != std::string::npos || name.find_first_of("&#!") != 0 || name.length() > 50) {
+	if (name.find_first_of(" :,\007") != std::string::npos || name.find_first_of("#+!") != 0 || name.length() > 50) {
 		this->channels.push_back(new Channel(this, "#"));
 		return this->channels.back();
 	}
@@ -336,6 +336,10 @@ Server&	Server::getServer() {
 
 std::string	Server::getInfos() {
 	return ((this->conf.find("infos"))->second);
+}
+
+int	Server::getMaxChannelbyUser() const {
+	return 10;
 }
 
 // Here, user_nb is from 0 to max - 1.

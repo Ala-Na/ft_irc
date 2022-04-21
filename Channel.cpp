@@ -210,9 +210,11 @@ int Channel::listAllUsersInChan(User* user_asking)
 		i++;
 		params.push_back(names);
 	}
+	std::cout << names << std::endl;
 	params.push_back(names);
 	ret = irc::numericReply(353, user_asking, params);
-	if (ret == -1) {
+	ret += irc::numericReply(366, user_asking, params);
+	if (ret <= -1) {
 		this->server->deleteUser(user_asking);
 		return (-1);
 	}
@@ -278,7 +280,7 @@ int Channel::addUser(User* user_to_add)
 	params.push_back(this->chan_name);
 	params.push_back(this->chan_topic);
 	ret += irc::numericReply(332, user_to_add, params); // Sent Rpl_Topic to user added
-	ret += listAllUsersInChan(user_to_add); // Send Rpl_NamReply to user added
+	ret += this->listAllUsersInChan(user_to_add); // Send Rpl_NamReply to user added
 	if (ret < 0) {
 		return (-1);
 	}
@@ -302,7 +304,6 @@ int Channel::deleteUser(User* user_to_delete, std::string message) {
 	return (0);
 };
 
-// TODO : maybe delete +O mode, or keep it and change message for +O in this case
 int Channel::addOperator(User* operator_adding, User* operator_to_add) {
 	std::string					msg;
 

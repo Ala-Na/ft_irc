@@ -182,7 +182,7 @@ void	Command::intAway() {
 // Consequence : No ERR_WILDTOPLEVEL, ERR_NOTOPLEVEL or ERR_TOOMANYTARGETS
 void	Command::intPrivMsg() {
 	std::vector<std::string>	params;
-	std::string					is_chan = "&#+!";
+	std::string					is_chan = "#";
 
 	params = irc::split(this->param, " :");
 	if (params.empty()) {
@@ -223,7 +223,7 @@ void	Command::intPrivMsg() {
 // Simplified version of Notice (only nickname or channel, no mask involved)
 void	Command::intNotice() {
 	std::vector<std::string>	params;
-	std::string					is_chan = "&#+!";
+	std::string					is_chan = "#";
 
 	params = irc::split(this->param, " :");
 	if (params.empty()) {
@@ -250,7 +250,6 @@ void	Command::intNotice() {
 
 void	Command::intWallops() {
 	std::vector<std::string>	params;
-	std::vector<User *>			users = server.getServUsers();
 
 	if (this->param.empty()) {
 		std::vector<std::string> params;
@@ -263,111 +262,88 @@ void	Command::intWallops() {
 	this->server.sendWallops(this->param.erase(0,1));
 }
 
-// TODO continue checking
-
 void Command::intJoin() {
 	std::vector<std::string>	vec;
 	std::vector<std::string>	vec_chan_names;
 	std::vector<std::string>	vec_keys;
 	std::vector<std::string> 	params;
-	std::string					chan_names;
-	unsigned long				i;
-	std::string                 name;
-	std::string                 key;
-	Channel                     *chan_found;
-	std::string                 message;
-	// std::vector<User> 			users;
-	// std::string 				nicks;
+	size_t						i = 0;
 
+	if (param.empty()) { // ERR_NEEDMOREPARAMS
+		params.push_back(this->prefix);
+		if (irc::numericReply(461, this->user, params) == -1) {
+			this->server.deleteUser(this->user);
+		}
+		return ;
+	}
 	vec = irc::split(param, " ");
 	vec_chan_names = irc::split(vec[0], ",");
 	if (vec.size() > 1) {
 		vec_keys = irc::split(vec[1], ",");
 	}
-	if (vec_chan_names.size() == 1 && vec_keys.size() == 0 && vec_chan_names[0] == "0")    // JOIN 0	// ????? Does not work
-	{
-		intQuit();
-		return ;
-	}
-	if (vec_chan_names.size() == 0)  // ERR_NEEDMOREPARAMS
-	{
-		params.push_back(prefix);
-		irc::numericReply(461, user, params);
-		return ;
-	}
-	if (vec_chan_names.size() < vec_keys.size())  // ERR_NEEDMOREPARAMS
-	{
-		params.push_back(prefix);
-		irc::numericReply(461, user, params);
-		return ;
-	}
-	if (vec_chan_names.size() >= 10 || vec_chan_names.size() + user->getNbOfChannels() > 10)  // ERR_TOOMANYCHANNELS
-	{
-		chan_names = "";
-		i = 0;
-		while (i < vec_chan_names.size())
-		{
-			chan_names += vec_chan_names[i];
-			if (i < vec_chan_names.size() - 1)
-				chan_names += ", ";
+	while (i < vec_chan_names.size()) {
+		params.clear();
+		if (vec_chan_names[i] == "0") { // SPECIAL CASE
+			std::vector<Channel *>	usr_chan = this->user->getChannels();
+			for (std::vector<Channel *>::iterator chan = usr_chan.begin(); chan != usr_chan.end(); chan ++) {
+				this->user->partChannel(*chan, "");
+			}
 			i++;
-		}
-		params.push_back(chan_names);
-		irc::numericReply(405, user, params);
-		return ;
-	}
-	i = 0;
-	while (i < vec_chan_names.size())
-	{
-		name = "";
-		key = "";
-		chan_found = NULL;
-		if (vec_chan_names[i].size() != 0)
-			name = vec_chan_names[i];
-		if (vec_keys.size() > i && vec_keys[i].size() != 0)
-			key = vec_keys[i];
-		if (name[0] != '&' && name[0] != '#' && name[0] != '+' && name[0] !=  '!')
-			name.insert(0, "#");
-		chan_found = server.getChannelByName(name);
-		if (chan_found == NULL) {
-			if ((chan_found = server.createChannel(name)) == NULL) {
-				return ;
-			}
-			// TODO modify to user be channel operator
-			//user->set_o(true);
-			if (key.size() > 0) {
-				chan_found->setChanPassword(key);
-			}
-			if (chan_found->addUser(user) == -1) {
-				return ;
-			}   
-			chan_found->addOperator(user, user); 
-		} else if (vec_keys.size() > i && vec_keys[i] != chan_found->getChanPassword()) {  // ERR_BADCHANNELKEY
+			continue ;
+		} else if (this->user->getNbOfChannels() >= this->server.getMaxChannelbyUser()) { // ERR_TOOMANYCHANNELS
 			params.push_back(vec_chan_names[i]);
-			if (irc::numericReply(475, user, params) == -1) {
-				this->server.deleteUser(user);
+			if (irc::numericReply(405, this->user, params) == -1) {
+				this->server.deleteUser(this->user);
 				return ;
 			}
 			i++;
 			continue ;
+		} else if (vec_chan_names[i].find_first_of(": ,") != std::string::npos) {
+			params.push_back(vec_chan_names[i]);
+			if (irc::numericReply(476, this->user, params) == -1) { // ERR_BADCHANMASK
+				this->server.deleteUser(this->user);
+				return ;
+			}
+			i++;
+			continue ;
+		} 
+		if (vec_chan_names[i][0] != '#') {
+			vec_chan_names[i].append(0, '#');
+		}
+		Channel*	to_join = this->server.getChannelByName(vec_chan_names[i]);
+		if (to_join == NULL) {
+			if ((to_join = this->server.createChannel(vec_chan_names[i])) == NULL) {
+				i++;
+				continue ;
+			}
+			if (i < vec_keys.size() && !vec_keys[i].empty()) {
+				to_join->setChanPassword(vec_keys[i]);
+			}
+			std::vector<User *>	op;
+			op.push_back(this->user);
+			to_join->setChanOperators(op);
+			if (to_join->addUser(user) == -1) {
+				return ;
+			}   
 		} else {
-			if (chan_found->addUser(user) == -1) {
+			if (vec_keys.size() > i && vec_keys[i] != to_join->getChanPassword()) {  // ERR_BADCHANNELKEY
+				params.push_back(vec_chan_names[i]);
+				if (irc::numericReply(475, user, params) == -1) {
+					this->server.deleteUser(user);
+					return ;
+				}
+				i++;
+				continue ;
+			}
+			if (to_join->addUser(user) == -1) {
 				return ;
 			}
 		}
 		i++;
 	}
-	std::cout << "BEFORE LEAVING INTJOIN FUNCTION\n";
-	std::vector<User *> users_end = chan_found->getVecChanUsers();
-	i = 0;
-	while (i < users_end.size())
-	{
-		std::cout << "users_end[" << i << "]: " << users_end[i]->getNickname() << std::endl;
-		i++;
-	}
-	std::cout << "LEAVING INTJOIN FUNCTION\n";
-	return ;
 }
+
+// TODO continue checking
 
 void Command::intInvite() {
 	std::vector<std::string>	vec;
@@ -543,7 +519,6 @@ void Command::intPart() {
 		i++;
 	}
 	// this->server.deleteUser(user);
-	std::cout << "INTPART 7\n";
 
 	std::cout << "BEFORE LEAVING INTPART FUNCTION\n";
 	std::vector<User *> users_end = chan_found->getVecChanUsers();
