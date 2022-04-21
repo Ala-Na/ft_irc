@@ -288,8 +288,9 @@ int	User::away(std::string msg)
 	} else {
 		set_a(true);
 		setAwayMessage(msg);
+		params.push_back(getNickname());
 		params.push_back(msg);
-		ret = irc::numericReply(301, this, params);
+		ret = irc::numericReply(306, this, params);
 	}
 	return ret;
 }
@@ -437,7 +438,7 @@ void	User::userCmd(std::vector<std::string>& params)
 	bit = bit >> 1;
 	if (bit &1)
 		set_i(true);
-	_real_name = params[3];
+	_real_name = left_trim(params[3], ":");
 }
 
 bool	User::operator==(User const &rhs) const

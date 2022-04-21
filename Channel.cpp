@@ -187,11 +187,10 @@ int Channel::listAllUsersInChan(User* user_asking)
 {
 	unsigned long				i;
 	int							ret;
-	std::string					names;
+	std::string					names = 0;
 	std::string					type;
 	std::vector<std::string>	params;
 
-	i = 0;
 	type = this->getChanMode();
 	if (type.find("s") != std::string::npos) {
 		type = "@";
@@ -207,8 +206,8 @@ int Channel::listAllUsersInChan(User* user_asking)
 			names += "@";
 		}
 		names += vec_chan_users[i]->getNickname();
+		names += " ";
 		i++;
-		params.push_back(names);
 	}
 	std::cout << names << std::endl;
 	params.push_back(names);

@@ -50,17 +50,22 @@ int	irc::there_is_no(char c, std::string str)
 	return (1);
 };
 
-std::vector<std::string>	irc::split(std::string text, std::string space_delimiter)
+std::vector<std::string>	irc::split(std::string text, std::string space_delimiter, int dot)
 {
 	std::vector<std::string> words;
 
 	size_t pos = 0;
 	while ((pos = text.find_first_of(space_delimiter)) != std::string::npos)
 	{
-		if (text[0] == ':')
+		if (text[0] == ':' && dot == 0)
 		{
 			words.push_back(text.substr(0));
 			return (words);
+		}
+		else if (text[0] == ':')
+		{
+			text = trim(text, ":");
+			continue ;
 		}
 		words.push_back(text.substr(0, pos));
 		int nbDelimiters = 0;
@@ -69,7 +74,6 @@ std::vector<std::string>	irc::split(std::string text, std::string space_delimite
 		text.erase(0, pos + nbDelimiters);
 	}
 	words.push_back(text.substr(0));
-	// words.push_back("\0");
 	return (words);
 }
 
