@@ -3,10 +3,6 @@
 
 using namespace irc;
 
-std::string Command::getParam() {
-	return (param);
-}
-
 Command::Command (Server& server, User* user, std::string& content) : server(server), user(user), content(content) {
 	this->prefix = "";
 }
@@ -28,6 +24,14 @@ void	Command::parseCommand () {
 
 	this->goToExecution();
 
+}
+
+User*	Command::getUser() {
+	return (user);
+}
+
+std::string Command::getParam() {
+	return (param);
 }
 
 std::string	Command::getWord () {
@@ -88,7 +92,6 @@ void	Command::intPing() {
 void	Command::intNick() {
 	this->server.checkNick(this->user, this->param);
 }
-
 
 void	Command::intWhoIs() {
 	std::vector<std::string>	arg;
@@ -246,33 +249,26 @@ void	Command::intNotice() {
 	}
 }
 
-void	Command::intWallops()
-{
-	std::vector<User *>	users = server.getServUsers();
-	std::string			sentence = getParam();
-	if (users.size() < 1)	// ERR_NEEDMOREPARAMS
-	{
+void	Command::intWallops() {
+	std::vector<std::string>	params;
+	std::vector<User *>			users = server.getServUsers();
+
+	if (this->param.empty()) {
 		std::vector<std::string> params;
 		params.push_back(prefix);
-		irc::numericReply(461, user, params);
+		if (irc::numericReply(461, user, params) == -1) {
+			this->server.deleteUser(this->user);
+		}
 		return ;
 	}
 	std::vector<User *>::iterator	it = users.begin();
 	while (it != users.end())
 	{
 		if ((*it)->get_w()) {
-			int res = irc::sendString((*it)->getFd(), sentence);
-			if (res == -1) {
-				//TODO close connection
-			}
+			irc::sendString((*it)->getFd(), this->param);
 		}
 		it++;
 	}
-}
-
-User *Command::getUser()
-{
-	return (user);
 }
 
 void Command::intJoin() {
