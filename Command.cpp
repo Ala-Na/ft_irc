@@ -244,7 +244,7 @@ void	Command::intNotice() {
 			return;
 		}
 		this->param.erase(0, params[0].size() + 2);
-		this->user->privmsgToChannel(chan, this->param);
+		this->user->noticeToChannel(chan, this->param);
 	}
 }
 
@@ -335,15 +335,13 @@ void Command::intJoin() {
 				i++;
 				continue ;
 			}
-			if (to_join->addUser(user) == -1) {
+			if (to_join->addUser(this->user) == -1) {
 				return ;
 			}
 		}
 		i++;
 	}
 }
-
-// TODO continue checking
 
 void Command::intInvite() {
 	std::vector<std::string>	vec;
@@ -365,7 +363,7 @@ void Command::intInvite() {
 	nickname = vec[0];
 	chan_name = vec[1];
 	chan_found = NULL;
-	if (chan_name[0] != '&' && chan_name[0] != '#' && chan_name[0] != '+' && chan_name[0] !=  '!') {
+	if (chan_name[0] != '#') {
 		chan_name.insert(0, "#");
 	}
 	chan_found = server.getChannelByName(chan_name);
@@ -394,7 +392,7 @@ void Command::intInvite() {
 		}
 		return ;
 	}
-	if (chan_found->userIsInChanFromNickname(nickname)) // ERR_USERONCHANNEL
+	if (chan_found->userIsInChanFromNickname(nickname) == 1) // ERR_USERONCHANNEL
 	{
 		params.push_back(nickname);
 		params.push_back(chan_name);
@@ -423,6 +421,8 @@ void Command::intInvite() {
 		return ;
 	}
 }
+
+// TODO continue checking
 
 void Command::intOper()			// ??? Server does not receive this command and user is asked key but there is none...
 {

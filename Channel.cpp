@@ -278,8 +278,12 @@ int Channel::addUser(User* user_to_add)
 	join_msg += " JOIN :" + this->chan_name + "\r\n";
 	ret = this->writeToAllChanUsers(join_msg, NULL); // Sent JOIN to everyone
 	params.push_back(this->chan_name);
-	params.push_back(this->chan_topic);
-	ret += irc::numericReply(332, user_to_add, params); // Sent Rpl_Topic to user added
+	if (this->chan_topic.empty()) {
+		ret += irc::numericReply(331, user_to_add, params);		
+	} else {
+		params.push_back(this->chan_topic);
+		ret += irc::numericReply(332, user_to_add, params); // Sent Rpl_Topic to user added
+	}
 	ret += this->listAllUsersInChan(user_to_add); // Send Rpl_NamReply to user added
 	if (ret < 0) {
 		return (-1);
