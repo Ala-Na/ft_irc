@@ -191,7 +191,6 @@ int Channel::listAllUsersInChan(User* user_asking)
 	std::string					type;
 	std::vector<std::string>	params;
 
-	i = 0;
 	type = this->getChanMode();
 	if (type.find("s") != std::string::npos) {
 		type = "@";
@@ -202,16 +201,23 @@ int Channel::listAllUsersInChan(User* user_asking)
 	}
 	params.push_back(type);
 	params.push_back(this->getChanName());
+	names = "";
+	i = 0;
 	while (i < vec_chan_users.size()) {
+		// std::cout << "LOOP LIST ALL CHAN USERS\n";
 		if (this->isOperator(vec_chan_users[i]) == 1) {
 			names += "@";
 		}
 		names += vec_chan_users[i]->getNickname();
+		names += " ";
 		i++;
-		params.push_back(names);
 	}
 	std::cout << names << std::endl;
 	params.push_back(names);
+	// std::cout << "params[0] in list all users: " << params[0] << std::endl;
+	// std::cout << "params[1] in list all users: " << params[1] << std::endl;
+	// std::cout << "params[2] in list all users: " << params[2] << std::endl;
+	// std::cout << "user_asking: " << user_asking->getNickname() << std::endl;
 	ret = irc::numericReply(353, user_asking, params);
 	params.clear();
 	params.push_back(this->getChanName());

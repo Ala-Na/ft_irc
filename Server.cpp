@@ -428,7 +428,7 @@ void	Server::checkNick(User* user, std::string parameters) {
 		}
 		return ;
 	}
-	params = irc::split(parameters, " ");
+	params = irc::split(parameters, " ", 0);
 	if (this->getUserByNick(params[0]) != NULL) {
 		if (irc::numericReply(433, user, params) == -1 || user->isRegistered() == false) {
 			this->deleteUser(user);
@@ -460,7 +460,7 @@ void	Server::checkUserCmd(User* user, std::string parameters) {
 		}
 		return ;
 	}
-	params = irc::split(parameters, " ");
+	params = irc::split(parameters, " ", 0);
 	if (params.size() < 4) {
 		params.clear();
 		params.push_back("USER");
@@ -519,7 +519,7 @@ void	Server::listChannels (User* user) {
 }
 
 void	Server::getMotd(User* user, std::string parameters) {
-	std::vector<std::string> param = irc::split(parameters, " ");
+	std::vector<std::string> param = irc::split(parameters, " ", 0);
 	std::string motd = (this->conf.find("motd"))->second;
 
 	if (!param[0].empty() && param[0].compare((this->conf.find("name"))->second)) {
