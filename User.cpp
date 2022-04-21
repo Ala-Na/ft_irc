@@ -215,9 +215,15 @@ void	User::deleteChannel(Channel* chan)
 }
 
 // COMMANDS
-void	User::nick(std::string nickname)
-{
+void	User::nick(std::string nickname) {
+	std::string	nick_msg;
+
 	setNickname(nickname);
+	nick_msg = ":" + this->_nickname + "!" + this->_username + "@" + this->_hostname;
+	nick_msg += " NICK :" + nickname + "\r\n";
+	if (irc::sendString(this->getFd(), nick_msg) == -1) {
+		return (this->_server->deleteUser(this));
+	}	
 }
 
 void	User::privmsgToUser(User* dest, std::string msg) // pov de la pax qui recoit le msg, usr est la pax qui veut lui envoyer un msg
