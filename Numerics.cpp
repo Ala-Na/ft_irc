@@ -88,7 +88,7 @@ int	irc::sendNumeric(int fd, std::string msg) {
 // 408 - No nedd
 /* 409 */ std::string	irc::ErrNoOrigin () { return (" :No origin specified"); }
 /* 411 */ std::string	irc::ErrNoRecipient (std::string command) { return (" : No recicipent given (" + command + ")"); }
-/* 412 */ std::string	irc::ErrNoTextToSend () { return (" : NO text to send"); }
+/* 412 */ std::string	irc::ErrNoTextToSend () { return (" : No text to send"); }
 /* 413 */ std::string	irc::ErrNoTopLevel (std::string mask) { return (" " + mask + " :No toplevel domain specified"); }
 /* 414 */ std::string	irc::ErrWildTopLevel (std::string mask) { return (" " + mask + " :Wildcard in toplevel domain"); }
 /* 415 */ std::string	irc::ErrBadMask (std::string mask) { return (" " + mask + " :Bad Server/host mask"); }

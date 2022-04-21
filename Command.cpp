@@ -176,164 +176,74 @@ void	Command::intAway() {
 	}
 }
 
+// Simplified version of PrivMsg (only nickname or channel, no mask involved)
+// Consequence : No ERR_WILDTOPLEVEL, ERR_NOTOPLEVEL or ERR_TOOMANYTARGETS
 void	Command::intPrivMsg() {
-	std::string username;
-	std::string nickname;
-	std::string hostname;
-	std::string server_str;
-	std::string msg;
+	std::vector<std::string>	params;
+	std::string					is_chan = "&#+!";
 
-	std::string param = getParam();
-
-	size_t position1 = param.find("@");
-	size_t position2 = param.find("%");
-	size_t dif = position1 < position2 ? position1 : position2;
-	username = param.substr(0, dif);
-	size_t pos1 = param.find("!");
-	if (pos1 != std::string::npos)
-	{
-		size_t pos2 = param.find("@");
-		size_t pos3 = param.find("%");
-		if (pos3 != std::string::npos)
-			username = param.substr(pos1 + 1,(pos3 - pos1) - 1);
-		else
-			username = param.substr(pos1 + 1,(pos2 - pos1) - 1);
-		nickname = param.substr(0, pos1);
-	}
-	size_t pos4 = param.find("@");
-	if (pos4 != std::string::npos)
-	{
-		size_t pos5 = param.find("%");
-		if (pos5 != std::string::npos)
-		{
-			hostname = param.substr(pos5 + 1, pos4 - pos5 - 1);
-			server_str = param.substr(pos4 + 1, param.find(" ") - pos4 - 1);
+	params = irc::split(this->param, " ");
+	if (params.empty()) {
+		params.push_back(this->prefix);
+		if (irc::numericReply(411, this->user, params) == -1) {
+			this->server.deleteUser(this->user);
 		}
-		else
-		{
-			hostname = param.substr(pos4 + 1, param.find(" ") - pos4 - 1);
+		return ;
+	} else if (params.size() < 2) {
+		if (irc::numericReply(412, this->user, params) == -1) {
+			this->server.deleteUser(this->user);
 		}
+		return ;	
 	}
-	size_t pos6 = param.find("%");
-	if (pos6 != std::string::npos && pos4 == std::string::npos)
-	{
-		hostname = param.substr(pos6 + 1, param.find(" ") - pos6 - 1);
+	if (is_chan.find_first_of(params[0]) == std::string::npos) {
+		User*	dest = this->server.getUserByNick(params[0]);
+		if (dest == NULL) {
+			if (irc::numericReply(401, this->user, params) == -1) {
+				this->server.deleteUser(this->user);
+			}
+			return;
+		}
+		this->param.erase(0, params[0].size() + 1);
+		this->user->privmsgToUser(dest, this->param);
+	} else {
+		Channel*	chan = this->server.getChannelByName(params[0]);
+		if (chan == NULL) {
+			if (irc::numericReply(403, this->user, params) == -1) {
+				this->server.deleteUser(this->user);
+			}
+			return;
+		}
+		this->param.erase(0, params[0].size() + 1);
+		this->user->privmsgToChannel(chan, this->param);
 	}
-
-	size_t pos7 = param.find(":");
-	if (pos7 != std::string::npos)
-		msg = param.substr(pos7 + 1);
-	std::vector<std::string> arg;
-	if (msg.size() == 0)
-		irc::numericReply(412, user, arg); // NOTEXTTOSEND
-	arg.push_back(user->getNickname());
-	std::cout << "ICI username: " << username << std::endl;
-	if (username.size() == 0)
-		irc::numericReply(411, user, arg); // NORECIPIENT
-	arg.clear();
-	arg.push_back("PRIVMSG"); //command
-	User	*recipient = NULL;
-	if (username.size() > 0)
-		recipient = server.getUserByUsername(username);
-	if (!recipient)
-	{
-		irc::numericReply(401, user, arg); // NOSUCHNICK
-		// return ;
-	}
-	user->privmsgToUser(recipient, msg);
-	// TODO user privmsgToChannel
-	arg.clear();
-	if (recipient)
-	{
-		arg.push_back(recipient->getNickname());
-		arg.push_back(recipient->getAwayMessage());
-	}
-	if (recipient && recipient->get_a())
-		irc::numericReply(301, user, arg); // RPL_AWAY
-	if (recipient)
-	{
-		recipient->setNickname(nickname);
-		recipient->setUsername(username);
-		recipient->setHostname(hostname);
-	}
-
-	//    ERR_CANNOTSENDTOCHAN            ERR_NOTOPLEVEL
-		// ERR_WILDTOPLEVEL                ERR_TOOMANYTARGETS
 }
 
-// TODO use noticeToUser and noticeToChannel of User
+// Simplified version of Notice (only nickname or channel, no mask involved)
 void	Command::intNotice() {
-	std::string username;
-	std::string nickname;
-	std::string hostname;
-	std::string server_str;
-	std::string msg;
+	std::vector<std::string>	params;
+	std::string					is_chan = "&#+!";
 
-	std::string param = getParam();
-
-	size_t position1 = param.find("@");
-	size_t position2 = param.find("%");
-	size_t dif = position1 < position2 ? position1 : position2;
-	username = param.substr(0, dif);
-	size_t pos1 = param.find("!");
-	if (pos1 != std::string::npos)
-	{
-		size_t pos2 = param.find("@");
-		size_t pos3 = param.find("%");
-		if (pos3 != std::string::npos)
-			username = param.substr(pos1 + 1,(pos3 - pos1) - 1);
-		else
-			username = param.substr(pos1 + 1,(pos2 - pos1) - 1);
-		nickname = param.substr(0, pos1);
+	params = irc::split(this->param, " ");
+	if (params.empty()) {
+		return ;
+	} else if (params.size() < 2) {
+		return ;	
 	}
-	size_t pos4 = param.find("@");
-	if (pos4 != std::string::npos)
-	{
-		size_t pos5 = param.find("%");
-		if (pos5 != std::string::npos)
-		{
-			hostname = param.substr(pos5 + 1, pos4 - pos5 - 1);
-			server_str = param.substr(pos4 + 1, param.find(" ") - pos4 - 1);
+	if (is_chan.find_first_of(params[0]) == std::string::npos) {
+		User*	dest = this->server.getUserByNick(params[0]);
+		if (dest == NULL) {
+			return;
 		}
-		else
-		{
-			hostname = param.substr(pos4 + 1, param.find(" ") - pos4 - 1);
+		this->param.erase(0, params[0].size() + 1);
+		this->user->noticeToUser(dest, this->param);
+	} else {
+		Channel*	chan = this->server.getChannelByName(params[0]);
+		if (chan == NULL) {
+			return;
 		}
+		this->param.erase(0, params[0].size() + 1);
+		this->user->privmsgToChannel(chan, this->param);
 	}
-	size_t pos6 = param.find("%");
-	if (pos6 != std::string::npos && pos4 == std::string::npos)
-	{
-		hostname = param.substr(pos6 + 1, param.find(" ") - pos6 - 1);
-	}
-
-	size_t pos7 = param.find(":");
-	if (pos7 != std::string::npos)
-		msg = param.substr(pos7 + 1);
-
-	std::vector<std::string> arg;
-	if (msg.size() == 0)
-		irc::numericReply(412, user, arg); // NOTEXTTOSEND
-	arg.push_back(user->getNickname());
-	if (username.size() == 0)
-		irc::numericReply(411, user, arg); // NORECIPIENT
-	arg.clear();
-	arg.push_back("PRIVMSG"); //command
-	User	*recipient = NULL;
-	if (username.size() > 0)
-		recipient = server.getUserByUsername(username);
-		// recipient = Channel::getUserFromUsername(username);
-	if (!recipient)
-		irc::numericReply(401, user, arg); // NOSUCHNICK
-	//user->noticeToUser(msg);
-	arg.clear();
-	arg.push_back(recipient->getNickname());
-	arg.push_back(recipient->getAwayMessage());
-	if (recipient->get_a())
-		irc::numericReply(301, user, arg); // RPL_AWAY
-
-	recipient->setNickname(nickname);
-	recipient->setUsername(username);
-	recipient->setHostname(hostname);
 }
 
 void	Command::intWallops()
