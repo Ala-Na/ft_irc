@@ -16,8 +16,9 @@ namespace irc {
 	class Server;
 	class User;
 
-	int	numericReply (int num_nb, User* user, std::vector<std::string>& s_params);
-	int	sendNumeric(int fd, std::string msg);
+	int			numericReply (int num_nb, User* user, std::vector<std::string>& s_params);
+	std::string	replyString(int num_nb, User* user, std::vector<std::string>& s_params);
+	int			sendNumeric(int fd, std::string msg);
 
 	std::string	RplWelcome (std::string nick, std::string user, std::string host);
 	std::string	RplYourHost (std::string server, std::string version);

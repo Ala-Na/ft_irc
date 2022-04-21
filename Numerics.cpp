@@ -134,10 +134,9 @@ int	irc::sendNumeric(int fd, std::string msg) {
 /* 502 */ std::string	irc::ErrUsersDontMatch () { return (" :Cannot change mode for tohers users"); }
 
 
-int	irc::numericReply(int num_nb, User* user, std::vector<std::string>& s_params) {
+std::string	irc::replyString(int num_nb, User* user, std::vector<std::string>& s_params) {
 	std::string					msg;
 	char		 				s_num_nb[4];
-	int							fd = user->getFd();
 	std::string					nick = user->getNickname();
 	std::string					server = user->getServer()->getName();
 
@@ -406,5 +405,12 @@ int	irc::numericReply(int num_nb, User* user, std::vector<std::string>& s_params
 			break;
 	}
 	msg += END;
+	return msg;
+}
+
+int	irc::numericReply(int num_nb, User* user, std::vector<std::string>& s_params) {
+	std::string					msg = irc::replyString(num_nb, user, s_params);
+	int							fd = user->getFd();
+
 	return (irc::sendNumeric(fd, msg));
 }

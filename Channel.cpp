@@ -205,7 +205,7 @@ int Channel::listAllUsersInChan(User* user_asking)
 	while (i < vec_chan_users.size()) {
 		if (this->isOperator(vec_chan_users[i]) == 1) {
 			names += "@";
-		} // NOTE : Moderated channel not taken into account, but if permission to speak + in front of nickname
+		}
 		names += vec_chan_users[i]->getNickname();
 		i++;
 		params.push_back(names);
@@ -213,6 +213,8 @@ int Channel::listAllUsersInChan(User* user_asking)
 	std::cout << names << std::endl;
 	params.push_back(names);
 	ret = irc::numericReply(353, user_asking, params);
+	params.clear();
+	params.push_back(this->getChanName());
 	ret += irc::numericReply(366, user_asking, params);
 	if (ret <= -1) {
 		this->server->deleteUser(user_asking);
@@ -278,9 +280,7 @@ int Channel::addUser(User* user_to_add)
 	join_msg += " JOIN :" + this->chan_name + "\r\n";
 	ret = this->writeToAllChanUsers(join_msg, NULL); // Sent JOIN to everyone
 	params.push_back(this->chan_name);
-	if (this->chan_topic.empty()) {
-		ret += irc::numericReply(331, user_to_add, params);		
-	} else {
+	if (!this->chan_topic.empty()) {
 		params.push_back(this->chan_topic);
 		ret += irc::numericReply(332, user_to_add, params); // Sent Rpl_Topic to user added
 	}
