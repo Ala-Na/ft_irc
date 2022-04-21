@@ -255,13 +255,8 @@ void	User::privmsgToChannel(Channel* channel, std::string msg) {
 	channel->writeToAllChanUsers(full_msg, this);
 }
 
-void	User::noticeToUser(User* dest, std::string msg, bool from_server) {
-	std::string	full_msg;
-	if (from_server == false) {
-		full_msg = ":" + this->getNickname() + "!" + this->getUsername() + "@" + this->getHostname();
-	} else {
-		full_msg = ":" + this->_server->getName();
-	}
+void	User::noticeToUser(User* dest, std::string msg) {
+	std::string	full_msg = ":" + this->getNickname() + "!" + this->getUsername() + "@" + this->getHostname();
 	full_msg += " NOTICE " + dest->getNickname() + " :" + msg + "\r\n";
 	int ret = irc::sendString(dest->getFd(), full_msg);
 	if (ret == -1) {

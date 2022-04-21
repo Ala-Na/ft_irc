@@ -103,7 +103,7 @@ namespace irc {
 			void						deleteServOperator (User* user);
 			bool						isServOperator(User *user);
 
-			void						intWallops ();
+			void						sendWallops(std::string msg);
 
 	};
 };

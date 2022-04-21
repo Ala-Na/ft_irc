@@ -237,7 +237,7 @@ void	Command::intNotice() {
 			return;
 		}
 		this->param.erase(0, params[0].size() + 2);
-		this->user->noticeToUser(dest, this->param, false);
+		this->user->noticeToUser(dest, this->param);
 	} else {
 		Channel*	chan = this->server.getChannelByName(params[0]);
 		if (chan == NULL) {
@@ -260,14 +260,7 @@ void	Command::intWallops() {
 		}
 		return ;
 	}
-	std::vector<User *>::iterator	it = users.begin();
-	while (it != users.end())
-	{
-		//if ((*it)->get_w()) {
-			this->user->noticeToUser((*it), this->param.erase(0, 1), true);
-		//}
-		it++;
-	}
+	this->server.sendWallops(this->param.erase(0,1));
 }
 
 // TODO continue checking

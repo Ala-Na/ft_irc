@@ -689,3 +689,16 @@ bool	Server::isServOperator(User *user) {
 	}		
 	return false;
 }
+
+void	Server::sendWallops(std::string msg) {
+	std::string	pref_msg = ":" + this->getName();
+	std::vector<User *>::iterator	it = this->users.begin();
+	while (it != this->users.end())
+	{
+		std::string full_msg = pref_msg + " NOTICE " +(*it)->getNickname() + " :" + msg + "\r\n";
+		if ((*it)->get_w()) {
+			irc::sendString((*it)->getFd(), full_msg);
+		}
+		it++;
+	}	
+}
