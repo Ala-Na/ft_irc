@@ -169,7 +169,7 @@ namespace irc
 
 			// Commands
 			void		userCmd(std::vector<std::string>& params);
-			void		nick(std::string nickname);
+			void		nick(std::string nickname, bool send_msg);
 			void		quit(std::vector<std::string> channels);
 			void		privmsgToUser(User* dest, std::string msg);
 			void		privmsgToChannel(Channel* channel, std::string msg);

@@ -58,11 +58,9 @@ void	Command::goToExecution () {
 		"LIST", "INVITE", "KICK", "PRIVMSG", "NOTICE", "KILL", "QUIT", \
 		"WHOIS", "AWAY", "WALLOPS", "USERHOST", "SQUIT", \
 		"MOTD", "ERROR", "SUMMON", "USERS", "PING"};
-
-	// std::cout << "SERVER REACTS AFTER JOIN - PART\n";
-
+	
+	// TODO delete following
 	std::cout << this->prefix << std::endl;
-
 	for (unsigned long i = 0; i < nbr_cmd; i++) {
 		if (!this->prefix.compare(msg[i])) {
 			if (i >= 3 && this->user->isRegistered() == false) {
@@ -74,13 +72,14 @@ void	Command::goToExecution () {
 	};
 	std::vector<std::string> params;
 	params.push_back(this->prefix);
-	irc::numericReply(421, user, params);
+	if (irc::numericReply(421, user, params) == -1) {
+		this->server.deleteUser(this->user);
+	}
 }
 
 // Intermediate Commands
 void	Command::intUser() {
 	this->server.checkUserCmd(this->user, this->param);
-	// Made in server to make deletion of unregistered user easier
 }
 
 void	Command::intPing() {
@@ -93,37 +92,7 @@ void	Command::intNick() {
 	arg.push_back(param);
 
 	this->server.checkNick(this->user, this->param);
-	// Made in server to make deletion of unregistered user easier
-
-	//std::string nickname;
-	//size_t pos = param.find("!");
-	//if (pos != std::string::npos)
-	//{
-	//	nickname = param.substr(1, pos - 1);
-	//}
-	//std::string	new_nickname;
-	//size_t	pos2 = param.find("NICK") + 5;
-	//new_nickname = param.substr(pos2);
-	//user->setNickname(new_nickname);
 }
-
-// void	Command::intUserMode()
-// {
-// 	std::string param = getParam();
-// 	std::vector<std::string>	params;
-
-// 	// User	usr;
-// 	params = irc::split(param, " ");
-// 	// need to select the right user in the channel
-// 	user->mode(params);
-// 	/*
-// 	221    RPL_UMODEIS
-// 			"<user mode string>"
-
-// 		- To answer a query about a client's own mode,
-// 		RPL_UMODEIS is sent back.
-// 	*/
-// }
 
 // TODO modify to call User::whois(User* who) with User as current user and who as searched user
 // TODO only keep ERR verification here
