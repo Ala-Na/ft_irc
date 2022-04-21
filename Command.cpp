@@ -96,7 +96,6 @@ void	Command::intNick() {
 void	Command::intWhoIs() {
 	std::vector<std::string>	arg;
 	std::vector<std::string>	names;
-	unsigned long				i;
 
 	if (param.empty()) {
 		if (irc::numericReply(431, this->user, arg) == -1) {
@@ -116,7 +115,7 @@ void	Command::intWhoIs() {
 	} else {
 		names = irc::split(arg[0], ",");
 	}
-	for (int i = 0; i < names.size(); i++) {
+	for (size_t i = 0; i < names.size(); i++) {
 		User* who = this->server.getUserByNick(names[i]);
 		if (who == NULL) {
 			arg.clear();
@@ -146,7 +145,7 @@ void	Command::intUserhost() {
 		return ;
 	}
 	nicks = irc::split(param, " ");
-	for (int i = 0; i < nicks.size(); i++) {
+	for (size_t i = 0; i < nicks.size(); i++) {
 	{
 		User* usr = this->server.getUserByNick(nicks[i]);
 		if (usr != NULL) {
@@ -185,7 +184,7 @@ void	Command::intPrivMsg() {
 	std::vector<std::string>	params;
 	std::string					is_chan = "&#+!";
 
-	params = irc::split(this->param, " ");
+	params = irc::split(this->param, " :");
 	if (params.empty()) {
 		params.push_back(this->prefix);
 		if (irc::numericReply(411, this->user, params) == -1) {
@@ -206,7 +205,7 @@ void	Command::intPrivMsg() {
 			}
 			return;
 		}
-		this->param.erase(0, params[0].size() + 1);
+		this->param.erase(0, params[0].size() + 2);
 		this->user->privmsgToUser(dest, this->param);
 	} else {
 		Channel*	chan = this->server.getChannelByName(params[0]);
@@ -216,7 +215,7 @@ void	Command::intPrivMsg() {
 			}
 			return;
 		}
-		this->param.erase(0, params[0].size() + 1);
+		this->param.erase(0, params[0].size() + 2);
 		this->user->privmsgToChannel(chan, this->param);
 	}
 }
@@ -226,7 +225,7 @@ void	Command::intNotice() {
 	std::vector<std::string>	params;
 	std::string					is_chan = "&#+!";
 
-	params = irc::split(this->param, " ");
+	params = irc::split(this->param, " :");
 	if (params.empty()) {
 		return ;
 	} else if (params.size() < 2) {
@@ -237,14 +236,14 @@ void	Command::intNotice() {
 		if (dest == NULL) {
 			return;
 		}
-		this->param.erase(0, params[0].size() + 1);
-		this->user->noticeToUser(dest, this->param);
+		this->param.erase(0, params[0].size() + 2);
+		this->user->noticeToUser(dest, this->param, false);
 	} else {
 		Channel*	chan = this->server.getChannelByName(params[0]);
 		if (chan == NULL) {
 			return;
 		}
-		this->param.erase(0, params[0].size() + 1);
+		this->param.erase(0, params[0].size() + 2);
 		this->user->privmsgToChannel(chan, this->param);
 	}
 }
@@ -264,12 +263,14 @@ void	Command::intWallops() {
 	std::vector<User *>::iterator	it = users.begin();
 	while (it != users.end())
 	{
-		if ((*it)->get_w()) {
-			irc::sendString((*it)->getFd(), this->param);
-		}
+		//if ((*it)->get_w()) {
+			this->user->noticeToUser((*it), this->param.erase(0, 1), true);
+		//}
 		it++;
 	}
 }
+
+// TODO continue checking
 
 void Command::intJoin() {
 	std::vector<std::string>	vec;
@@ -542,7 +543,7 @@ void Command::intPart() {
 			chan_found->deleteUser(user, "");
 			if (vec.size() > 1) {
 				std::cout << "INTPART 6\n";
-				if (chan_found->writeToAllChanUsers(vec[1]) == -1)
+				if (chan_found->writeToAllChanUsers(vec[1], NULL) == -1)
 					return ;
 			}
 		}
@@ -582,7 +583,7 @@ void    Command::intQuit() {
 			name.insert(0, "#");
 		chan_found = server.getChannelByName(name);
 		std::cout << message << std::endl;
-		if (chan_found->writeToAllChanUsers(message) == -1) {
+		if (chan_found->writeToAllChanUsers(message, NULL) == -1) {
 			this->server.deleteUser(user);
 			return ;
 		}

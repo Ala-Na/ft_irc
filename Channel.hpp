@@ -71,7 +71,7 @@ namespace irc
 			void				addMode(std::string mode);
 			int					receivingAnInvitation(User* user_inviting, User* user_invited);
 			int					listAllUsersInChan(User* user_asking);
-			int					writeToAllChanUsers(std::string sentence_to_send);
+			int					writeToAllChanUsers(std::string sentence_to_send, User* to_avoid);
 			int					addUser(User* user_to_add);
 			int					deleteUser(User* user_to_delete, std::string message);
 			int					addOperator(User* operator_adding, User* operator_to_add);

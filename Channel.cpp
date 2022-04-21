@@ -97,7 +97,7 @@ void	Channel::setChanTopic(std::string topic, User* user_who_changes) {
 		chan_topic = topic;
 		std::string	msg = ":" + user_who_changes->getNickname() + "!" + user_who_changes->getUsername() + "@" + user_who_changes->getHostname();
 		msg += " TOPIC " + this->chan_name + " :" + topic + "\r\n";
-		writeToAllChanUsers(msg);
+		writeToAllChanUsers(msg, NULL);
 	}
 };
 
@@ -219,16 +219,17 @@ int Channel::listAllUsersInChan(User* user_asking)
 	return (0);
 };
 
-int	Channel::writeToAllChanUsers(std::string sentence_to_send)
+int	Channel::writeToAllChanUsers(std::string sentence_to_send, User* to_avoid)
 {
 	unsigned long	i;
-	int				ret;
 
 	i = 0;
-	while (i < vec_chan_users.size())
-	{
-		ret = irc::sendString(vec_chan_users[i]->getFd(), sentence_to_send);
-		if (ret == -1) {
+	while (i < vec_chan_users.size()) {
+		if (vec_chan_users[i] == to_avoid) {
+			i++;
+			continue ;
+		}
+		if (irc::sendString(vec_chan_users[i]->getFd(), sentence_to_send) == -1) {
 			std::cerr << "Could not send message to user " << vec_chan_users[i]->getNickname() << "\n";
 			return (-1);
 		}
@@ -273,7 +274,7 @@ int Channel::addUser(User* user_to_add)
 	user_to_add->addChannel(this);
 	std::string join_msg = ":" + user_to_add->getNickname() + "!" + user_to_add->getUsername() + "@" + user_to_add->getHostname();
 	join_msg += " JOIN :" + this->chan_name + "\r\n";
-	ret = this->writeToAllChanUsers(join_msg); // Sent JOIN to everyone
+	ret = this->writeToAllChanUsers(join_msg, NULL); // Sent JOIN to everyone
 	params.push_back(this->chan_name);
 	params.push_back(this->chan_topic);
 	ret += irc::numericReply(332, user_to_add, params); // Sent Rpl_Topic to user added
@@ -292,7 +293,7 @@ int Channel::deleteUser(User* user_to_delete, std::string message) {
 	msg += " " + message + "\r\n";
 	for (std::vector<User *>::iterator it = vec_chan_users.begin(); it != vec_chan_users.end(); it++) {
 		if ((*it) == user_to_delete) {
-			writeToAllChanUsers(msg);
+			writeToAllChanUsers(msg, NULL);
 			vec_chan_users.erase(it);
 			user_to_delete->deleteChannel(this);
 			return (0);
@@ -314,7 +315,7 @@ int Channel::addOperator(User* operator_adding, User* operator_to_add) {
 		vec_chan_operators.push_back(operator_to_add);
 		msg = ":"+ operator_adding->getNickname() + "!" + operator_adding->getUsername() + "@" + operator_adding->getHostname();
 		msg += " MODE " + this->chan_name + " +o " + operator_to_add->getNickname() + "\r\n";
-		if (writeToAllChanUsers(msg) == -1) {
+		if (writeToAllChanUsers(msg, NULL) == -1) {
 			return (-1);
 		}
 	}
@@ -330,7 +331,7 @@ int Channel::deleteOperator(User* operator_deleting, User* operator_to_delete)
 			vec_chan_operators.erase(it);
 			msg = ":"+ operator_deleting->getNickname() + "!" + operator_deleting->getUsername() + "@" + operator_deleting->getHostname();
 			msg += " MODE " + this->chan_name + " -o " + operator_to_delete->getNickname() + "\r\n";
-			if (writeToAllChanUsers(msg) == -1) {
+			if (writeToAllChanUsers(msg, NULL) == -1) {
 				return (-1);
 			}
 			return (0);
@@ -347,7 +348,7 @@ int Channel::addBannedUser(User* user_banning, User* user_to_ban) {
 			vec_chan_banned_users.push_back(user_to_ban);
 			msg = ":"+ user_banning->getNickname() + "!" + user_banning->getUsername() + "@" + user_banning->getHostname();
 			msg += " MODE " + this->chan_name + " +b " + user_to_ban->getNickname() + "\r\n";
-			if (writeToAllChanUsers(msg) == -1) {
+			if (writeToAllChanUsers(msg, NULL) == -1) {
 				return (-1);
 			}
 			return (0);
@@ -364,7 +365,7 @@ int Channel::deleteBannedUser(User* user_unbanning, User* user_to_unban) {
 			vec_chan_banned_users.erase(it);
 			msg = ":"+ user_unbanning->getNickname() + "!" + user_unbanning->getUsername() + "@" + user_unbanning->getHostname();
 			msg += " MODE " + this->chan_name + " -b " + user_to_unban->getNickname() + "\r\n";
-			if (writeToAllChanUsers(msg) == -1) {
+			if (writeToAllChanUsers(msg, NULL) == -1) {
 				return (-1);
 			}
 			return (0);

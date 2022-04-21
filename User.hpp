@@ -173,7 +173,7 @@ namespace irc
 			void		quit(std::vector<std::string> channels);
 			void		privmsgToUser(User* dest, std::string msg);
 			void		privmsgToChannel(Channel* channel, std::string msg);
-			void		noticeToUser(User* dest, std::string msg);
+			void		noticeToUser(User* dest, std::string msg, bool from_server);
 			void		noticeToChannel(Channel* channel, std::string msg);
 			void		notice(std::string msg);
 			void		receiveWallops(std::string msg);
