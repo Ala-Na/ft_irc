@@ -284,6 +284,7 @@ int	User::away(std::string msg)
 	{
 		set_a(true);
 		setAwayMessage(msg);
+		params.push_back(getNickname());
 		params.push_back(msg);
 		ret = irc::numericReply(301, this, params);
 	}
