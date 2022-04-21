@@ -89,8 +89,7 @@ void	Command::intNick() {
 	this->server.checkNick(this->user, this->param);
 }
 
-// TODO modify to call User::whois(User* who) with User as current user and who as searched user
-// TODO only keep ERR verification here
+
 void	Command::intWhoIs() {
 	std::vector<std::string>	arg;
 	std::vector<std::string>	names;
@@ -109,15 +108,15 @@ void	Command::intWhoIs() {
 		}
 		return ;
 	}
-	if (arg.size() == 1) {
-		names = irc::split(arg[0], ",");
-	} else {
+	if (arg.size() >= 2) {
 		names = irc::split(arg[1], ",");
+	} else {
+		names = irc::split(arg[0], ",");
 	}
 	for (int i = 0; i < names.size(); i++) {
-		arg.clear();
 		User* who = this->server.getUserByNick(names[i]);
 		if (who == NULL) {
+			arg.clear();
 			arg.push_back(names[i]);
 			if (irc::numericReply(401, user, arg) == -1) {
 				this->server.deleteUser(this->user);
@@ -133,40 +132,42 @@ void	Command::intWhoIs() {
 }
 
 void	Command::intUserhost() {
-	std::string param = getParam();
-	std::vector<std::string>	params;
-	unsigned long				i;
+	std::vector<std::string>	nicks;
+	std::string					reply = "";
 
-	std::string	reply;
-	params = irc::split(param, " ");
-	if (params.size() == 0)	// ERR_NEEDMOREPARAMS
-	{
-		std::vector<std::string> para;
-		params.push_back(prefix);
-		irc::numericReply(461, user, para);
+	if (param.empty()) {
+		nicks.push_back(this->prefix);
+		if (irc::numericReply(461, this->user, nicks) == -1) {
+			this->server.deleteUser(this->user);
+		}
 		return ;
 	}
-	i = 0;
-	while (i < params.size())
+	nicks = irc::split(param, " ");
+	for (int i = 0; i < nicks.size(); i++) {
 	{
-		reply.append(user->getNickname());
-		if (user->get_o())
-			reply.append("*");
-		reply.append("=");
-		if (user->get_a())
-			reply.append("-");
-		else
-			reply.append("+");
-		reply.append(user->getHostname());
-		if (params.size() > 1)
-			reply.append(" ");
-		// User::whois(usr);
-		i++;
+		User* usr = this->server.getUserByNick(nicks[i]);
+		if (usr != NULL) {
+			reply.append(usr->getNickname());
+			if (usr->get_o()) {}
+				reply.append("*");
+			}
+			reply.append("=");
+			if (usr->get_a()) {
+				reply.append("-");
+			} else {
+				reply.append("+");
+			}
+			reply.append(usr->getHostname());
+			if (i < nicks.size() - 1) {
+				reply.append(" ");
+			}
+		}
 	}
-	std::vector<std::string> arg;
-	arg.push_back(reply);
-	irc::numericReply(302, user, arg);
-
+	nicks.clear();
+	nicks.push_back(reply);
+	if (irc::numericReply(302, user, nicks) == -1) {
+		this->server.deleteUser(this->user);
+	}
 }
 
 void	Command::intAway() {
