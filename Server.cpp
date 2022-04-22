@@ -152,7 +152,6 @@ int	Server::runServer() {
 		} else if (running == true) {
 			if (pfds[0].revents & POLLIN) {
 				this->createUser();
-				operators.push_back(users[0]);
 			}
 			this->receiveDatas();
 		}
@@ -221,36 +220,16 @@ void	Server::deleteUser(User* user) {
 }
 
 void	Server::deleteUserFromChannels(User* user) {
-	unsigned long i = 0;
-	while (i < channels.size())
-	{
-		if (channels[i]->userIsInChanFromUsername(user->getUsername()))
-		{
+	for (size_t i = 0; i < channels.size(); i++) {
+		if (channels[i]->userIsInChanFromNickname(user->getNickname())) {
 			channels[i]->deleteUser(user, " PART");
 		}
-		i++;
 	}
-	return ;
 }
-
-int	Server::isServOp(User & user)
-{
-	unsigned long	i;
-
-	i = 0;
-	while (i < operators.size())
-	{
-		if (operators[i]->getNickname() == user.getNickname())
-			return (1);
-		i++;
-	}
-	return (0);
-}
-
 
 Channel*	Server::createChannel(std::string name) {
 	srand(time(0));
-	if (name.find_first_of(" :,\007") != std::string::npos || name.find_first_of("#+!") != 0 || name.length() > 50) {
+	if (name.find_first_of(" :,\007") != std::string::npos || name.find_first_of("#") != 0 || name.length() > 50) {
 		this->channels.push_back(new Channel(this, "#"));
 		return this->channels.back();
 	}

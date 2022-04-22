@@ -375,8 +375,6 @@ void	User::sendMode(User* ope, std::string mode_msg) {
 	}
 }
 
-// this = changing user
-// ope = operator who change this user mode; can be operator or same user than this
 void	User::mode(User* ope, std::string new_modes) {
 	std::vector<std::string>	params;
 
@@ -418,10 +416,8 @@ void	User::mode(User* ope, std::string new_modes) {
 		} else if (*it == 'o' && plus == false && get_o() == true) {
 			set_o(false);
 			sendMode(ope, mode_msg + "-o");
-		} else if (valid.find_first_of(*it)) {
-			params.push_back(std::string(*it, 1));
-			irc::numericReply(472, ope, params);
-			params.clear();
+		} else if (valid.find_first_of(*it) == std::string::npos && !isspace(*it)) {
+			irc::numericReply(501, ope, params);
 		}
 		it++;
 	}

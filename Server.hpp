@@ -83,7 +83,6 @@ namespace irc {
 			void						sendError (User* user, std::string parameter);
 			void						sendPong (User* user, std::string parameter);
 			void						getAdmin (User* user, std::string parameters);
-			int							isServOp (User & user);
 
 			User*						getSpecificUser (size_t user_nb);
 			Channel*					getChannelByName (std::string name);
@@ -102,7 +101,7 @@ namespace irc {
 
 			int							setServOperator (User* user);
 			void						deleteServOperator (User* user);
-			bool						isServOperator(User *user);
+			bool						isServOperator(User* user);
 
 			void						sendWallops(std::string msg);
 
