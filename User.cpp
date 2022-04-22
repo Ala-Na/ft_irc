@@ -218,9 +218,9 @@ void	User::deleteChannel(Channel* chan)
 void	User::nick(std::string nickname, bool send_msg) {
 	std::string	nick_msg;
 
-	setNickname(nickname);
+	nick_msg = ":" + this->_nickname + "!" + this->_username + "@" + this->_hostname;
+	this->setNickname(nickname);
 	if (send_msg == true) {
-		nick_msg = ":" + this->_nickname + "!" + this->_username + "@" + this->_hostname;
 		nick_msg += " NICK :" + nickname + "\r\n";
 		if (irc::sendString(this->getFd(), nick_msg) == -1) {
 			return (this->_server->deleteUser(this));
