@@ -74,6 +74,14 @@ namespace irc
 
 			std::string					getModesString();
 
+				// UserModes Setters
+
+			// flags bool
+			// bool		isAway();
+			// bool		isInvisible();
+			// bool		isWallops();
+			// bool		isRestricted();
+			// bool		isOperator();
 			bool		isRegistered();
 
 			// Setters

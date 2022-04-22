@@ -102,7 +102,7 @@ int	irc::sendNumeric(int fd, std::string msg) {
 /* 433 */ std::string	irc::ErrNicknameInUse (std::string nick) { return (" " + nick + " :Nickname is already in use"); }
 // 436 - No need
 // 437 - No need
-/* 441 */ std::string	irc::ErrUserNotInChannel (std::string nick, std::string channel) { return (" " + nick + " " + channel +" : They aren't on that channel"); }
+/* 441 */ std::string	irc::ErrUserNotInChannel (std::string to_kick_nick, std::string channel) { return (" " + to_kick_nick + " " + channel +" :They aren't on that channel"); }
 /* 442 */ std::string	irc::ErrNotOnChannel (std::string channel) { return (" " + channel + " :You're not on that channel"); }
 /* 443 */ std::string	irc::ErrUserOnChannel (std::string user, std::string channel) { return (" " + user + " " + channel +" :is already on channel"); }
 /* 444 */ std::string	irc::ErrNoLogin (std::string user) { return (" " + user + " :Not logged in"); }
@@ -323,7 +323,7 @@ std::string	irc::replyString(int num_nb, User* user, std::vector<std::string>& s
 			msg += irc::ErrNicknameInUse(s_params[0]);
 			break;
 		case 441:
-			msg += irc::ErrUserNotInChannel(nick, s_params[0]);
+			msg += irc::ErrUserNotInChannel(s_params[0], s_params[1]);
 			break;
 		case 442:
 			msg += irc::ErrNotOnChannel(s_params[0]);

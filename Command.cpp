@@ -585,69 +585,82 @@ void    Command::intNames() {
 
 void Command::intKick() {
 	std::vector<std::string>	vec;
-	std::vector<std::string>	vec_chan_names;
-	std::vector<std::string>	vec_usernames;
+	std::vector<std::string>	chans;
+	std::vector<std::string>	users;
 	std::string                 message;
-	std::string                 name;
-	std::string                 user_str;
-	unsigned long				i;
-	Channel                     *chan_found;
+	Channel                     *kick_from;
 	std::vector<std::string>	params;
 
 	vec = irc::split(param, " ", 0);
 	if (vec.size() < 2)      // ERR_NEEDMOREPARAMS
 	{
 		params.push_back(prefix);
-		irc::numericReply(461, user, params);
+		if (irc::numericReply(461, user, params) == -1) {
+			this->server.deleteUser(this->user);
+		}
 		return ;
 	}
-	vec_chan_names = irc::split(vec[0], ",", 0);
-	vec_usernames = irc::split(vec[1], ",", 0);
-	if (vec[2].size() > 0)
-		message = vec[2];
-	else
-		message = user->getNickname() + " has kicked you\n";
-	if (vec_chan_names.size() == 0 ||
-		vec_usernames.size() == 0 ||
-		(vec_chan_names.size() > 1 && vec_chan_names.size() != vec_usernames.size()))    // ERR_NEEDMOREPARAMS
+	chans = irc::split(vec[0], ",", 0);
+	users = irc::split(vec[1], ",", 0);
+	if (vec.size() > 2 && vec[2] != ":") {
+		message = vec[2].erase(0, 1);
+	}
+	else {
+		message = "no reason";
+	}
+	if (chans.size() == 0 || users.size() == 0 ||
+		(chans.size() > 1 && chans.size() != users.size()))    // ERR_NEEDMOREPARAMS
 	{
 		params.push_back(prefix);
-		irc::numericReply(461, user, params);
+		if (irc::numericReply(461, user, params) == -1) {
+			this->server.deleteUser(this->user);
+		}
 		return ;
 	}
-	if (vec_chan_names.size() > 1)
-	{
-		i = 0;
-		while (i < vec_chan_names.size())
-		{
-			chan_found = NULL;
-			name = vec_chan_names[i];
-			user_str = vec_usernames[i];
-			if (name[0] != '&' && name[0] != '#' && name[0] != '+' && name[0] !=  '!')
-				name.insert(0, "#");
-			chan_found = server.getChannelByName(name);
-			if (chan_found == NULL) // ERR_NOSUCHCHANNEL
-			{
-				params.push_back(name);
-				irc::numericReply(403, user, params);
-			}
-			if (chan_found->userIsInChanFromUsername(user_str) == 0)	// ERR_USERNOTINCHANNEL
-			{
-				params.push_back(user_str);
-				params.push_back(name);
-				irc::numericReply(441, user, params);
-				i++;
-				continue ;
-			}
-			else
-			{
-				chan_found->deleteUser((chan_found->getUserFromUsername(user_str)), message);
-				// TODO : modify message to : "KICK chan_name user_kicking :reason"
-			}
-			i++;
-		}
+	for (size_t i = 0; i < users.size(); i++) {
+		if (chans[i][0] !=  '#')
+			chans[i].insert(0, "#");		
 	}
-	return ;
+	for (size_t i = 0; i < users.size(); i++) {
+		if (chans.size() > 1) {
+			kick_from = server.getChannelByName(chans[i]);
+		} else {
+			kick_from = server.getChannelByName(chans[0]);
+		}
+		if (kick_from == NULL) { // ERR_NOSUCHCHANNEL
+			params.push_back(chans[i]);
+			if (irc::numericReply(403, user, params) == -1) {
+				this->server.deleteUser(this->user);
+				return ;
+			}
+			continue ;
+		} else if (kick_from->userIsInChanFromNickname(this->user->getNickname()) == 0) {
+			params.push_back(chans[i]);
+			if (irc::numericReply(442, user, params) == -1) { //ERR_NOTONCHANNEL
+				this->server.deleteUser(this->user);
+				return ;
+			}
+			continue ;			
+		} else if (kick_from->isOperator(this->user) == 0) {
+			params.push_back(chans[i]);
+			if (irc::numericReply(482, user, params) == -1) { //ERR_NOTONCHANNEL
+				this->server.deleteUser(this->user);
+				return ;
+			}
+			continue ;				
+		} else if (kick_from->userIsInChanFromNickname(users[i]) == 0)	{ // ERR_USERNOTINCHANNEL
+			params.push_back(users[i]);
+			params.push_back(chans[i]);
+			if (irc::numericReply(441, user, params) == -1) {
+				this->server.deleteUser(this->user);
+				return ;
+			}
+			continue ;
+		}
+		message = ":" + this->user->getNickname() + "!" + this->user->getUsername() + \
+			"@" + this->user->getHostname() + " KICK " + chans[i] + " " + users[i] + " :" + message;
+		kick_from->deleteUser((kick_from->getUserFromNickname(users[i])), message, true);
+	}
 }
 
 void Command::intTopic()				// when client sends /topic or /topic channel, server gets no request... But irssi answers by giving topic
