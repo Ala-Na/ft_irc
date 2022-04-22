@@ -152,7 +152,6 @@ int	Server::runServer() {
 		} else if (running == true) {
 			if (pfds[0].revents & POLLIN) {
 				this->createUser();
-				operators.push_back(users[0]);
 			}
 			this->receiveDatas();
 		}
@@ -227,21 +226,6 @@ void	Server::deleteUserFromChannels(User* user) {
 		}
 	}
 }
-
-int	Server::isServOp(User & user)
-{
-	unsigned long	i;
-
-	i = 0;
-	while (i < operators.size())
-	{
-		if (operators[i]->getNickname() == user.getNickname())
-			return (1);
-		i++;
-	}
-	return (0);
-}
-
 
 Channel*	Server::createChannel(std::string name) {
 	srand(time(0));

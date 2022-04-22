@@ -47,7 +47,7 @@ std::string	Command::getWord () {
 
 void	Command::goToExecution () {
 	// TODO delete unimplemented functions
-	int const nbr_cmd = 26;
+	int const nbr_cmd = 25;
 	void (Command::*pmf[nbr_cmd])() = {&Command::intPass, &Command::intNick, \
 		&Command::intUser, &Command::intOper, \
 		&Command::intJoin, &Command::intTopic, &Command::intMode, \
@@ -56,11 +56,11 @@ void	Command::goToExecution () {
 		&Command::intNotice, &Command::intKill, &Command::intQuit, \
 		&Command::intWhoIs, &Command::intAway, &Command::intWallops, \
 		&Command::intUserhost, &Command::intSquit, &Command::intMotd, \
-		&Command::intError, &Command::intSummon, &Command::intUsers, &Command::intPing};
+		&Command::intSummon, &Command::intUsers, &Command::intPing};
 	std::string msg[nbr_cmd] = {"PASS", "NICK", "USER", "OPER", "JOIN", "TOPIC", "MODE", "PART", "NAMES", \
 		"LIST", "INVITE", "KICK", "PRIVMSG", "NOTICE", "KILL", "QUIT", \
 		"WHOIS", "AWAY", "WALLOPS", "USERHOST", "SQUIT", \
-		"MOTD", "ERROR", "SUMMON", "USERS", "PING"};
+		"MOTD", "SUMMON", "USERS", "PING"};
 
 	// TODO delete following sentence
 	std::cout << this->prefix << std::endl;
@@ -450,12 +450,13 @@ void Command::intOper() {
 			this->server.deleteUser(this->user);
 		}
 		return ;
-	} else if (this->user->get_o() ==  false) {
+	} else if (this->user->get_o() == false) {
 		if (this->server.setServOperator(this->user) == -1) {
 			this->server.deleteUser(this->user);
 			return ;
 		}
 	}
+	this->prefix = "MODE";
 	this->param = this->user->getNickname();
 	intMode();
 	return ;
@@ -663,8 +664,6 @@ void Command::intKick() {
 	}
 }
 
-// TODO continue following
-
 void Command::intTopic() {
 	std::vector<std::string>	vec;
 	std::string                 new_topic;
@@ -724,64 +723,47 @@ void Command::intMotd() {
 	this->server.getMotd(this->user, param);
 }
 
-int	Command::isServerOperator(User & user)
-{
-	unsigned long	i;
-	std::vector<User *>	operators;
-
-	i = 0;
-	operators = server.getServOp();
-
-	while (i < operators.size())
-	{
-		if (operators[i]->getNickname() == user.getNickname())
-			return (1);
-		i++;
-	}
-	return (0);
-}
-
 void Command::intKill() {
 	std::vector<std::string>		vec;
-	std::string             		nickname;
-	std::string             		comment;
-	User *                      	user_to_kill;
-	std::vector<User *>::iterator	found;
+	User*                   	   	user_to_kill;
 	std::vector<std::string> 		params;
+	std::vector<Channel *>			chans;
 
 	vec = irc::split(param, " ", 0);
 	if (vec.size() < 2)      // ERR_NEEDMOREPARAMS
 	{
 		params.push_back(prefix);
-		irc::numericReply(461, user, params);
+		if (irc::numericReply(461, user, params) == -1) {
+			this->server.deleteUser(this->user);
+		}
+		return ;
+	} else if (server.isServOperator(this->user) == false) { // ERR_NOPRIVILEGES
+		if (irc::numericReply(481, user, params) == -1) {
+			this->server.deleteUser(this->user);
+		}
 		return ;
 	}
-	nickname = vec[0];
-	comment = vec[1];
-	if (server.isServOp(*user) == 0)  // ERR_NOPRIVILEGES
-	{
-		irc::numericReply(481, user, params);
+	user_to_kill = server.getUserByNick(vec[0]);
+	if (user_to_kill == NULL) {  // ERR_NOSUCHNICK
+		params.push_back(vec[0]);
+		if (irc::numericReply(401, user, params) == -1) {
+			this->server.deleteUser(this->user);
+		}
 		return ;
 	}
-	user_to_kill = server.getUserByNick(nickname);
-	if (user_to_kill == NULL)  // ERR_NOSUCHNICK
-	{
-		params.push_back(nickname);
-		irc::numericReply(401, user, params);
-		return ;
+	chans = user_to_kill->getChannels();
+	vec[1].erase(0,1);
+	if (vec[1].empty()) {
+		vec[1] = "no reason specified";
 	}
-	std::vector<User *>	users = server.getServUsers();
-	found = find(users.begin(), users.end(), user_to_kill);
-	if (found == users.end())
-	{
-		std::cerr << "Cannot delete user: not found\n";
-		return ;
+	for (size_t i = 0; i < chans.size(); i++) {
+		chans[i]->deleteUser(user_to_kill, "PART " + chans[i]->getChanName() + " :KILL - " + vec[1]);
 	}
-	users.erase(found);
-	// close socket ??
-	return ;
+	this->server.sendError(user_to_kill, "KILL - " + vec[1]);
+	this->server.deleteUser(user_to_kill);
 }
 
+// TODO check following
 int 	HasInvalidMode(std::string letters)
 {
 	unsigned long	i;
@@ -934,7 +916,7 @@ void		Command::intSquit() {
 		return ;
 	}
 	std::vector<std::string> arg;
-	if (server.isServOp(*user) == 0)  // ERR_NOPRIVILEGES
+	if (server.isServOperator(user) == true)  // ERR_NOPRIVILEGES
 	{
 		irc::numericReply(481, user, arg);
 		return ;
@@ -947,20 +929,6 @@ void		Command::intSquit() {
 		irc::numericReply(402, user, params);
 	}
 	// close connection ?????
-}
-
-// The ERROR message is also used before terminating a client
-//    connection.
-/*
-   When a server sends a received ERROR message to its operators, the
-   message SHOULD be encapsulated inside a NOTICE message, indicating
-   that the client was not responsible for the error.
-*/
-void		Command::intError() {
-	std::vector<std::string> msg;
-	msg.push_back("The client was not responsible for the error.");
-	user->setParams(msg);
-	intNotice();
 }
 
 void	Command::intSummon() {

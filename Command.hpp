@@ -68,15 +68,9 @@ namespace irc {
 			void		intUserhost();
 			void		intSquit();
 			void		intMotd();
-			void		intError();
 			void		intSummon();
 			void		intUsers();
 			void		intPing();
-			// void		intUserMode();
-			// void		intChannelMode();
-
-			int			isServerOperator(User & user);
-
 	};
 };
 
