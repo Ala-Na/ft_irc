@@ -336,7 +336,6 @@ int	User::whois(User* who)
 		channels += (*it)->getChanName() + " ";
 	}
 	params.push_back(channels);
-	std::cout << "here 3" << std::endl;
 	if (irc::numericReply(319, this, params) == -1) {
 		return (-1);
 	}
@@ -347,7 +346,9 @@ int	User::whois(User* who)
 		return (-1);
 	}
 	params.clear();
+	std::cout << "Before away"<< std::endl;
 	if (this->get_a() == true) {
+		std::cout << "AWAY"<< std::endl;
 		params.push_back(this->_nickname);
 		params.push_back(this->_away_message);
 		if (irc::numericReply(301, this, params) == -1) {

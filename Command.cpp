@@ -583,6 +583,7 @@ void    Command::intNames() {
 	}
 }
 
+// TODO check following
 void Command::intKick() {
 	std::vector<std::string>	vec;
 	std::vector<std::string>	vec_chan_names;

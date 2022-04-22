@@ -189,7 +189,8 @@ int Channel::listAllUsersInChan(User* user_asking)
 	std::string					names = "";
 	std::string					type;
 	std::vector<std::string>	params;
-	bool						in_chan = this->userIsInChanFromNickname(user_asking->getNickname());
+	int							in_chan = this->userIsInChanFromNickname(user_asking->getNickname());
+	bool						is_oper = this->server->isServOperator(user_asking);
 
 	type = this->getChanMode();
 	if (type.find("s") != std::string::npos) {
@@ -202,10 +203,9 @@ int Channel::listAllUsersInChan(User* user_asking)
 	params.push_back(type);
 	params.push_back(this->getChanName());
 	for (size_t i = 0; i < vec_chan_users.size(); i++) {
-		if (in_chan == 0 && vec_chan_users[i]->get_i() == true) {
+		if (is_oper == false && in_chan == 0 && vec_chan_users[i]->get_i() == true) {
 			continue ;
-		}
-		if (this->isOperator(vec_chan_users[i]) == 1) {
+		} else if (this->isOperator(vec_chan_users[i]) == 1) {
 			names += "@";
 		}
 		names += vec_chan_users[i]->getNickname();
