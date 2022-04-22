@@ -466,7 +466,7 @@ void Command::intPart() {
 	std::vector<std::string>	chans;
 	Channel                     *to_part;
 	std::vector<std::string> 	params;
-	std::string					part_msg = "PART ";
+	std::string					part_msg;
 
 	vec = irc::split(param, ":", 0);
 	chans = irc::split(vec[0], ",", 0);
@@ -478,6 +478,7 @@ void Command::intPart() {
 		return ;
 	}
 	for (size_t i = 0; i < chans.size(); i++) {
+		part_msg = "PART ";
 		chans[i] = irc::trim(chans[i], " ");
 		if (chans[i][0] != '#') {
 			chans[i].insert(0, "#");
@@ -508,30 +509,15 @@ void Command::intPart() {
 
 void    Command::intQuit() {
 	std::string                 message;
-	unsigned long				i;
 	std::vector<Channel *>    	vec_chan;
-	Channel                     *chan_found;
-	std::string                 name;
+	std::string                 chan_name;
 
 	message = irc::trim(param, ":");
-	vec_chan = user->getChannels();
-	i = 0;
-	while (i < vec_chan.size())
-	{
-		chan_found = NULL;
-		name = vec_chan[i]->getChanName();
-		if (name[0] != '&' && name[0] != '#' && name[0] != '+' && name[0] !=  '!')
-			name.insert(0, "#");
-		chan_found = server.getChannelByName(name);
-		std::cout << message << std::endl;
-		if (chan_found->writeToAllChanUsers(message, NULL) == -1) {
-			this->server.deleteUser(user);
-			return ;
-		}
-		chan_found->deleteUser(user, "PART " + chan_found->getChanName() + ":" + message);
-		i++;
-	}
+	vec_chan = this->user->getChannels();
 	this->server.sendError(user, this->param);
+	for (size_t i = 0; i < vec_chan.size(); i++) {
+		vec_chan[i]->deleteUser(user, "QUIT :" + message);
+	}
 	this->server.deleteUser(user);
 }
 

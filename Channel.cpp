@@ -296,9 +296,14 @@ int Channel::deleteUser(User* user_to_delete, std::string message) {
 
 	msg = ":" + user_to_delete->getNickname() + "!" + user_to_delete->getUsername() + "@" + user_to_delete->getHostname();
 	msg += " " + message + "\r\n";
+	std::cout << msg << std::endl;
 	for (std::vector<User *>::iterator it = vec_chan_users.begin(); it != vec_chan_users.end(); it++) {
 		if ((*it) == user_to_delete) {
-			writeToAllChanUsers(msg, NULL);
+			if (message.find("QUIT") == 0) {
+				writeToAllChanUsers(msg, user_to_delete);
+			} else {
+				writeToAllChanUsers(msg, NULL);
+			}
 			vec_chan_users.erase(it);
 			user_to_delete->deleteChannel(this);
 			return (0);
