@@ -797,105 +797,111 @@ void	 Command::intMode() {
 	std::string                 letters;
 	std::string             	arg;
 	std::string                 message;
-	int                         ret;
-	Channel *                   chan_found;
-	User *                      user_found;
+	//Channel*                   chan_found;
+	User*                      mode_user;
 	std::vector<std::string> 	params;
 
 	vec = irc::split(param, " ", 0);
-	std::cout << "vec[0]: " << vec[0] << std::endl;
-	std::cout << "vec[1]: " << vec[1] << std::endl;
-	// std::cout << "vec[2]: " << vec[2] << std::endl;
-	user->mode(user, vec[1]);
-	/*
-	221    RPL_UMODEIS
-			"<user mode string>"
-
-		- To answer a query about a client's own mode,
-		RPL_UMODEIS is sent back.
-	*/
-	if (vec.size() < 2)      // ERR_NEEDMOREPARAMS
-	{
+	if (vec.size() < 1) { // ERR_NEEDMOREPARAMS
 		params.push_back(prefix);
-		irc::numericReply(461, user, params);
-		return ;
-	}
-	name = vec[0];			// can be name of channel OR USER... :'(
-	if (name[0] != '#')
-		name.insert(0, "#");
-	chan_found = server.getChannelByName(name);
-	if (chan_found == NULL)
-	{
-		name = irc::trim(name, "#");
-		user_found = server.getUserByNick(name);
-		if (user_found == NULL)
-		{
-			std::cout << "No such channel or user.\n";
-			return ;
-		}
-	}
-	mode = vec[1];
-	if (mode[0] != '-' && mode[0] != '+')
-		mode.insert(0, "+");
-	letters = irc::trim(mode, "-+");
-	if (HasInvalidMode(letters))     // ERR_UNKNOWNMODE
-	{
-		params.push_back(letters);
-		params.push_back(name);
-		irc::numericReply(472, user, params);
-		return ;
-	}
-	arg = "";
-	if (vec.size() > 2)
-		arg = vec[2];
-	if (chan_found)
-		chan_found->addMode(letters);
-	if (irc::there_is_no('k', letters) == 0 && vec.size() == 3)			// set or unset channel password
-	{
-		if (mode[0] == '-' && arg == chan_found->getChanPassword())
-			chan_found->setChanPassword("");
-		else if (mode[0] == '-' && arg != chan_found->getChanPassword())    // ERR_KEYSET
-		{
-			params.push_back(name);
-			irc::numericReply(467, user, params);
-			return ;
-		}
-		else if (mode[0] == '+')
-			chan_found->setChanPassword(arg);
-	}
-	if (irc::there_is_no('l', letters) == 0)		// set or unset nb max of users in channel
-	{
-		if (mode[0] == '-' && vec.size() == 2)
-			chan_found->setMaxNbUsersInChan(100);
-		else if (mode[0] == '+')
-			chan_found->setMaxNbUsersInChan(std::atoi(arg.c_str()));
-	}
-	if (irc::there_is_no('o', letters) == 0 && vec.size() == 3)		// set or unset an operator
-	{
-		user_found = server.getUserByUsername(arg);
-		if (user_found == NULL)         // ERR_USERNOTINCHANNEL
-		{
-			params.push_back(arg);
-			params.push_back(name);
-			irc::numericReply(441, user, params);
-			return ;
-		}
-		if (mode[0] == '-')
-			chan_found->deleteOperator(this->user, user_found);
-		else if (mode[0] == '+')
-			chan_found->addOperator(this->user, user_found);
-	}
-	if (irc::there_is_no('O', letters) == 0 && vec.size() == 2)		// set creator
-	{
-		message = chan_found->getChanCreator();
-		ret = irc::sendString(user->getFd(), message);
-		if (ret == -1)
-		{
-			// TODO close connection
-			return ;
+		if (irc::numericReply(461, user, params) == -1) {
+			this->server.deleteUser(this->user);
 		}
 		return ;
 	}
+	mode_user = this->server.getUserByNick(vec[0]);
+	if (mode_user == NULL) {
+		// CHANNEL MODE
+		// TODO check/continue this maybe by making new function in Channel class
+		// with commented part ?
+		return ;
+	}
+	if (this->user != mode_user) { // ERR_USERSDONTMATCH
+		if (irc::numericReply(502, this->user, params) == -1) {
+			this->server.deleteUser(this->user);
+		}
+		return ;
+	}
+	this->param.erase(0, vec[0].size() + 1);
+	user->mode(user, this->param);
+
+
+	//name = vec[0];			// can be name of channel OR USER... :'(
+	//if (name[0] != '#')
+	//	name.insert(0, "#");
+	//chan_found = server.getChannelByName(name);
+	//if (chan_found == NULL)
+	//{
+	//	name = irc::trim(name, "#");
+	//	user_found = server.getUserByNick(name);
+	//	if (user_found == NULL)
+	//	{
+	//		std::cout << "No such channel or user.\n";
+	//		return ;
+	//	}
+	//}
+	//mode = vec[1];
+	//if (mode[0] != '-' && mode[0] != '+')
+	//	mode.insert(0, "+");
+	//letters = irc::trim(mode, "-+");
+	//if (HasInvalidMode(letters))     // ERR_UNKNOWNMODE
+	//{
+	//	params.push_back(letters);
+	//	params.push_back(name);
+	//	irc::numericReply(472, user, params);
+	//	return ;
+	//}
+	//arg = "";
+	//if (vec.size() > 2)
+	//	arg = vec[2];
+	//if (chan_found)
+	//	chan_found->addMode(letters);
+	//if (irc::there_is_no('k', letters) == 0 && vec.size() == 3)			// set or unset channel password
+	//{
+	//	if (mode[0] == '-' && arg == chan_found->getChanPassword())
+	//		chan_found->setChanPassword("");
+	//	else if (mode[0] == '-' && arg != chan_found->getChanPassword())    // ERR_KEYSET
+	//	{
+	//		params.push_back(name);
+	//		irc::numericReply(467, user, params);
+	//		return ;
+	//	}
+	//	else if (mode[0] == '+')
+	//		chan_found->setChanPassword(arg);
+	//}
+	//if (irc::there_is_no('l', letters) == 0)		// set or unset nb max of users in channel
+	//{
+	//	if (mode[0] == '-' && vec.size() == 2)
+	//		chan_found->setMaxNbUsersInChan(100);
+	//	else if (mode[0] == '+')
+	//		chan_found->setMaxNbUsersInChan(std::atoi(arg.c_str()));
+	//}
+	//if (irc::there_is_no('o', letters) == 0 && vec.size() == 3)		// set or unset an operator
+	//{
+	//	user_found = server.getUserByUsername(arg);
+	//	if (user_found == NULL)         // ERR_USERNOTINCHANNEL
+	//	{
+	//		params.push_back(arg);
+	//		params.push_back(name);
+	//		irc::numericReply(441, user, params);
+	//		return ;
+	//	}
+	//	if (mode[0] == '-')
+	//		chan_found->deleteOperator(this->user, user_found);
+	//	else if (mode[0] == '+')
+	//		chan_found->addOperator(this->user, user_found);
+	//}
+	//if (irc::there_is_no('O', letters) == 0 && vec.size() == 2)		// set creator
+	//{
+	//	message = chan_found->getChanCreator();
+	//	ret = irc::sendString(user->getFd(), message);
+	//	if (ret == -1)
+	//	{
+	//		// TODO close connection
+	//		return ;
+	//	}
+		return ;
+	//}
 }
 
 void		Command::intPass() {
