@@ -85,23 +85,22 @@ namespace irc {
 			void						getAdmin (User* user, std::string parameters);
 			int							isServOp (User & user);
 
-			std::string					getName ();
-			Server&						getServer ();
-			std::string					getInfos();
-
-			int							getMaxChannelbyUser() const;
-
 			User*						getSpecificUser (size_t user_nb);
 			Channel*					getChannelByName (std::string name);
 
 			User *						getUserByUsername (std::string name);
 			User *						getUserByNick (std::string nick);
 			std::string					getPass ();
+			std::string					getOpPass ();
 			std::string					getVersion ();
 			std::vector<User *>			getServOp ();
 			std::vector<User *>			getServUsers ();
-			
-			void						setServOperator (User* user);
+			std::string					getName ();
+			Server&						getServer ();
+			std::string					getInfos();
+			int							getMaxChannelbyUser() const;
+
+			int							setServOperator (User* user);
 			void						deleteServOperator (User* user);
 			bool						isServOperator(User *user);
 

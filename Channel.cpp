@@ -185,9 +185,9 @@ int	Channel::receivingAnInvitation(User* user_inviting, User* user_invited) {
 
 int Channel::listAllUsersInChan(User* user_asking)
 {
-	unsigned long				i;
+	unsigned long				i = 0;
 	int							ret;
-	std::string					names = 0;
+	std::string					names = "";
 	std::string					type;
 	std::vector<std::string>	params;
 
@@ -264,7 +264,7 @@ int Channel::addUser(User* user_to_add)
 		params.push_back(this->chan_name);
 		if (irc::numericReply(473, user_to_add, params) == -1) {
 			this->server->deleteUser(user_to_add);
-			return (-1);			
+			return (-1);
 		}
 		return (0);
 	}
@@ -290,7 +290,7 @@ int Channel::addUser(User* user_to_add)
 	return (0);
 };
 
-// Here, message is either a PART or KICK formated message (KICK/PART nick :reason)
+// Here, message is either a PART or KICK formated message (KICK/PART #channel (nick for KICK) :reason)
 int Channel::deleteUser(User* user_to_delete, std::string message) {
 	std::string msg;
 
@@ -315,7 +315,7 @@ int Channel::addOperator(User* operator_adding, User* operator_to_add) {
 			return (0); // User was already an operator
 		}
 	}
-	if (operator_adding != operator_to_add) { 
+	if (operator_adding != operator_to_add) {
 		vec_chan_operators.push_back(operator_to_add);
 		msg = ":"+ operator_adding->getNickname() + "!" + operator_adding->getUsername() + "@" + operator_adding->getHostname();
 		msg += " MODE " + this->chan_name + " +o " + operator_to_add->getNickname() + "\r\n";
@@ -340,7 +340,7 @@ int Channel::deleteOperator(User* operator_deleting, User* operator_to_delete)
 			}
 			return (0);
 		}
-	} 
+	}
 	return (0);
 };
 
@@ -357,7 +357,7 @@ int Channel::addBannedUser(User* user_banning, User* user_to_ban) {
 			}
 			return (0);
 		}
-	} 
+	}
 	return (0);
 };
 
@@ -374,6 +374,6 @@ int Channel::deleteBannedUser(User* user_unbanning, User* user_to_unban) {
 			}
 			return (0);
 		}
-	} 
+	}
 	return (0);
 };

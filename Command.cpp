@@ -61,8 +61,8 @@ void	Command::goToExecution () {
 		"LIST", "INVITE", "KICK", "PRIVMSG", "NOTICE", "KILL", "QUIT", \
 		"WHOIS", "AWAY", "WALLOPS", "USERHOST", "SQUIT", \
 		"MOTD", "ERROR", "SUMMON", "USERS", "PING"};
-	
-	// TODO delete following
+
+	// TODO delete following sentence
 	std::cout << this->prefix << std::endl;
 	for (unsigned long i = 0; i < nbr_cmd; i++) {
 		if (!this->prefix.compare(msg[i])) {
@@ -195,7 +195,7 @@ void	Command::intPrivMsg() {
 		if (irc::numericReply(412, this->user, params) == -1) {
 			this->server.deleteUser(this->user);
 		}
-		return ;	
+		return ;
 	}
 	if (is_chan.find_first_of(params[0]) == std::string::npos) {
 		User*	dest = this->server.getUserByNick(params[0]);
@@ -229,7 +229,7 @@ void	Command::intNotice() {
 	if (params.empty()) {
 		return ;
 	} else if (params.size() < 2) {
-		return ;	
+		return ;
 	}
 	if (is_chan.find_first_of(params[0]) == std::string::npos) {
 		User*	dest = this->server.getUserByNick(params[0]);
@@ -306,7 +306,7 @@ void Command::intJoin() {
 			}
 			i++;
 			continue ;
-		} 
+		}
 		if (vec_chan_names[i][0] != '#') {
 			vec_chan_names[i].append(0, '#');
 		}
@@ -324,7 +324,7 @@ void Command::intJoin() {
 			to_join->setChanOperators(op);
 			if (to_join->addUser(user) == -1) {
 				return ;
-			}   
+			}
 		} else {
 			if (vec_keys.size() > i && vec_keys[i] != to_join->getChanPassword()) {  // ERR_BADCHANNELKEY
 				params.push_back(vec_chan_names[i]);
@@ -422,103 +422,88 @@ void Command::intInvite() {
 	}
 }
 
-// TODO continue checking
-
-void Command::intOper()			// ??? Server does not receive this command and user is asked key but there is none...
-{
+// As there's no restriction for user to become OPER, ERR_NOOPERHOST is only
+// called when name doesn't suit the user nickname
+void Command::intOper() {
 	std::vector<std::string>	vec;
 	std::string                 name;
 	std::string                 key;
-	std::vector<std::string> 	params;
+	std::vector<std::string> 	arg;
 
 	vec = irc::split(param, " ", 0);
-	if (vec.size() < 2)  // ERR_NEEDMOREPARAMS
-	{
-		params.push_back(prefix);
-		irc::numericReply(461, user, params);
+	if (vec.size() < 2) { // ERR_NEEDMOREPARAMS
+		arg.push_back(prefix);
+		if (irc::numericReply(461, user, arg) == -1) {
+			this->server.deleteUser(this->user);
+		}
 		return ;
 	}
 	name = vec[0];
 	key = vec[1];
-	std::vector<std::string> arg;
-	if (key != server.getPass())    // ERR_PASSWDMISMATCH
-	{
-		irc::numericReply(464, user, arg);
+	if (name != this->user->getNickname()) {
+		if (irc::numericReply(491, this->user, arg) == -1) {
+			this->server.deleteUser(this->user);
+		}
 		return ;
-	} else if (user->get_o())  // RPL_YOUREOPER
-	{
-		irc::numericReply(481, user, arg);
+	} else if (key != server.getOpPass()) { // ERR_PASSWDMISMATCH
+		if (irc::numericReply(464, this->user, arg) == -1) {
+			this->server.deleteUser(this->user);
+		}
 		return ;
+	} else if (this->user->get_o() ==  false) {
+		if (this->server.setServOperator(this->user) == -1) {
+			this->server.deleteUser(this->user);
+			return ;
+		}
 	}
-	//this->server->setServerOperator(this->user);
+	this->param = this->user->getNickname();
+	intMode();
 	return ;
 }
 
 void Command::intPart() {
 	std::vector<std::string>	vec;
-	std::vector<std::string>	vec_chan_names;
-	std::string					name;
-	unsigned long				i;
-	Channel                     *chan_found;
+	std::vector<std::string>	chans;
+	Channel                     *to_part;
 	std::vector<std::string> 	params;
+	std::string					part_msg = "PART ";
 
 	vec = irc::split(param, ":", 0);
-	vec_chan_names = irc::split(vec[0], ",", 0);
-	std::cout << "INTPART 1\n";
-	if (vec_chan_names.size() == 0)  // ERR_NEEDMOREPARAMS
-	{
+	chans = irc::split(vec[0], ",", 0);
+	if (chans.size() == 0) {  // ERR_NEEDMOREPARAMS
 		params.push_back(prefix);
-		irc::numericReply(461, user, params);
+		if (irc::numericReply(461, user, params) == -1) {
+			this->server.deleteUser(this->user);
+		}
 		return ;
 	}
-	std::cout << "INTPART 2\n";
-
-	i = 0;
-	while (i < vec_chan_names.size())
-	{
-		vec_chan_names[i] = irc::trim(vec_chan_names[i], " ");
-		i++;
-	}
-	std::cout << "INTPART 3\n";
-
-	i = 0;
-	while (i < vec_chan_names.size())
-	{
-		chan_found = NULL;
-		name = vec_chan_names[i];
-		if (name[0] != '&' && name[0] != '#' && name[0] != '+' && name[0] !=  '!')
-			name.insert(0, "#");
-		chan_found = server.getChannelByName(name);
-		if (chan_found == NULL)     // ERR_NOSUCHCHANNEL
-		{
-			params.push_back(name);
-			irc::numericReply(403, user, params);
-			i++;
-			std::cout << "INTPART 4\n";
-			continue ;
+	for (size_t i = 0; i < chans.size(); i++) {
+		chans[i] = irc::trim(chans[i], " ");
+		if (chans[i][0] != '#') {
+			chans[i].insert(0, "#");
 		}
-		if (chan_found->userIsInChanFromUsername(user->getUsername()) == 0) // ERR_NOTONCHANNEL
-		{
-			params.push_back(name);
-			irc::numericReply(442, user, params);
-			i++;
-			std::cout << "INTPART 5\n";
-			continue ;
-		}
-		else
-		{
-			std::cout << "INTPART 5,5\nuser : " << user->getNickname() << std::endl;
-
-			chan_found->deleteUser(user, "");
-			if (vec.size() > 1) {
-				std::cout << "INTPART 6\n";
-				if (chan_found->writeToAllChanUsers(vec[1], NULL) == -1)
-					return ;
+		to_part = server.getChannelByName(chans[i]);
+		if (to_part == NULL) { // ERR_NOSUCHCHANNEL
+			params.push_back(chans[i]);
+			if (irc::numericReply(403, this->user, params) == -1) {
+				this->server.deleteUser(this->user);
+				return ;
 			}
+			continue ;
+		} else if (to_part->userIsInChanFromNickname(user->getNickname()) == 0) { // ERR_NOTONCHANNEL
+			params.push_back(chans[i]);
+			if (irc::numericReply(442, this->user, params) == -1) {
+				this->server.deleteUser(this->user);
+				return ;
+			}
+			continue ;
 		}
-		i++;
+		part_msg += chans[i] + " :";
+		if (vec.size() > 1) {
+			part_msg += vec[1];
+		}
+		to_part->deleteUser(this->user, part_msg);
 	}
-	return ;
 }
 
 void    Command::intQuit() {
@@ -546,7 +531,7 @@ void    Command::intQuit() {
 		chan_found->deleteUser(user, "PART " + chan_found->getChanName() + ":" + message);
 		i++;
 	}
-	this->server.sendError(user, this->param);	
+	this->server.sendError(user, this->param);
 	this->server.deleteUser(user);
 }
 
@@ -783,10 +768,10 @@ void Command::intKill() {
 	users.erase(found);
 	// close socket ??
 	return ;
-}	
+}
 
 int 	HasInvalidMode(std::string letters)
-{	
+{
 	unsigned long	i;
 
 	i = 0;
@@ -801,7 +786,7 @@ int 	HasInvalidMode(std::string letters)
 		i++;
 	}
 	return (0);
-}	
+}
 
 // TODO :
 // Do verification for ERR_NEEDMOREPARAMS
@@ -810,6 +795,7 @@ int 	HasInvalidMode(std::string letters)
 // If not : ERR_USERSDONTMATCH
 // Go to User->mode()
 // For Channel : LOOK UP RFC
+// Check that +o is correctly ignored
 void	 Command::intMode() {
 	std::vector<std::string>	vec;
 	std::string             	name;
@@ -968,18 +954,18 @@ void		Command::intError() {
 void	Command::intSummon() {
 	std::vector<std::string>	params;
 
-	irc::numericReply(445, user, params);	
+	irc::numericReply(445, user, params);
 }
 
 void	Command::intUsers() {
 	std::vector<std::string>	params;
 
-	irc::numericReply(446, user, params);		
+	irc::numericReply(446, user, params);
 }
 
 void	Command::intList() {
 	std::vector<std::string>	params;
-	
+
 	if (this->param.empty()) {
 		this->server.listChannels(this->user);
 	} else {

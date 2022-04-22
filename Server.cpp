@@ -37,7 +37,7 @@ int	Server::readConfFile() {
 	in.open("./ft_irc.conf", std::ifstream::in);
 	if (!in.good()) {
 		std::cerr << "Can't open configuration file" << std::endl;
-		std::cerr << "Please check that ./ft_irc.conf is present in Server folder" << std::endl; 
+		std::cerr << "Please check that ./ft_irc.conf is present in Server folder" << std::endl;
 		return (-1);
 	}
 	while (!in.eof() && in.good()) {
@@ -153,7 +153,6 @@ int	Server::runServer() {
 			if (pfds[0].revents & POLLIN) {
 				this->createUser();
 				operators.push_back(users[0]);
-				users[0]->set_o(true);
 			}
 			this->receiveDatas();
 		}
@@ -261,7 +260,7 @@ Channel*	Server::createChannel(std::string name) {
 		std::string 		s;
 		std::stringstream	out;
 		int					i;
-		
+
 		i = 0;
 		while (i < 5) {
 			random = rand() % 10;
@@ -326,22 +325,6 @@ void	Server::datasExtraction(std::string& buf, size_t pos) {
 	}
 }
 
-std::string	Server::getName() {
-	return ((this->conf.find("name"))->second);
-}
-
-Server&	Server::getServer() {
-	return *this;
-}
-
-std::string	Server::getInfos() {
-	return ((this->conf.find("infos"))->second);
-}
-
-int	Server::getMaxChannelbyUser() const {
-	return 10;
-}
-
 // Here, user_nb is from 0 to max - 1.
 User*	Server::getSpecificUser(size_t user_nb) {
 	if (user_nb < this->users.size())
@@ -393,6 +376,42 @@ User*	Server::getUserByNick(std::string nick)
 		i++;
 	}
 	return (NULL);
+}
+
+std::string	Server::getPass() {
+	return (password);
+}
+
+std::string	Server::getOpPass() {
+	return ((this->conf.find("op_pwd"))->second);
+}
+
+std::string	Server::getVersion() {
+	return (this->conf.find("version")->second);
+}
+
+std::vector<User *>	Server::getServOp() {
+	return (operators);
+}
+
+std::vector<User *>	Server::getServUsers() {
+	return (users);
+}
+
+std::string	Server::getName() {
+	return ((this->conf.find("name"))->second);
+}
+
+Server&	Server::getServer() {
+	return *this;
+}
+
+std::string	Server::getInfos() {
+	return ((this->conf.find("infos"))->second);
+}
+
+int	Server::getMaxChannelbyUser() const {
+	return 10;
 }
 
 void	Server::checkPassword(User* user, std::string parameters) {
@@ -493,7 +512,7 @@ void	Server::welcomeUser(User *user) {
 	if (irc::numericReply(3, user, params) == -1) {
 		this->deleteUser(user);
 		return ;
-	}	
+	}
 	params.clear();
 	params.push_back(this->conf.find("version")->second);
 	params.push_back("aiwro");
@@ -501,7 +520,7 @@ void	Server::welcomeUser(User *user) {
 	if (irc::numericReply(4, user, params) == -1) {
 		this->deleteUser(user);
 		return ;
-	}	
+	}
 	this->getMotd(user, "");
 }
 
@@ -544,7 +563,7 @@ void	Server::getMotd(User* user, std::string parameters) {
 			this->deleteUser(user);
 			return ;
 		}
-		param.clear();	
+		param.clear();
 	}
 	if (irc::numericReply(376, user, param) == -1) {
 		this->deleteUser(user);
@@ -570,7 +589,7 @@ void	Server::retrieveTime(User* user, std::string parameters) {
 	params.push_back(s_time);
 	if (irc::numericReply(391, user, params) == -1) {
 		this->deleteUser(user);
-	}	
+	}
 	return ;
 }
 
@@ -649,33 +668,17 @@ void	Server::sendPong (User* user, std::string server_name) {
 	}
 }
 
-std::string	Server::getPass()
-{
-	return (password);
-}
-
-std::string	Server::getVersion()
-{
-	return (this->conf.find("version")->second);
-}
-
-std::vector<User *>	Server::getServOp()
-{
-	return (operators);
-}
-
-std::vector<User *>	Server::getServUsers()
-{
-	return (users);
-}
-
-void	Server::setServOperator(User*	user) {
+int	Server::setServOperator(User*	user) {
 	std::vector<User *>::iterator it = std::find(this->operators.begin(), this->operators.end(), user);
 	if (it == this->operators.end()) {
 		this->operators.push_back(user);
+		user->set_o(true);
 	}
 	std::vector<std::string> params;
-	irc::numericReply(381, user, params);
+	if (irc::numericReply(381, user, params) == -1) {
+		return (-1);
+	}
+	return 0;
 
 }
 
@@ -683,14 +686,14 @@ void	Server::deleteServOperator(User* user) {
 	std::vector<User *>::iterator it = std::find(this->operators.begin(), this->operators.end(), user);
 	if (it != operators.end()) {
 		this->operators.erase(it);
-	}		
+	}
 }
 
 bool	Server::isServOperator(User *user) {
 	std::vector<User *>::iterator it = std::find(this->operators.begin(), this->operators.end(), user);
 	if (it != operators.end()) {
 		return true;
-	}		
+	}
 	return false;
 }
 
@@ -704,5 +707,5 @@ void	Server::sendWallops(std::string msg) {
 			irc::sendString((*it)->getFd(), full_msg);
 		}
 		it++;
-	}	
+	}
 }

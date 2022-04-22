@@ -23,7 +23,7 @@ User::~User() {}
 // GETTERS
 Server *	User::getServer()
 {
-	return (_server);	
+	return (_server);
 }
 
 std::string	User::getNickname()
@@ -113,16 +113,16 @@ std::string	User::getModesString() {
 	}
 	if (this->get_i() == true) {
 		modes += "i";
-	} 
+	}
 	if (this->get_w() == true) {
 		modes += "w";
-	} 
+	}
 	if (this->get_o() == true) {
 		modes += "o";
-	} 
+	}
 	if (this->get_r() == true) {
 		modes += "r";
-	} 		
+	}
 	if (!modes.empty()) {
 		modes.insert(modes.begin(), '+');
 	}
@@ -218,13 +218,13 @@ void	User::deleteChannel(Channel* chan)
 void	User::nick(std::string nickname, bool send_msg) {
 	std::string	nick_msg;
 
-	setNickname(nickname);
+	nick_msg = ":" + this->_nickname + "!" + this->_username + "@" + this->_hostname;
+	this->setNickname(nickname);
 	if (send_msg == true) {
-		nick_msg = ":" + this->_nickname + "!" + this->_username + "@" + this->_hostname;
 		nick_msg += " NICK :" + nickname + "\r\n";
 		if (irc::sendString(this->getFd(), nick_msg) == -1) {
 			return (this->_server->deleteUser(this));
-		}	
+		}
 	}
 }
 
@@ -352,19 +352,19 @@ int	User::whois(User* who)
 		params.push_back(this->_away_message);
 		if (irc::numericReply(301, this, params) == -1) {
 			return (-1);
-		}	
-		params.clear();	
+		}
+		params.clear();
 	}
 	if (this->_server->isServOperator(this) == true) {
 		params.push_back(this->_nickname);
 		if (irc::numericReply(313, this, params) == -1) {
 			return (-1);
-		}	
+		}
 	}
 	if (irc::numericReply(318, this, params) == -1) {
 		return (-1);
-	}	
-	return 0;	
+	}
+	return 0;
 }
 
 void	User::sendMode(User* ope, std::string mode_msg) {
