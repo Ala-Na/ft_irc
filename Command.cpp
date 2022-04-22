@@ -643,7 +643,7 @@ void Command::intKick() {
 			continue ;			
 		} else if (kick_from->isOperator(this->user) == 0) {
 			params.push_back(chans[i]);
-			if (irc::numericReply(482, user, params) == -1) { //ERR_NOTONCHANNEL
+			if (irc::numericReply(482, user, params) == -1) { //ERR_CHANOPRIVSNEEDED
 				this->server.deleteUser(this->user);
 				return ;
 			}
@@ -663,60 +663,61 @@ void Command::intKick() {
 	}
 }
 
-void Command::intTopic()				// when client sends /topic or /topic channel, server gets no request... But irssi answers by giving topic
-{
+// TODO continue following
+
+void Command::intTopic() {
 	std::vector<std::string>	vec;
-	std::string 	            name;
 	std::string                 new_topic;
-	Channel                     *chan_found;
+	Channel*                    chan;
 	std::vector<std::string>	params;
 
-	if (param.size() == 0)  // ERR_NEEDMOREPARAMS
-	{
+	if (param.size() == 0) { // ERR_NEEDMOREPARAMS
 		params.push_back(prefix);
-		irc::numericReply(461, user, params);
-		return ;
-	}
-	if (param[param.size() - 1] == ':')
-		param += " ";
-	std::cout << param << std::endl;
-	vec = irc::split(param, ":", 0);
-	name = vec[0];
-	if (name[0] != '&' && name[0] != '#' && name[0] != '+' && name[0] !=  '!')
-		name.insert(0, "#");
-	chan_found = server.getChannelByName(name);
-	if (chan_found == NULL) {
-		return ;
-	}
-	if (chan_found->userIsInChanFromUsername(user->getUsername()) == 0) { // ERR_NOTONCHANNEL
-		params.push_back(name);
-		irc::numericReply(442, user, params);
-		return ;
-	}
-	if (irc::there_is_no(':', param)) {    // RPL_TOPIC
-		params.push_back(name);
-		params.push_back(chan_found->getChanTopic());
-		irc::numericReply(332, user, params);
-		return ;
-	}
-	if (irc::there_is_no('t', chan_found->getChanMode()) == 0 && chan_found->isOperator(user) == 0) {// ERR_CHANOPRIVSNEEDED
-		params.push_back(name);
-		irc::numericReply(482, user, params);
-		return ;
-	} else {
-		if (vec.size() > 1 && vec[1] != " ")
-			new_topic = irc::trim(vec[1], ":");
-		else
-			new_topic = "";
-		chan_found->setChanTopic(new_topic, user);
-		// std::cout << "chan_found->getChanTopic(): " << chan_found->getChanTopic() << std::endl;
-		if (new_topic.size() == 0)      // RPL_NOTOPIC
-		{
-			params.push_back(name);
-			irc::numericReply(482, user, params);
+		if (irc::numericReply(461, user, params) == -1) {
+			this->server.deleteUser(this->user);
 		}
+		return ;
 	}
-	return ;
+	vec = irc::split(param, ":", 0);
+	if (vec[0][0] != '#') {
+		vec[0].insert(0, "#");
+	}
+	chan = server.getChannelByName(vec[0]);
+	if (chan == NULL) {
+		return ;
+	} else if (chan->userIsInChanFromNickname(user->getNickname()) == 0) { // ERR_NOTONCHANNEL
+		params.push_back(vec[0]);
+		if (irc::numericReply(442, user, params) == -1) {
+			this->server.deleteUser(this->user);
+		}
+		return ;
+	} else if (irc::there_is_no(':', param)) {    // RPL_TOPIC && RPL_NOTOPIC
+		params.push_back(vec[0]);
+		params.push_back(chan->getChanTopic());
+		if (params.back().empty()) {
+			if (irc::numericReply(331, user, params) == -1) {
+				this->server.deleteUser(this->user);
+			} else {
+				if (irc::numericReply(332, user, params) == -1) {
+					this->server.deleteUser(this->user);
+				}
+			}
+			return ;
+		}
+	} else if (irc::there_is_no('t', chan->getChanMode()) == 0 || chan->isOperator(this->user) == 0) { // ERR_CHANOPRIVSNEEDED
+		params.push_back(vec[0]);
+		if (irc::numericReply(482, user, params) == -1) {
+			this->server.deleteUser(this->user);
+		}
+		return ;
+	}
+	if (vec.size() > 1 && vec[1] != " ") {
+		new_topic = vec[1].erase(0);
+	}
+	else {
+		new_topic = "";
+	}
+	chan->setChanTopic(new_topic, user);
 }
 
 void Command::intMotd() {
@@ -838,7 +839,7 @@ void	 Command::intMode() {
 		return ;
 	}
 	name = vec[0];			// can be name of channel OR USER... :'(
-	if (name[0] != '&' && name[0] != '#' && name[0] != '+' && name[0] !=  '!')
+	if (name[0] != '#')
 		name.insert(0, "#");
 	chan_found = server.getChannelByName(name);
 	if (chan_found == NULL)

@@ -126,19 +126,6 @@ void	Channel::setVecChanBannedUsers(std::vector<User *> vec_banned_users) {
 	vec_chan_banned_users = vec_banned_users;
 };
 
-int	Channel::userIsInChanFromUsername(std::string username_to_search) {
-	unsigned long i;
-
-	i = 0;
-	while (i < vec_chan_users.size())
-	{
-		if (vec_chan_users[i]->getUsername() == username_to_search)
-			return (1);
-		i++;
-	}
-	return (0);
-};
-
 int	Channel::userIsInChanFromNickname(std::string nickname_to_search) {
 	unsigned long i;
 

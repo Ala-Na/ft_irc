@@ -221,16 +221,11 @@ void	Server::deleteUser(User* user) {
 }
 
 void	Server::deleteUserFromChannels(User* user) {
-	unsigned long i = 0;
-	while (i < channels.size())
-	{
-		if (channels[i]->userIsInChanFromUsername(user->getUsername()))
-		{
+	for (size_t i = 0; i < channels.size(); i++) {
+		if (channels[i]->userIsInChanFromNickname(user->getNickname())) {
 			channels[i]->deleteUser(user, " PART");
 		}
-		i++;
 	}
-	return ;
 }
 
 int	Server::isServOp(User & user)
@@ -250,7 +245,7 @@ int	Server::isServOp(User & user)
 
 Channel*	Server::createChannel(std::string name) {
 	srand(time(0));
-	if (name.find_first_of(" :,\007") != std::string::npos || name.find_first_of("#+!") != 0 || name.length() > 50) {
+	if (name.find_first_of(" :,\007") != std::string::npos || name.find_first_of("#") != 0 || name.length() > 50) {
 		this->channels.push_back(new Channel(this, "#"));
 		return this->channels.back();
 	}
