@@ -318,6 +318,7 @@ void	User::kick(Channel* chan, std::string reason)
 int	User::whois(User* who)
 {
 	std::vector<std::string>	params;
+	std::vector<Channel *> 		who_chan = who->getChannels();
 
 	params.push_back(who->getNickname());
 	params.push_back(who->getUsername());
@@ -329,8 +330,8 @@ int	User::whois(User* who)
 	params.clear();
 	params.push_back(who->getNickname());
 	std::string channels;
-	for (std::vector<Channel *>::iterator it = this->_channels.begin(); it != _channels.end(); it++) {
-		if ((*it)->isOperator(this) == 1) {
+	for (std::vector<Channel *>::iterator it = who_chan.begin(); it != who_chan.end(); it++) {
+		if ((*it)->isOperator(who) == 1) {
 			channels += "@";
 		}
 		channels += (*it)->getChanName() + " ";
@@ -340,24 +341,22 @@ int	User::whois(User* who)
 		return (-1);
 	}
 	params.clear();
-	params.push_back(this->_server->getName());
-	params.push_back(this->_server->getInfos());
+	params.push_back(who->getServer()->getName());
+	params.push_back(who->getServer()->getInfos());
 	if (irc::numericReply(312, this, params) == -1) {
 		return (-1);
 	}
 	params.clear();
-	std::cout << "Before away"<< std::endl;
-	if (this->get_a() == true) {
-		std::cout << "AWAY"<< std::endl;
-		params.push_back(this->_nickname);
-		params.push_back(this->_away_message);
+	if (who->get_a() == true) {
+		params.push_back(who->_nickname);
+		params.push_back(who->_away_message);
 		if (irc::numericReply(301, this, params) == -1) {
 			return (-1);
 		}
 		params.clear();
 	}
-	if (this->_server->isServOperator(this) == true) {
-		params.push_back(this->_nickname);
+	if (this->_server->isServOperator(who) == true) {
+		params.push_back(who->_nickname);
 		if (irc::numericReply(313, this, params) == -1) {
 			return (-1);
 		}
