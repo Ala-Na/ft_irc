@@ -522,51 +522,63 @@ void    Command::intQuit() {
 }
 
 void    Command::intNames() {
-	std::vector<Channel *>		vec_chan;
-	std::vector<std::string>	vec_chan_names;
-	std::string                 name;
-	unsigned long				i;
-	Channel                     *chan_found;
+	std::vector<Channel *>		chan;
+	std::vector<User *>			users;
+	std::vector<std::string>	chan_names;
+	std::vector<std::string>	params;
+	Channel                     *to_list;
 
-	if (param.empty())
-	{
-		i = 0;
-		vec_chan = user->getChannels();
-		while (i < vec_chan.size())
-		{
-			if (vec_chan[i]->listAllUsersInChan(user) == -1) {
+	params = (irc::split(param, " ", 0));
+	if (params.size() >= 2 && params[1] != this->server.getName()) {
+		params.erase(params.begin());
+		if (irc::numericReply(402, this->user, params) == -1) {
+			this->server.deleteUser(user);
+		}
+		return ;
+	}
+	param = params[0];
+	params.clear();
+	if (this->param.empty()) {
+		chan = user->getChannels();
+		for (size_t i = 0; i < chan.size(); i++) {
+			if (chan[i]->listAllUsersInChan(user) == -1) {
 				this->server.deleteUser(user);
 				return ;
 			}
-			i++;
 		}
-	}
-	else
-	{
-		vec_chan_names = irc::split(param, ",", 0);
-		i = 0;
-		while (i < vec_chan_names.size())
-		{
-			name = "";
-			chan_found = NULL;
-			if (vec_chan_names[i].size() != 0)
-				name = vec_chan_names[i];
-			if (name[0] != '&' && name[0] != '#' && name[0] != '+' && name[0] !=  '!') {
-				name.insert(0, "#");
-			}
-			chan_found = server.getChannelByName(name);
-			if (chan_found == NULL)
-			{
-				i++;
-				continue ;
-			}
-			else {
-				if (chan_found->listAllUsersInChan(user) == -1) {				// sent on welcome page? Not in channel just joined? Like motd
+		users = this->server.getServUsers();
+		for (size_t i = 0; i < users.size(); i++) {
+			if (users[i]->getNbOfChannels() == 0 && users[i]->get_i() == false) {
+				params.push_back("");
+				params.push_back("*");
+				params.push_back(users[i]->getNickname());
+				if (irc::numericReply(353, this->user, params) == -1) {
 					this->server.deleteUser(user);
-					return;
+					return ;
 				}
+				params.clear();
 			}
-			i++;
+		}
+		return ;
+	}
+	chan_names = irc::split(param, ",", 0);
+	for (size_t i = 0; i < chan_names.size(); i++) {
+		if (chan_names[i][0] != '#') {
+			chan_names[i].insert(0, "#");
+		}
+		to_list = server.getChannelByName(chan_names[i]);
+		if (to_list == NULL) {
+			params.push_back(chan_names[i]);
+			if (irc::numericReply(366, this->user, params) == -1) {
+				this->server.deleteUser(this->user);
+				return ;
+			}
+			params.clear();
+			continue ;
+		}
+		if (to_list->listAllUsersInChan(user) == -1) {
+			this->server.deleteUser(user);
+			return;
 		}
 	}
 }

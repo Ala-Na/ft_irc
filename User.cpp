@@ -455,4 +455,3 @@ bool	User::operator!=(User const &rhs) const
 {
 	return (!(*this == rhs));
 }
-
