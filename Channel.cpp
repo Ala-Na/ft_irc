@@ -62,13 +62,13 @@ std::string	Channel::getChanNameAndTopic() {
 	return (ret);
 };
 
-User* Channel::getUserFromUsername(std::string username) {
+User* Channel::getUserFromNickname(std::string nickname) {
 	unsigned long i;
 
 	i = 0;
 	while (i < vec_chan_users.size())
 	{
-		if (vec_chan_users[i]->getUsername() == username)
+		if (vec_chan_users[i]->getNickname() == nickname)
 			return (vec_chan_users[i]);
 		i++;
 	}
@@ -293,11 +293,14 @@ int Channel::addUser(User* user_to_add)
 };
 
 // Here, message is either a PART or KICK formated message (KICK/PART #channel (nick for KICK) :reason)
-int Channel::deleteUser(User* user_to_delete, std::string message) {
+int Channel::deleteUser(User* user_to_delete, std::string message, bool kick) {
 	std::string msg;
 
-	msg = ":" + user_to_delete->getNickname() + "!" + user_to_delete->getUsername() + "@" + user_to_delete->getHostname();
-	msg += " " + message + "\r\n";
+	if (kick == false) {
+		msg = ":" + user_to_delete->getNickname() + "!" + user_to_delete->getUsername() + "@" + user_to_delete->getHostname();
+		msg += " ";
+	}
+	msg += message + "\r\n";
 	std::cout << msg << std::endl;
 	for (std::vector<User *>::iterator it = vec_chan_users.begin(); it != vec_chan_users.end(); it++) {
 		if ((*it) == user_to_delete) {
