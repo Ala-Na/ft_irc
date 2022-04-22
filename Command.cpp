@@ -461,61 +461,49 @@ void Command::intOper() {
 	return ;
 }
 
-// TODO check following
-
 void Command::intPart() {
-// 	std::vector<std::string>	vec;
-// 	std::vector<std::string>	chans
-// 	std::string					name;
-// 	Channel                     *to_part;
-// 	std::vector<std::string> 	params;
+	std::vector<std::string>	vec;
+	std::vector<std::string>	chans;
+	Channel                     *to_part;
+	std::vector<std::string> 	params;
+	std::string					part_msg = "PART ";
 
-// 	vec = irc::split(param, ":", 0);
-// 	chans = irc::split(vec[0], ",", 0);
-// 	if (chans.size() == 0) {  // ERR_NEEDMOREPARAMS
-// 		params.push_back(prefix);
-// 		if (irc::numericReply(461, user, params) == -1) {
-// 			this->server.deleteUser(this->user);
-// 		}
-// 		return ;
-// 	}
-// 	for (size_t i = 0; i < chans.size(); i++) {
-// 		chans[i] = irc::trim(chans[i], " ");
-// 		i++;
-// 	}
-
-// 	i = 0;
-// 	while (i < chans.size())
-// 	{
-// 		chan_found = NULL;
-// 		name = chans[i];
-// 		if (name[0] != '&' && name[0] != '#' && name[0] != '+' && name[0] !=  '!')
-// 			name.insert(0, "#");
-// 		chan_found = server.getChannelByName(name);
-// 		if (chan_found == NULL)     // ERR_NOSUCHCHANNEL
-// 		{
-// 			params.push_back(name);
-// 			irc::numericReply(403, user, params);
-// 			i++;
-// 			continue ;
-// 		}
-// 		if (chan_found->userIsInChanFromUsername(user->getUsername()) == 0) // ERR_NOTONCHANNEL
-// 		{
-// 			params.push_back(name);
-// 			irc::numericReply(442, user, params);
-// 			i++;
-// 			continue ;
-// 		}
-// 		else {
-// 			chan_found->deleteUser(user, "");
-// 			if (vec.size() > 1) {
-// 				if (chan_found->writeToAllChanUsers(vec[1], NULL) == -1)
-// 					return ;
-// 			}
-// 		}
-// 		i++;
-// 	}
-// 	return ;
+	vec = irc::split(param, ":", 0);
+	chans = irc::split(vec[0], ",", 0);
+	if (chans.size() == 0) {  // ERR_NEEDMOREPARAMS
+		params.push_back(prefix);
+		if (irc::numericReply(461, user, params) == -1) {
+			this->server.deleteUser(this->user);
+		}
+		return ;
+	}
+	for (size_t i = 0; i < chans.size(); i++) {
+		chans[i] = irc::trim(chans[i], " ");
+		if (chans[i][0] != '#') {
+			chans[i].insert(0, "#");
+		}
+		to_part = server.getChannelByName(chans[i]);
+		if (to_part == NULL) { // ERR_NOSUCHCHANNEL
+			params.push_back(chans[i]);
+			if (irc::numericReply(403, this->user, params) == -1) {
+				this->server.deleteUser(this->user);
+				return ;
+			}
+			continue ;
+		} else if (to_part->userIsInChanFromNickname(user->getNickname()) == 0) { // ERR_NOTONCHANNEL
+			params.push_back(chans[i]);
+			if (irc::numericReply(442, this->user, params) == -1) {
+				this->server.deleteUser(this->user);
+				return ;
+			}
+			continue ;
+		}
+		part_msg += chans[i] + " :";
+		if (vec.size() > 1) {
+			part_msg += vec[1];
+		}
+		to_part->deleteUser(this->user, part_msg);
+	}
 }
 
 void    Command::intQuit() {

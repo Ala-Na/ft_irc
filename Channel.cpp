@@ -187,7 +187,7 @@ int Channel::listAllUsersInChan(User* user_asking)
 {
 	unsigned long				i = 0;
 	int							ret;
-	std::string					names = 0;
+	std::string					names = "";
 	std::string					type;
 	std::vector<std::string>	params;
 
@@ -290,7 +290,7 @@ int Channel::addUser(User* user_to_add)
 	return (0);
 };
 
-// Here, message is either a PART or KICK formated message (KICK/PART nick :reason)
+// Here, message is either a PART or KICK formated message (KICK/PART #channel (nick for KICK) :reason)
 int Channel::deleteUser(User* user_to_delete, std::string message) {
 	std::string msg;
 
