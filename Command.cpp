@@ -316,8 +316,8 @@ void Command::intJoin() {
 				i++;
 				continue ;
 			}
-			if (i < vec_keys.size() && !vec_keys[i].empty()) {
-				to_join->setChanPassword(vec_keys[i]);
+			if (i < vec_keys.size() && !vec_keys[i].empty() && vec_keys[i] != "x") {
+				to_join->addKey(this->user, vec_keys[i]);
 			}
 			std::vector<User *>	op;
 			op.push_back(this->user);
@@ -326,7 +326,8 @@ void Command::intJoin() {
 				return ;
 			}
 		} else {
-			if (vec_keys.size() > i && vec_keys[i] != to_join->getChanPassword()) {  // ERR_BADCHANNELKEY
+			if (!(to_join->getChanPassword().empty()) && (vec_keys.size() == 0 || vec_keys.size() < i \
+				|| vec_keys[i] != to_join->getChanPassword())) {  // ERR_BADCHANNELKEY
 				params.push_back(vec_chan_names[i]);
 				if (irc::numericReply(475, user, params) == -1) {
 					this->server.deleteUser(user);
@@ -376,7 +377,7 @@ void Command::intInvite() {
 		}
 		return ;
 	}
-	if (chan_found->userIsInChanFromNickname(user->getNickname()) == 0) // ERR_NOTONCHANNEL
+	if (chan_found->userIsInChanFromNickname(user->getNickname()) == false) // ERR_NOTONCHANNEL
 	{
 		params.push_back(chan_name);
 		if (irc::numericReply(442, user, params) == -1) {
@@ -392,7 +393,7 @@ void Command::intInvite() {
 		}
 		return ;
 	}
-	if (chan_found->userIsInChanFromNickname(nickname) == 1) // ERR_USERONCHANNEL
+	if (chan_found->userIsInChanFromNickname(nickname) == true) // ERR_USERONCHANNEL
 	{
 		params.push_back(nickname);
 		params.push_back(chan_name);
@@ -492,7 +493,7 @@ void Command::intPart() {
 				return ;
 			}
 			continue ;
-		} else if (to_part->userIsInChanFromNickname(user->getNickname()) == 0) { // ERR_NOTONCHANNEL
+		} else if (to_part->userIsInChan(user) == false) { // ERR_NOTONCHANNEL
 			params.push_back(chans[i]);
 			if (irc::numericReply(442, this->user, params) == -1) {
 				this->server.deleteUser(this->user);
@@ -505,6 +506,9 @@ void Command::intPart() {
 			part_msg += vec[1];
 		}
 		to_part->deleteUser(this->user, part_msg);
+		if (to_part->getNbUsersInChan() == 0) {
+			this->server.deleteChannel(to_part);
+		}
 	}
 }
 
@@ -518,6 +522,9 @@ void    Command::intQuit() {
 	this->server.sendError(user, this->param);
 	for (size_t i = 0; i < vec_chan.size(); i++) {
 		vec_chan[i]->deleteUser(user, "QUIT :" + message);
+		if (vec_chan[i]->getNbUsersInChan() == 0) {
+			this->server.deleteChannel(vec_chan[i]);
+		}
 	}
 	this->server.deleteUser(user);
 }
@@ -635,7 +642,7 @@ void Command::intKick() {
 				return ;
 			}
 			continue ;
-		} else if (kick_from->userIsInChanFromNickname(this->user->getNickname()) == 0) {
+		} else if (kick_from->userIsInChan(this->user) == false) {
 			params.push_back(chans[i]);
 			if (irc::numericReply(442, user, params) == -1) { //ERR_NOTONCHANNEL
 				this->server.deleteUser(this->user);
@@ -649,7 +656,7 @@ void Command::intKick() {
 				return ;
 			}
 			continue ;				
-		} else if (kick_from->userIsInChanFromNickname(users[i]) == 0)	{ // ERR_USERNOTINCHANNEL
+		} else if (kick_from->userIsInChanFromNickname(users[i]) == false)	{ // ERR_USERNOTINCHANNEL
 			params.push_back(users[i]);
 			params.push_back(chans[i]);
 			if (irc::numericReply(441, user, params) == -1) {
@@ -661,6 +668,9 @@ void Command::intKick() {
 		message = ":" + this->user->getNickname() + "!" + this->user->getUsername() + \
 			"@" + this->user->getHostname() + " KICK " + chans[i] + " " + users[i] + " :" + message;
 		kick_from->deleteUser((kick_from->getUserFromNickname(users[i])), message, true);
+		if (kick_from->getNbUsersInChan() == 0) {
+			this->server.deleteChannel(kick_from);
+		}
 	}
 }
 
@@ -677,6 +687,7 @@ void Command::intTopic() {
 		}
 		return ;
 	}
+	std::cout << irc::there_is_no(':', param) << std::endl;
 	vec = irc::split(param, ":", 0);
 	if (vec[0][0] != '#') {
 		vec[0].insert(0, "#");
@@ -684,13 +695,13 @@ void Command::intTopic() {
 	chan = server.getChannelByName(vec[0]);
 	if (chan == NULL) {
 		return ;
-	} else if (chan->userIsInChanFromNickname(user->getNickname()) == 0) { // ERR_NOTONCHANNEL
+	} else if (chan->userIsInChan(user) == false) { // ERR_NOTONCHANNEL
 		params.push_back(vec[0]);
 		if (irc::numericReply(442, user, params) == -1) {
 			this->server.deleteUser(this->user);
 		}
 		return ;
-	} else if (irc::there_is_no(':', param)) {    // RPL_TOPIC && RPL_NOTOPIC
+	} else if (irc::there_is_no(':', param) == 1) {    // RPL_TOPIC && RPL_NOTOPIC
 		params.push_back(vec[0]);
 		params.push_back(chan->getChanTopic());
 		if (params.back().empty()) {
@@ -703,7 +714,7 @@ void Command::intTopic() {
 			}
 			return ;
 		}
-	} else if (irc::there_is_no('t', chan->getChanMode()) == 0 || chan->isOperator(this->user) == 0) { // ERR_CHANOPRIVSNEEDED
+	} else if (irc::there_is_no('t', chan->getChanMode()) == 0 && chan->isOperator(this->user) == 0) { // ERR_CHANOPRIVSNEEDED
 		params.push_back(vec[0]);
 		if (irc::numericReply(482, user, params) == -1) {
 			this->server.deleteUser(this->user);
@@ -711,7 +722,7 @@ void Command::intTopic() {
 		return ;
 	}
 	if (vec.size() > 1 && vec[1] != " ") {
-		new_topic = vec[1].erase(0);
+		new_topic = vec[1];
 	}
 	else {
 		new_topic = "";
@@ -758,48 +769,21 @@ void Command::intKill() {
 	}
 	for (size_t i = 0; i < chans.size(); i++) {
 		chans[i]->deleteUser(user_to_kill, "PART " + chans[i]->getChanName() + " :KILL - " + vec[1]);
+		if (chans[i]->getNbUsersInChan() == 0) {
+			this->server.deleteChannel(chans[i]);
+		}
 	}
 	this->server.sendError(user_to_kill, "KILL - " + vec[1]);
 	this->server.deleteUser(user_to_kill);
 }
 
-// TODO check following
-int 	HasInvalidMode(std::string letters)
-{
-	unsigned long	i;
-
-	i = 0;
-	if (letters[i] == '+' || letters[i] == '-')
-		i++;
-	while (letters[i])
-	{
-		if (letters[i] != 'O' && letters[i] != 'o' && letters[i] != 'i' &&
-			letters[i] != 't' && letters[i] != 'k' && letters[i] != 'l' &&
-			letters[i] != 'a')
-			return (1);
-		i++;
-	}
-	return (0);
-}
-
-// TODO :
-// Do verification for ERR_NEEDMOREPARAMS
-// Check if CHANNEL or USER MODE
-// For User : Check that user calling MODE is either modified user or ope
-// If not : ERR_USERSDONTMATCH
-// Go to User->mode()
-// For Channel : LOOK UP RFC
-// Check that +o is correctly ignored
+// ERR_NOCHANMODES non supported as only "#" channels are supported
 void	 Command::intMode() {
 	std::vector<std::string>	vec;
-	std::string             	name;
-	std::string             	mode;
-	std::string                 letters;
-	std::string             	arg;
-	std::string                 message;
-	//Channel*                   chan_found;
-	User*                      mode_user;
+	Channel*                  	mode_chan;
+	User*                     	mode_user;
 	std::vector<std::string> 	params;
+	size_t						name_size;
 
 	vec = irc::split(param, " ", 0);
 	if (vec.size() < 1) { // ERR_NEEDMOREPARAMS
@@ -811,12 +795,20 @@ void	 Command::intMode() {
 	}
 	mode_user = this->server.getUserByNick(vec[0]);
 	if (mode_user == NULL) {
-		// CHANNEL MODE
-		// TODO check/continue this maybe by making new function in Channel class
-		// with commented part ?
+		name_size = vec[0].size();
+		if (vec[0][0] != '#') {
+			vec[0].insert(0, "#");
+		}
+		if ((mode_chan = this->server.getChannelByName(vec[0])) == NULL) {
+			params.push_back(vec[0]);
+			if (irc::numericReply(403, this->user, params) == -1) { // ERR_NOSUCHCHANNEL (not in RFC but used by open.ircnet.net)
+				this->server.deleteUser(this->user);
+			}
+			return ;
+		}
+		mode_chan->setModes(this->user, this->param.erase(0, name_size + 1));
 		return ;
-	}
-	if (this->user != mode_user) { // ERR_USERSDONTMATCH
+	} else if (this->user != mode_user) { // ERR_USERSDONTMATCH
 		if (irc::numericReply(502, this->user, params) == -1) {
 			this->server.deleteUser(this->user);
 		}
@@ -824,86 +816,9 @@ void	 Command::intMode() {
 	}
 	this->param.erase(0, vec[0].size() + 1);
 	user->mode(user, this->param);
-
-
-	//name = vec[0];			// can be name of channel OR USER... :'(
-	//if (name[0] != '#')
-	//	name.insert(0, "#");
-	//chan_found = server.getChannelByName(name);
-	//if (chan_found == NULL)
-	//{
-	//	name = irc::trim(name, "#");
-	//	user_found = server.getUserByNick(name);
-	//	if (user_found == NULL)
-	//	{
-	//		std::cout << "No such channel or user.\n";
-	//		return ;
-	//	}
-	//}
-	//mode = vec[1];
-	//if (mode[0] != '-' && mode[0] != '+')
-	//	mode.insert(0, "+");
-	//letters = irc::trim(mode, "-+");
-	//if (HasInvalidMode(letters))     // ERR_UNKNOWNMODE
-	//{
-	//	params.push_back(letters);
-	//	params.push_back(name);
-	//	irc::numericReply(472, user, params);
-	//	return ;
-	//}
-	//arg = "";
-	//if (vec.size() > 2)
-	//	arg = vec[2];
-	//if (chan_found)
-	//	chan_found->addMode(letters);
-	//if (irc::there_is_no('k', letters) == 0 && vec.size() == 3)			// set or unset channel password
-	//{
-	//	if (mode[0] == '-' && arg == chan_found->getChanPassword())
-	//		chan_found->setChanPassword("");
-	//	else if (mode[0] == '-' && arg != chan_found->getChanPassword())    // ERR_KEYSET
-	//	{
-	//		params.push_back(name);
-	//		irc::numericReply(467, user, params);
-	//		return ;
-	//	}
-	//	else if (mode[0] == '+')
-	//		chan_found->setChanPassword(arg);
-	//}
-	//if (irc::there_is_no('l', letters) == 0)		// set or unset nb max of users in channel
-	//{
-	//	if (mode[0] == '-' && vec.size() == 2)
-	//		chan_found->setMaxNbUsersInChan(100);
-	//	else if (mode[0] == '+')
-	//		chan_found->setMaxNbUsersInChan(std::atoi(arg.c_str()));
-	//}
-	//if (irc::there_is_no('o', letters) == 0 && vec.size() == 3)		// set or unset an operator
-	//{
-	//	user_found = server.getUserByUsername(arg);
-	//	if (user_found == NULL)         // ERR_USERNOTINCHANNEL
-	//	{
-	//		params.push_back(arg);
-	//		params.push_back(name);
-	//		irc::numericReply(441, user, params);
-	//		return ;
-	//	}
-	//	if (mode[0] == '-')
-	//		chan_found->deleteOperator(this->user, user_found);
-	//	else if (mode[0] == '+')
-	//		chan_found->addOperator(this->user, user_found);
-	//}
-	//if (irc::there_is_no('O', letters) == 0 && vec.size() == 2)		// set creator
-	//{
-	//	message = chan_found->getChanCreator();
-	//	ret = irc::sendString(user->getFd(), message);
-	//	if (ret == -1)
-	//	{
-	//		// TODO close connection
-	//		return ;
-	//	}
-		return ;
-	//}
 }
 
+//TODO check following
 void		Command::intPass() {
 	this->server.checkPassword(user, param);
 }

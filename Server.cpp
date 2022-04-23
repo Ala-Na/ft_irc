@@ -220,9 +220,14 @@ void	Server::deleteUser(User* user) {
 }
 
 void	Server::deleteUserFromChannels(User* user) {
-	for (size_t i = 0; i < channels.size(); i++) {
-		if (channels[i]->userIsInChanFromNickname(user->getNickname())) {
-			channels[i]->deleteUser(user, " PART");
+	std::vector<Channel *>	chans = this->channels;
+
+	for (size_t i = 0; i < chans.size(); i++) {
+		if (chans[i]->userIsInChan(user) == true) {
+			chans[i]->deleteUser(user, " PART");
+			if (chans[i]->getNbUsersInChan() == 0) {
+				this->deleteChannel(chans[i]);
+			}
 		}
 	}
 }
@@ -251,6 +256,20 @@ Channel*	Server::createChannel(std::string name) {
 	}
 	this->channels.push_back(new Channel(this, name));
 	return this->channels.back();
+}
+
+void	Server::deleteChannel (Channel* channel) {
+	if (channel->getNbUsersInChan() != 0) {
+		return ;
+	}
+	for (std::vector<Channel *>::iterator it1 = this->channels.begin(); \
+			it1 != this->channels.end(); it1++) {
+		if ((*it1) == channel) {
+			this->channels.erase(it1);
+			delete *it1;
+			return ;
+		}
+	}
 }
 
 void	Server::receiveDatas() {
@@ -614,7 +633,6 @@ void	Server::getAdmin(User* user, std::string parameters) {
 void	Server::sendError (User* user, std::string parameter) {
 	int fd = user->getFd();
 
-	// TODO check
 	parameter.insert(0, "ERROR :");
 	parameter += "\r\n";
 	int res = irc::sendString(fd, parameter);

@@ -82,7 +82,7 @@ int	irc::sendNumeric(int fd, std::string msg) {
 /* 401 */ std::string	irc::ErrNoSuchNick (std::string nick) { return (" " + nick + " :No suck nick/channel"); }
 /* 402 */ std::string	irc::ErrNoSuchServer (std::string server_name) { return (" " + server_name + " :No such server"); }
 /* 403 */ std::string	irc::ErrNoSuchChannel (std::string channel_name) { return (" " + channel_name + " :No such channel"); }
-/* 404 */ std::string	irc::ErrCannotSendToChan (std::string channel_name) { return (" " + channel_name + " :No such channel"); }
+/* 404 */ std::string	irc::ErrCannotSendToChan (std::string channel_name) { return (" " + channel_name + " :Cannot send to channel"); }
 /* 405 */ std::string	irc::ErrTooManyChannels (std::string channel_name) { return (" " + channel_name + " :You have joined too many channels"); }
 // 406 - No need
 // 407 - NEED MORE INFOS
@@ -102,7 +102,7 @@ int	irc::sendNumeric(int fd, std::string msg) {
 /* 433 */ std::string	irc::ErrNicknameInUse (std::string nick) { return (" " + nick + " :Nickname is already in use"); }
 // 436 - No need
 // 437 - No need
-/* 441 */ std::string	irc::ErrUserNotInChannel (std::string to_kick_nick, std::string channel) { return (" " + to_kick_nick + " " + channel +" :They aren't on that channel"); }
+/* 441 */ std::string	irc::ErrUserNotInChannel (std::string not_in_nick, std::string channel) { return (" " + not_in_nick + " " + channel +" :They aren't on that channel"); }
 /* 442 */ std::string	irc::ErrNotOnChannel (std::string channel) { return (" " + channel + " :You're not on that channel"); }
 /* 443 */ std::string	irc::ErrUserOnChannel (std::string user, std::string channel) { return (" " + user + " " + channel +" :is already on channel"); }
 /* 444 */ std::string	irc::ErrNoLogin (std::string user) { return (" " + user + " :Not logged in"); }
