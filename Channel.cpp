@@ -223,6 +223,7 @@ int	Channel::receivingAnInvitation(User* user_inviting, User* user_invited) {
 	std::string	message;
 	int			ret;
 
+	addInvitedUser(user_inviting, user_invited);
 	message = ":" + user_inviting->getNickname() + "!" + user_inviting->getUsername() + "@" + user_inviting->getHostname();
 	message += " INVITE " + user_invited->getNickname() + " :" + this->chan_name + "\r\n";
 	ret = irc::sendString(user_invited->getFd(), message);
