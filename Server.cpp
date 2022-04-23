@@ -514,7 +514,7 @@ void	Server::welcomeUser(User *user) {
 	params.clear();
 	params.push_back(this->conf.find("version")->second);
 	params.push_back("aiwro");
-	params.push_back("klo");
+	params.push_back("oitklbI");
 	if (irc::numericReply(4, user, params) == -1) {
 		this->deleteUser(user);
 		return ;
