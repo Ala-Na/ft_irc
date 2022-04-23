@@ -68,6 +68,7 @@ namespace irc {
 			void						deleteUser (User* user);
 			void						deleteUserFromChannels (User* user);
 			Channel*					createChannel (std::string name);
+			void						deleteChannel (Channel* channel);
 			void						receiveDatas ();
 			void						datasExtraction (std::string& buf, size_t pos);
 
