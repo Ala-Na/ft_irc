@@ -46,8 +46,7 @@ std::string	Command::getWord () {
 }
 
 void	Command::goToExecution () {
-	// TODO delete unimplemented functions
-	int const nbr_cmd = 25;
+	int const nbr_cmd = 24;
 	void (Command::*pmf[nbr_cmd])() = {&Command::intPass, &Command::intNick, \
 		&Command::intUser, &Command::intOper, \
 		&Command::intJoin, &Command::intTopic, &Command::intMode, \
@@ -55,14 +54,12 @@ void	Command::goToExecution () {
 		&Command::intInvite, &Command::intKick, &Command::intPrivMsg, \
 		&Command::intNotice, &Command::intKill, &Command::intQuit, \
 		&Command::intWhoIs, &Command::intAway, &Command::intWallops, \
-		&Command::intUserhost, &Command::intSquit, &Command::intMotd, \
+		&Command::intUserhost, &Command::intMotd, \
 		&Command::intSummon, &Command::intUsers, &Command::intPing};
 	std::string msg[nbr_cmd] = {"PASS", "NICK", "USER", "OPER", "JOIN", "TOPIC", "MODE", "PART", "NAMES", \
 		"LIST", "INVITE", "KICK", "PRIVMSG", "NOTICE", "KILL", "QUIT", \
-		"WHOIS", "AWAY", "WALLOPS", "USERHOST", "SQUIT", \
-		"MOTD", "SUMMON", "USERS", "PING"};
+		"WHOIS", "AWAY", "WALLOPS", "USERHOST", "MOTD", "SUMMON", "USERS", "PING"};
 
-	// TODO delete following sentence
 	std::cout << this->prefix << std::endl;
 	for (unsigned long i = 0; i < nbr_cmd; i++) {
 		if (!this->prefix.compare(msg[i])) {
@@ -76,7 +73,7 @@ void	Command::goToExecution () {
 	std::vector<std::string> params;
 	params.push_back(this->prefix);
 	if (irc::numericReply(421, user, params) == -1) {
-		this->server.deleteUser(this->user);
+		this->server.deleteUser(this->user, "Fatal error");
 	}
 }
 
@@ -99,14 +96,14 @@ void	Command::intWhoIs() {
 
 	if (param.empty()) {
 		if (irc::numericReply(431, this->user, arg) == -1) {
-			this->server.deleteUser(this->user);
+			this->server.deleteUser(this->user, "Fatal error");
 		}
 		return ;
 	}
 	arg = irc::split(this->param, " ", 0);
 	if (arg.size() >= 2 && arg[0] != this->server.getName()) {
 		if (irc::numericReply(402, this->user, arg) == -1) {
-			this->server.deleteUser(this->user);
+			this->server.deleteUser(this->user, "Fatal error");
 		}
 		return ;
 	}
@@ -121,13 +118,13 @@ void	Command::intWhoIs() {
 			arg.clear();
 			arg.push_back(names[i]);
 			if (irc::numericReply(401, user, arg) == -1) {
-				this->server.deleteUser(this->user);
+				this->server.deleteUser(this->user, "Fatal error");
 				return;
 			}
 			continue;
 		}
 		if (this->user->whois(who) == -1) {
-			this->server.deleteUser(this->user);
+			this->server.deleteUser(this->user, "Fatal error");
 			return ;
 		}
 	}
@@ -140,7 +137,7 @@ void	Command::intUserhost() {
 	if (param.empty()) {
 		nicks.push_back(this->prefix);
 		if (irc::numericReply(461, this->user, nicks) == -1) {
-			this->server.deleteUser(this->user);
+			this->server.deleteUser(this->user, "Fatal error");
 		}
 		return ;
 	}
@@ -168,13 +165,13 @@ void	Command::intUserhost() {
 	nicks.clear();
 	nicks.push_back(reply);
 	if (irc::numericReply(302, user, nicks) == -1) {
-		this->server.deleteUser(this->user);
+		this->server.deleteUser(this->user, "Fatal error");
 	}
 }
 
 void	Command::intAway() {
 	if (this->user->away(this->param.erase(0, 1)) == -1) {
-		this->server.deleteUser(this->user);
+		this->server.deleteUser(this->user, "Fatal error");
 	}
 }
 
@@ -188,12 +185,12 @@ void	Command::intPrivMsg() {
 	if (params.empty()) {
 		params.push_back(this->prefix);
 		if (irc::numericReply(411, this->user, params) == -1) {
-			this->server.deleteUser(this->user);
+			this->server.deleteUser(this->user, "Fatal error");
 		}
 		return ;
 	} else if (params.size() < 2) {
 		if (irc::numericReply(412, this->user, params) == -1) {
-			this->server.deleteUser(this->user);
+			this->server.deleteUser(this->user, "Fatal error");
 		}
 		return ;
 	}
@@ -201,7 +198,7 @@ void	Command::intPrivMsg() {
 		User*	dest = this->server.getUserByNick(params[0]);
 		if (dest == NULL) {
 			if (irc::numericReply(401, this->user, params) == -1) {
-				this->server.deleteUser(this->user);
+				this->server.deleteUser(this->user, "Fatal error");
 			}
 			return;
 		}
@@ -211,7 +208,7 @@ void	Command::intPrivMsg() {
 		Channel*	chan = this->server.getChannelByName(params[0]);
 		if (chan == NULL) {
 			if (irc::numericReply(403, this->user, params) == -1) {
-				this->server.deleteUser(this->user);
+				this->server.deleteUser(this->user, "Fatal error");
 			}
 			return;
 		}
@@ -255,7 +252,7 @@ void	Command::intWallops() {
 		std::vector<std::string> params;
 		params.push_back(prefix);
 		if (irc::numericReply(461, user, params) == -1) {
-			this->server.deleteUser(this->user);
+			this->server.deleteUser(this->user, "Fatal error");
 		}
 		return ;
 	}
@@ -272,7 +269,7 @@ void Command::intJoin() {
 	if (param.empty()) { // ERR_NEEDMOREPARAMS
 		params.push_back(this->prefix);
 		if (irc::numericReply(461, this->user, params) == -1) {
-			this->server.deleteUser(this->user);
+			this->server.deleteUser(this->user, "Fatal error");
 		}
 		return ;
 	}
@@ -293,7 +290,7 @@ void Command::intJoin() {
 		} else if (this->user->getNbOfChannels() >= this->server.getMaxChannelbyUser()) { // ERR_TOOMANYCHANNELS
 			params.push_back(vec_chan_names[i]);
 			if (irc::numericReply(405, this->user, params) == -1) {
-				this->server.deleteUser(this->user);
+				this->server.deleteUser(this->user, "Fatal error");
 				return ;
 			}
 			i++;
@@ -301,7 +298,7 @@ void Command::intJoin() {
 		} else if (vec_chan_names[i].find_first_of(": ,") != std::string::npos) {
 			params.push_back(vec_chan_names[i]);
 			if (irc::numericReply(476, this->user, params) == -1) { // ERR_BADCHANMASK
-				this->server.deleteUser(this->user);
+				this->server.deleteUser(this->user, "Fatal error");
 				return ;
 			}
 			i++;
@@ -330,7 +327,7 @@ void Command::intJoin() {
 				|| vec_keys[i] != to_join->getChanPassword())) {  // ERR_BADCHANNELKEY
 				params.push_back(vec_chan_names[i]);
 				if (irc::numericReply(475, user, params) == -1) {
-					this->server.deleteUser(user);
+					this->server.deleteUser(user, "Fatal error");
 					return ;
 				}
 				i++;
@@ -357,7 +354,7 @@ void Command::intInvite() {
 	{
 		params.push_back(prefix);
 		if (irc::numericReply(461, user, params) == -1) {
-			this->server.deleteUser(user);
+			this->server.deleteUser(user, "Fatal error");
 		}
 		return ;
 	}
@@ -373,7 +370,7 @@ void Command::intInvite() {
 	{
 		params.push_back(nickname);
 		if (irc::numericReply(401, user, params) == -1) {
-			this->server.deleteUser(user);
+			this->server.deleteUser(user, "Fatal error");
 		}
 		return ;
 	}
@@ -381,7 +378,7 @@ void Command::intInvite() {
 	{
 		params.push_back(chan_name);
 		if (irc::numericReply(442, user, params) == -1) {
-			this->server.deleteUser(user);
+			this->server.deleteUser(user, "Fatal error");
 		}
 		return ;
 	}
@@ -389,7 +386,7 @@ void Command::intInvite() {
 	{
 		params.push_back(chan_name);
 		if (irc::numericReply(482, user, params) == -1) {
-			this->server.deleteUser(user);
+			this->server.deleteUser(user, "Fatal error");
 		}
 		return ;
 	}
@@ -398,18 +395,18 @@ void Command::intInvite() {
 		params.push_back(nickname);
 		params.push_back(chan_name);
 		if (irc::numericReply(443, user, params) == -1) {
-			this->server.deleteUser(user);
+			this->server.deleteUser(user, "Fatal error");
 		}
 		return ;
 	}
 	if (chan_found->receivingAnInvitation(user, user_asked) == -1) {
-		this->server.deleteUser(user);
+		this->server.deleteUser(user, "Fatal error");
 		return ;
 	}
 	params.push_back(nickname);
 	params.push_back(chan_name);
 	if (irc::numericReply(341, user, params) == -1) {
-		this->server.deleteUser(user);
+		this->server.deleteUser(user, "Fatal error");
 		return ;
 	}
 	if (user_asked->get_a())
@@ -417,7 +414,7 @@ void Command::intInvite() {
 		params.push_back(nickname);
 		params.push_back(user_asked->getAwayMessage());
 		if (irc::numericReply(301, user, params) == -1) {
-			this->server.deleteUser(user);
+			this->server.deleteUser(user, "Fatal error");
 		}
 		return ;
 	}
@@ -435,7 +432,7 @@ void Command::intOper() {
 	if (vec.size() < 2) { // ERR_NEEDMOREPARAMS
 		arg.push_back(prefix);
 		if (irc::numericReply(461, user, arg) == -1) {
-			this->server.deleteUser(this->user);
+			this->server.deleteUser(this->user, "Fatal error");
 		}
 		return ;
 	}
@@ -443,17 +440,17 @@ void Command::intOper() {
 	key = vec[1];
 	if (name != this->user->getNickname()) {
 		if (irc::numericReply(491, this->user, arg) == -1) {
-			this->server.deleteUser(this->user);
+			this->server.deleteUser(this->user, "Fatal error");
 		}
 		return ;
 	} else if (key != server.getOpPass()) { // ERR_PASSWDMISMATCH
 		if (irc::numericReply(464, this->user, arg) == -1) {
-			this->server.deleteUser(this->user);
+			this->server.deleteUser(this->user, "Fatal error");
 		}
 		return ;
 	} else if (this->user->get_o() == false) {
 		if (this->server.setServOperator(this->user) == -1) {
-			this->server.deleteUser(this->user);
+			this->server.deleteUser(this->user, "Fatal error");
 			return ;
 		}
 	}
@@ -475,7 +472,7 @@ void Command::intPart() {
 	if (chans.size() == 0) {  // ERR_NEEDMOREPARAMS
 		params.push_back(prefix);
 		if (irc::numericReply(461, user, params) == -1) {
-			this->server.deleteUser(this->user);
+			this->server.deleteUser(this->user, "Fatal error");
 		}
 		return ;
 	}
@@ -489,14 +486,14 @@ void Command::intPart() {
 		if (to_part == NULL) { // ERR_NOSUCHCHANNEL
 			params.push_back(chans[i]);
 			if (irc::numericReply(403, this->user, params) == -1) {
-				this->server.deleteUser(this->user);
+				this->server.deleteUser(this->user, "Fatal error");
 				return ;
 			}
 			continue ;
 		} else if (to_part->userIsInChan(user) == false) { // ERR_NOTONCHANNEL
 			params.push_back(chans[i]);
 			if (irc::numericReply(442, this->user, params) == -1) {
-				this->server.deleteUser(this->user);
+				this->server.deleteUser(this->user, "Fatal error");
 				return ;
 			}
 			continue ;
@@ -505,10 +502,8 @@ void Command::intPart() {
 		if (vec.size() > 1) {
 			part_msg += vec[1];
 		}
-		to_part->deleteUser(this->user, part_msg);
-		if (to_part->getNbUsersInChan() == 0) {
-			this->server.deleteChannel(to_part);
-		}
+		to_part->deleteChanUser(this->user, part_msg);
+		this->server.deleteChannel(to_part);
 	}
 }
 
@@ -520,13 +515,11 @@ void    Command::intQuit() {
 	message = irc::trim(param, ":");
 	vec_chan = this->user->getChannels();
 	this->server.sendError(user, this->param);
-	for (size_t i = 0; i < vec_chan.size(); i++) {
-		vec_chan[i]->deleteUser(user, "QUIT :" + message);
-		if (vec_chan[i]->getNbUsersInChan() == 0) {
-			this->server.deleteChannel(vec_chan[i]);
-		}
+	for (std::vector<Channel *>::reverse_iterator rit = vec_chan.rbegin(); rit != vec_chan.rend(); rit++) {
+		(*rit)->deleteChanUser(user, "QUIT :" + message);
 	}
-	this->server.deleteUser(user);
+	this->server.deleteUser(user, "Fatal error");
+	this->server.deleteEmptyChannels();
 }
 
 void    Command::intNames() {
@@ -540,7 +533,7 @@ void    Command::intNames() {
 	if (params.size() >= 2 && params[1] != this->server.getName()) {
 		params.erase(params.begin());
 		if (irc::numericReply(402, this->user, params) == -1) {
-			this->server.deleteUser(user);
+			this->server.deleteUser(user, "Fatal error");
 		}
 		return ;
 	}
@@ -550,7 +543,7 @@ void    Command::intNames() {
 		chan = user->getChannels();
 		for (size_t i = 0; i < chan.size(); i++) {
 			if (chan[i]->listAllUsersInChan(user) == -1) {
-				this->server.deleteUser(user);
+				this->server.deleteUser(user, "Fatal error");
 				return ;
 			}
 		}
@@ -561,7 +554,7 @@ void    Command::intNames() {
 				params.push_back("*");
 				params.push_back(users[i]->getNickname());
 				if (irc::numericReply(353, this->user, params) == -1) {
-					this->server.deleteUser(user);
+					this->server.deleteUser(user, "Fatal error");
 					return ;
 				}
 				params.clear();
@@ -578,14 +571,14 @@ void    Command::intNames() {
 		if (to_list == NULL) {
 			params.push_back(chan_names[i]);
 			if (irc::numericReply(366, this->user, params) == -1) {
-				this->server.deleteUser(this->user);
+				this->server.deleteUser(this->user, "Fatal error");
 				return ;
 			}
 			params.clear();
 			continue ;
 		}
 		if (to_list->listAllUsersInChan(user) == -1) {
-			this->server.deleteUser(user);
+			this->server.deleteUser(user, "Fatal error");
 			return;
 		}
 	}
@@ -604,7 +597,7 @@ void Command::intKick() {
 	{
 		params.push_back(prefix);
 		if (irc::numericReply(461, user, params) == -1) {
-			this->server.deleteUser(this->user);
+			this->server.deleteUser(this->user, "Fatal error");
 		}
 		return ;
 	}
@@ -621,7 +614,7 @@ void Command::intKick() {
 	{
 		params.push_back(prefix);
 		if (irc::numericReply(461, user, params) == -1) {
-			this->server.deleteUser(this->user);
+			this->server.deleteUser(this->user, "Fatal error");
 		}
 		return ;
 	}
@@ -638,21 +631,21 @@ void Command::intKick() {
 		if (kick_from == NULL) { // ERR_NOSUCHCHANNEL
 			params.push_back(chans[i]);
 			if (irc::numericReply(403, user, params) == -1) {
-				this->server.deleteUser(this->user);
+				this->server.deleteUser(this->user, "Fatal error");
 				return ;
 			}
 			continue ;
 		} else if (kick_from->userIsInChan(this->user) == false) {
 			params.push_back(chans[i]);
 			if (irc::numericReply(442, user, params) == -1) { //ERR_NOTONCHANNEL
-				this->server.deleteUser(this->user);
+				this->server.deleteUser(this->user, "Fatal error");
 				return ;
 			}
 			continue ;			
 		} else if (kick_from->isOperator(this->user) == 0) {
 			params.push_back(chans[i]);
 			if (irc::numericReply(482, user, params) == -1) { //ERR_CHANOPRIVSNEEDED
-				this->server.deleteUser(this->user);
+				this->server.deleteUser(this->user, "Fatal error");
 				return ;
 			}
 			continue ;				
@@ -660,17 +653,15 @@ void Command::intKick() {
 			params.push_back(users[i]);
 			params.push_back(chans[i]);
 			if (irc::numericReply(441, user, params) == -1) {
-				this->server.deleteUser(this->user);
+				this->server.deleteUser(this->user, "Fatal error");
 				return ;
 			}
 			continue ;
 		}
 		message = ":" + this->user->getNickname() + "!" + this->user->getUsername() + \
 			"@" + this->user->getHostname() + " KICK " + chans[i] + " " + users[i] + " :" + message;
-		kick_from->deleteUser((kick_from->getUserFromNickname(users[i])), message, true);
-		if (kick_from->getNbUsersInChan() == 0) {
-			this->server.deleteChannel(kick_from);
-		}
+		kick_from->deleteChanUser((kick_from->getUserFromNickname(users[i])), message, true);
+		this->server.deleteChannel(kick_from);
 	}
 }
 
@@ -683,7 +674,7 @@ void Command::intTopic() {
 	if (param.size() == 0) { // ERR_NEEDMOREPARAMS
 		params.push_back(prefix);
 		if (irc::numericReply(461, user, params) == -1) {
-			this->server.deleteUser(this->user);
+			this->server.deleteUser(this->user, "Fatal error");
 		}
 		return ;
 	}
@@ -698,7 +689,7 @@ void Command::intTopic() {
 	} else if (chan->userIsInChan(user) == false) { // ERR_NOTONCHANNEL
 		params.push_back(vec[0]);
 		if (irc::numericReply(442, user, params) == -1) {
-			this->server.deleteUser(this->user);
+			this->server.deleteUser(this->user, "Fatal error");
 		}
 		return ;
 	} else if (irc::there_is_no(':', param) == 1) {    // RPL_TOPIC && RPL_NOTOPIC
@@ -706,10 +697,10 @@ void Command::intTopic() {
 		params.push_back(chan->getChanTopic());
 		if (params.back().empty()) {
 			if (irc::numericReply(331, user, params) == -1) {
-				this->server.deleteUser(this->user);
+				this->server.deleteUser(this->user, "Fatal error");
 			} else {
 				if (irc::numericReply(332, user, params) == -1) {
-					this->server.deleteUser(this->user);
+					this->server.deleteUser(this->user, "Fatal error");
 				}
 			}
 			return ;
@@ -717,7 +708,7 @@ void Command::intTopic() {
 	} else if (irc::there_is_no('t', chan->getChanMode()) == 0 && chan->isOperator(this->user) == 0) { // ERR_CHANOPRIVSNEEDED
 		params.push_back(vec[0]);
 		if (irc::numericReply(482, user, params) == -1) {
-			this->server.deleteUser(this->user);
+			this->server.deleteUser(this->user, "Fatal error");
 		}
 		return ;
 	}
@@ -745,12 +736,12 @@ void Command::intKill() {
 	{
 		params.push_back(prefix);
 		if (irc::numericReply(461, user, params) == -1) {
-			this->server.deleteUser(this->user);
+			this->server.deleteUser(this->user, "Fatal error");
 		}
 		return ;
 	} else if (server.isServOperator(this->user) == false) { // ERR_NOPRIVILEGES
 		if (irc::numericReply(481, user, params) == -1) {
-			this->server.deleteUser(this->user);
+			this->server.deleteUser(this->user, "Fatal error");
 		}
 		return ;
 	}
@@ -758,7 +749,7 @@ void Command::intKill() {
 	if (user_to_kill == NULL) {  // ERR_NOSUCHNICK
 		params.push_back(vec[0]);
 		if (irc::numericReply(401, user, params) == -1) {
-			this->server.deleteUser(this->user);
+			this->server.deleteUser(this->user, "Fatal error");
 		}
 		return ;
 	}
@@ -768,13 +759,11 @@ void Command::intKill() {
 		vec[1] = "no reason specified";
 	}
 	for (size_t i = 0; i < chans.size(); i++) {
-		chans[i]->deleteUser(user_to_kill, "PART " + chans[i]->getChanName() + " :KILL - " + vec[1]);
-		if (chans[i]->getNbUsersInChan() == 0) {
-			this->server.deleteChannel(chans[i]);
-		}
+		chans[i]->deleteChanUser(user_to_kill, "PART " + chans[i]->getChanName() + " :KILL - " + vec[1]);
 	}
+	this->server.deleteEmptyChannels();
 	this->server.sendError(user_to_kill, "KILL - " + vec[1]);
-	this->server.deleteUser(user_to_kill);
+	this->server.deleteUser(user_to_kill, "KILL - " + vec[1]);
 }
 
 // ERR_NOCHANMODES non supported as only "#" channels are supported
@@ -789,7 +778,7 @@ void	 Command::intMode() {
 	if (vec.size() < 1) { // ERR_NEEDMOREPARAMS
 		params.push_back(prefix);
 		if (irc::numericReply(461, user, params) == -1) {
-			this->server.deleteUser(this->user);
+			this->server.deleteUser(this->user, "Fatal error");
 		}
 		return ;
 	}
@@ -802,7 +791,7 @@ void	 Command::intMode() {
 		if ((mode_chan = this->server.getChannelByName(vec[0])) == NULL) {
 			params.push_back(vec[0]);
 			if (irc::numericReply(403, this->user, params) == -1) { // ERR_NOSUCHCHANNEL (not in RFC but used by open.ircnet.net)
-				this->server.deleteUser(this->user);
+				this->server.deleteUser(this->user,"Fatal error");
 			}
 			return ;
 		}
@@ -810,7 +799,7 @@ void	 Command::intMode() {
 		return ;
 	} else if (this->user != mode_user) { // ERR_USERSDONTMATCH
 		if (irc::numericReply(502, this->user, params) == -1) {
-			this->server.deleteUser(this->user);
+			this->server.deleteUser(this->user, "Fatal error");
 		}
 		return ;
 	}
@@ -818,50 +807,24 @@ void	 Command::intMode() {
 	user->mode(user, this->param);
 }
 
-//TODO check following
 void		Command::intPass() {
 	this->server.checkPassword(user, param);
-}
-
-void		Command::intSquit() {
-	std::vector<std::string>	vec;
-	std::string					serv_name;
-	std::string					comment;
-	std::vector<std::string>	params;
-
-	vec = irc::split(param, " ", 0);
-	if (vec.size() < 2)      // ERR_NEEDMOREPARAMS
-	{
-		params.push_back(prefix);
-		irc::numericReply(461, user, params);
-		return ;
-	}
-	std::vector<std::string> arg;
-	if (server.isServOperator(user) == true)  // ERR_NOPRIVILEGES
-	{
-		irc::numericReply(481, user, arg);
-		return ;
-	}
-	serv_name = vec[0];
-	comment = vec[1];
-	if (serv_name != server.getName())  // ERR_NOSUCHSERVER
-	{
-		params.push_back(serv_name);
-		irc::numericReply(402, user, params);
-	}
-	// close connection ?????
 }
 
 void	Command::intSummon() {
 	std::vector<std::string>	params;
 
-	irc::numericReply(445, user, params);
+	if (irc::numericReply(445, user, params) == -1) {
+		this->server.deleteUser(this->user, "Fatal error");
+	}
 }
 
 void	Command::intUsers() {
 	std::vector<std::string>	params;
 
-	irc::numericReply(446, user, params);
+	if (irc::numericReply(446, user, params) == -1) {
+		this->server.deleteUser(this->user, "Fatal error");
+	}
 }
 
 void	Command::intList() {
@@ -871,6 +834,13 @@ void	Command::intList() {
 		this->server.listChannels(this->user);
 	} else {
 		std::vector<std::string>	split = irc::split(param, " ", 0);
+		if (split.size() > 1 && split[1] != this->server.getName()) {
+			params.push_back(split[1]);
+			if (irc::numericReply(402, this->user, params) == -1) {
+				this->server.deleteUser(user, "Fatal error");
+			}
+			return ;
+		}
 		std::vector<std::string>	channels = irc::split(split[0], ",", 0);
 		for (size_t i = 0; i < channels.size(); i++) {
 			Channel* curr_chan = this->server.getChannelByName(channels[i]);
@@ -878,19 +848,18 @@ void	Command::intList() {
 				params.push_back(curr_chan->getChanName());
 				char nb[3];
 				sprintf(nb, "%d", curr_chan->getNbUsersInChan());
-				params.push_back(std::string(nb));
+				params.push_back(nb);
 				params.push_back(curr_chan->getChanTopic());
 				if (irc::numericReply(322, this->user, params) == -1) {
-					this->server.deleteUser(user);
-					return;
+					this->server.deleteUser(user, "Fatal error");
+					return ;
 				}
 				params.clear();
-
 			}
 		}
 	}
 	if (irc::numericReply(323, this->user, params) == -1) {
-		this->server.deleteUser(user);
+		this->server.deleteUser(user, "Fatal error");
 		return ;
 	}
 }

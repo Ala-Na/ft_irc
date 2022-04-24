@@ -66,7 +66,6 @@ namespace irc {
 			void		intAway();
 			void		intWallops();
 			void		intUserhost();
-			void		intSquit();
 			void		intMotd();
 			void		intSummon();
 			void		intUsers();
