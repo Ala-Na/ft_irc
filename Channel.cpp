@@ -223,18 +223,18 @@ int	Channel::receivingAnInvitation(User* user_inviting, User* user_invited) {
 	std::string	message;
 	int			ret;
 
+	addInvitedUser(user_inviting, user_invited);
 	message = ":" + user_inviting->getNickname() + "!" + user_inviting->getUsername() + "@" + user_inviting->getHostname();
 	message += " INVITE " + user_invited->getNickname() + " :" + this->chan_name + "\r\n";
 	ret = irc::sendString(user_invited->getFd(), message);
 	if (ret == -1) {
-		this->server->deleteUser(user_invited);
+		this->server->deleteUser(user_invited, "Fatal error");
 		return (-1);
 	}
 	return (0);
 };
 
-int Channel::listAllUsersInChan(User* user_asking)
-{
+int Channel::listAllUsersInChan(User* user_asking) {
 	int							ret;
 	std::string					names = "";
 	std::string					type;
@@ -268,7 +268,7 @@ int Channel::listAllUsersInChan(User* user_asking)
 	params.push_back(this->getChanName());
 	ret += irc::numericReply(366, user_asking, params);
 	if (ret <= -1) {
-		this->server->deleteUser(user_asking);
+		this->server->deleteUser(user_asking, "Fatal error");
 		return (-1);
 	}
 	return (0);
@@ -301,14 +301,14 @@ int Channel::addUser(User* user_to_add)
 	if (vec_chan_users.size() >= max_nb_users_in_chan) { // ERR_CHANNELISFULL
 		params.push_back(this->chan_name);
 		if (irc::numericReply(471, user_to_add, params) == -1) {
-			this->server->deleteUser(user_to_add);
+			this->server->deleteUser(user_to_add, "Fatal error");
 			return (-1);
 		}
 		return (0);
 	} else if (this->userIsBannedFromChan(user_to_add) == true) { // ERR_BANNEDFROMCHAN
 		params.push_back(this->chan_name);
 		if (irc::numericReply(474, user_to_add, params) == -1) {
-			this->server->deleteUser(user_to_add);
+			this->server->deleteUser(user_to_add, "Fatal error");
 			return (-1);
 		}
 		return (0);
@@ -316,7 +316,7 @@ int Channel::addUser(User* user_to_add)
 		this->userIsInvitedInChan(user_to_add) == false) {  // ERR_INVITEONLYCHAN
 		params.push_back(this->chan_name);
 		if (irc::numericReply(473, user_to_add, params) == -1) {
-			this->server->deleteUser(user_to_add);
+			this->server->deleteUser(user_to_add, "Fatal error");
 			return (-1);
 		}
 		return (0);
@@ -344,7 +344,7 @@ int Channel::addUser(User* user_to_add)
 };
 
 // Here, message is either a PART or KICK formated message (KICK/PART #channel (nick for KICK) :reason)
-int Channel::deleteUser(User* user_to_delete, std::string message, bool kick) {
+int Channel::deleteChanUser(User* user_to_delete, std::string message, bool kick) {
 	std::string msg;
 
 	if (kick == false) {
@@ -362,7 +362,7 @@ int Channel::deleteUser(User* user_to_delete, std::string message, bool kick) {
 				writeToAllChanUsers(msg, NULL);
 			}
 			vec_chan_users.erase(it);
-			user_to_delete->deleteChannel(this);
+			user_to_delete->leaveChannel(this);
 			return (0);
 		}
 	}
@@ -597,7 +597,7 @@ void	Channel::setModes(User* user, std::string modes) {
 		param.push_back(user->getNickname());
 		param.push_back(chan_name);
 		if (irc::numericReply(441, user, param) == -1) {
-			this->server->deleteUser(user);
+			this->server->deleteUser(user, "Fatal error");
 		}
 		return ;
 	} else if (modes.empty()) {
@@ -605,7 +605,7 @@ void	Channel::setModes(User* user, std::string modes) {
 		param.push_back("+" + this->getChanMode());
 		param.push_back(this->getChanModesParams());
 		if (irc::numericReply(324, user, param) == -1) {
-			this->server->deleteUser(user);
+			this->server->deleteUser(user, "Fatal error");
 		}
 		return ;
 	} else if (this->isOperator(user) == 0) {
@@ -706,7 +706,7 @@ void	Channel::setModes(User* user, std::string modes) {
 		std::cout << change << std::endl;
 		param.push_back(chan_name);
 		if (irc::numericReply(482, user, param) == -1) { // ERR_CHANOPRIVSNEEDED
-			this->server->deleteUser(user);
+			this->server->deleteUser(user, "Fatal error");
 		}
 		return ;
 	}

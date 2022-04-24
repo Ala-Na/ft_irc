@@ -15,11 +15,11 @@ Server::Server(std::string password, const char* port) : password(password), por
 
 Server::~Server() {
 	std::cout << "Closing server..." << std::endl;
+	for (std::vector<User *>::reverse_iterator it = this->users.rbegin(); it != this->users.rend(); it++) {
+		this->deleteUser(*it, "Closing server");
+	}
 	for (std::vector<pollfd>::reverse_iterator it = pfds.rbegin(); it != pfds.rend(); it++) {
 		close((*it).fd);
-	}
-	for (std::vector<User *>::reverse_iterator it = this->users.rbegin(); it != this->users.rend(); it++) {
-		delete *it;
 	}
 	for (std::vector<Channel *>::reverse_iterator it = this->channels.rbegin(); it != this->channels.rend(); it++) {
 		delete *it;
@@ -197,13 +197,14 @@ void	Server::createUser() {
 	this->datas.push_back("");
 }
 
-void	Server::deleteUser(User* user) {
+void	Server::deleteUser(User* user, std::string reason) {
 	for (std::vector<User *>::iterator it1 = this->users.begin(); \
 			it1 != this->users.end(); it1++) {
 		if ((*it1) == user) {
 			std::cout << "Closing connection to client fd = " << (*it1)->getFd() << "\n" << std::endl;
-			this->deleteUserFromChannels(user);
+			this->deleteUserFromChannels(user, reason);
 			this->deleteServOperator(user);
+			this->sendError(user, reason);
 			int position = it1 - this->users.begin();
 			std::vector<std::string>::iterator it2 = this->datas.begin();
 			std::advance(it2, position);
@@ -219,15 +220,12 @@ void	Server::deleteUser(User* user) {
 	}
 }
 
-void	Server::deleteUserFromChannels(User* user) {
+void	Server::deleteUserFromChannels(User* user, std::string reason) {
 	std::vector<Channel *>	chans = this->channels;
 
 	for (size_t i = 0; i < chans.size(); i++) {
 		if (chans[i]->userIsInChan(user) == true) {
-			chans[i]->deleteUser(user, " PART");
-			if (chans[i]->getNbUsersInChan() == 0) {
-				this->deleteChannel(chans[i]);
-			}
+			chans[i]->deleteChanUser(user, "PART " + chans[i]->getChanName() + " :" + reason);
 		}
 	}
 }
@@ -258,18 +256,31 @@ Channel*	Server::createChannel(std::string name) {
 	return this->channels.back();
 }
 
-void	Server::deleteChannel (Channel* channel) {
+int	Server::deleteChannel (Channel* channel) {
 	if (channel->getNbUsersInChan() != 0) {
-		return ;
+		return 0;
 	}
 	for (std::vector<Channel *>::iterator it1 = this->channels.begin(); \
 			it1 != this->channels.end(); it1++) {
 		if ((*it1) == channel) {
-			this->channels.erase(it1);
 			delete *it1;
-			return ;
+			this->channels.erase(it1);
+			return 1;
 		}
 	}
+	return 0;
+}
+
+void	Server::deleteEmptyChannels () {
+	std::vector<Channel *>::iterator it = this->channels.begin();
+
+	while (it != this->channels.end()) {
+		if (this->deleteChannel(*it) == 1) {
+			it = this->channels.begin();
+		} else {
+			it++;
+		}
+	}	
 }
 
 void	Server::receiveDatas() {
@@ -288,7 +299,7 @@ void	Server::receiveDatas() {
 				int	position = it - this->pfds.begin();
 				std::vector<User *>::iterator it1 = this->users.begin();
 				std::advance(it1, position - 1);
-				this->deleteUser(*it1);
+				this->deleteUser(*it1, "Fatal error");
 				break ;
 			} else {
 				buf[bytes_recv] = 0;
@@ -417,17 +428,17 @@ void	Server::checkPassword(User* user, std::string parameters) {
 
 	if (user->isRegistered() == true) {
 		if (irc::numericReply(462, user, params) == -1) {
-			this->deleteUser(user);
+			this->deleteUser(user, "Fatal error");
 		}
 		return ;
 	 } else if (parameters.empty()) {
 		params.push_back("PASS");
 		irc::numericReply(461, user, params);
-		this->deleteUser(user);
+		this->deleteUser(user, "Fatal error");
 		return ;
 	} else if (parameters.compare(this->password) != 0) {
 		irc::numericReply(464, user, params);
-		this->deleteUser(user);
+		this->deleteUser(user, "Fatal error");
 		return ;
 	}
 	user->setStatus(NICK);
@@ -441,14 +452,14 @@ void	Server::checkNick(User* user, std::string parameters) {
 		return ;
 	} else if (parameters.empty()) {
 		if (irc::numericReply(431, user, params) == -1 || user->isRegistered() == false) {
-			this->deleteUser(user);
+			this->deleteUser(user, "Fatal error");
 		}
 		return ;
 	}
 	params = irc::split(parameters, " ", 0);
 	if (this->getUserByNick(params[0]) != NULL) {
 		if (irc::numericReply(433, user, params) == -1 || user->isRegistered() == false) {
-			this->deleteUser(user);
+			this->deleteUser(user, "Fatal error");
 		}
 		return ;
 	} else if (params[0].size() > 8 ||
@@ -456,7 +467,7 @@ void	Server::checkNick(User* user, std::string parameters) {
 		((params[0].find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ;[]\\`_^{}|")) == 0))
 	{
 		if (irc::numericReply(432, user, params) == -1 || user->isRegistered() == false) {
-			this->deleteUser(user);
+			this->deleteUser(user, "Fatal error");
 		}
 		return ;
 	}
@@ -473,7 +484,7 @@ void	Server::checkUserCmd(User* user, std::string parameters) {
 
 	if (user->isRegistered() == true) {
 		if (irc::numericReply(462, user, params) == -1) {
-			this->deleteUser(user);
+			this->deleteUser(user, "Fatal error");
 		}
 		return ;
 	}
@@ -482,7 +493,7 @@ void	Server::checkUserCmd(User* user, std::string parameters) {
 		params.clear();
 		params.push_back("USER");
 		irc::numericReply(461, user, params);
-		this->deleteUser(user);
+		this->deleteUser(user, "Fatal error");
 		return ;
 	}
 	user->userCmd(params);
@@ -496,19 +507,19 @@ void	Server::welcomeUser(User *user) {
 	params.push_back(user->getUsername());
 	params.push_back(user->getHostname());
 	if (irc::numericReply(1, user, params) == -1) {
-		this->deleteUser(user);
+		this->deleteUser(user, "Fatal error");
 		return ;
 	}
 	params.clear();
 	params.push_back(this->conf.find("version")->second);
 	if (irc::numericReply(2, user, params) == -1) {
-		this->deleteUser(user);
+		this->deleteUser(user, "Fatal error");
 		return ;
 	}
 	params.clear();
 	params.push_back(this->conf.find("creation")->second);
 	if (irc::numericReply(3, user, params) == -1) {
-		this->deleteUser(user);
+		this->deleteUser(user, "Fatal error");
 		return ;
 	}
 	params.clear();
@@ -516,23 +527,26 @@ void	Server::welcomeUser(User *user) {
 	params.push_back("aiwro");
 	params.push_back("oitklbI");
 	if (irc::numericReply(4, user, params) == -1) {
-		this->deleteUser(user);
+		this->deleteUser(user, "Fatal error");
 		return ;
 	}
 	this->getMotd(user, "");
 }
 
-// TODO finish this function
 void	Server::listChannels (User* user) {
-	(void)user;
-	// Maybe send 321 and 323 from intList ?
-	// Send RPL_liststart 321
+	std::vector<std::string>	params;
+	int							visible_users;
+	char						buff[3];
+
 	for (std::vector<Channel *>::iterator it = this->channels.begin(); it != this->channels.end(); it++) {
-		//(*it).getChanName()
-		// Response must be : '322 nickname channelname nb_user_in_channel: topic'
-		// Maybe do call to function ?
+		params.push_back((*it)->getChanName());
+		visible_users = (*it)->getNbUsersInChan();
+		sprintf(buff, "%d", visible_users);
+		params.push_back(buff);
+		params.push_back((*it)->getChanTopic());
+		irc::numericReply(322, user, params);
+		params.clear();
 	}
-	// Send RPL_LISTEND 323
 }
 
 void	Server::getMotd(User* user, std::string parameters) {
@@ -541,30 +555,30 @@ void	Server::getMotd(User* user, std::string parameters) {
 
 	if (!param[0].empty() && param[0].compare((this->conf.find("name"))->second)) {
 		if (irc::numericReply(402, user, param) == -1) {
-			this->deleteUser(user);
+			this->deleteUser(user, "Fatal error");
 		}
 		return ;
 	} else if (motd.empty()) {
 		if (irc::numericReply(422, user, param) == -1) {
-			this->deleteUser(user);
+			this->deleteUser(user, "Fatal error");
 		}
 		return ;
 	}
 	if (irc::numericReply(375, user, param) == -1) {
-		this->deleteUser(user);
+		this->deleteUser(user, "Fatal error");
 		return ;
 	}
 	param.clear();
 	for (size_t i = 0; i < motd.size(); i += 80) {
     	param.push_back(motd.substr(i, 80));
 		if (irc::numericReply(372, user, param) == -1) {
-			this->deleteUser(user);
+			this->deleteUser(user, "Fatal error");
 			return ;
 		}
 		param.clear();
 	}
 	if (irc::numericReply(376, user, param) == -1) {
-		this->deleteUser(user);
+		this->deleteUser(user, "Fatal error");
 	}
 }
 
@@ -575,7 +589,7 @@ void	Server::retrieveTime(User* user, std::string parameters) {
 		std::vector<std::string> params;
 		params.push_back(name);
 		if (irc::numericReply(402, user, params) == -1) {
-			this->deleteUser(user);
+			this->deleteUser(user, "Fatal error");
 		}
 		return ;
 	}
@@ -586,7 +600,7 @@ void	Server::retrieveTime(User* user, std::string parameters) {
 	params.push_back(name);
 	params.push_back(s_time);
 	if (irc::numericReply(391, user, params) == -1) {
-		this->deleteUser(user);
+		this->deleteUser(user, "Fatal error");
 	}
 	return ;
 }
@@ -598,7 +612,7 @@ void	Server::retrieveVersion(User* user, std::string parameters) {
 	if (!parameters.empty() && parameters.compare(name)) {
 		params.push_back(name);
 		if (irc::numericReply(402, user, params) == -1) {
-			this->deleteUser(user);
+			this->deleteUser(user, "Fatal error");
 		}
 		return ;
 	}
@@ -606,7 +620,7 @@ void	Server::retrieveVersion(User* user, std::string parameters) {
 	params.push_back("");
 	params.push_back("");
 	if (irc::numericReply(351, user, params) == -1) {
-		this->deleteUser(user);
+		this->deleteUser(user, "Fatal error");
 	}
 }
 
@@ -635,10 +649,7 @@ void	Server::sendError (User* user, std::string parameter) {
 
 	parameter.insert(0, "ERROR :");
 	parameter += "\r\n";
-	int res = irc::sendString(fd, parameter);
-	if (res == -1) {
-		this->deleteUser(user);
-	}
+	irc::sendString(fd, parameter);
 }
 
 void	Server::sendPong (User* user, std::string server_name) {
@@ -661,7 +672,7 @@ void	Server::sendPong (User* user, std::string server_name) {
 		ret = irc::sendString(user->getFd(), server_name);
 	}
 	if (ret == -1) {
-		this->deleteUser(user);
+		this->deleteUser(user, "Fatal error");
 	}
 }
 

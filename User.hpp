@@ -100,7 +100,7 @@ namespace irc
 			void		set_o(bool val);
 
 			void		addChannel(Channel* chan);
-			void		deleteChannel(Channel* chan);
+			void		leaveChannel(Channel* chan);
 
 			// Commands
 			void		userCmd(std::vector<std::string>& params);
@@ -115,7 +115,6 @@ namespace irc
 			int			away(std::string msg = "");
 			void		quit(std::string reason);
 			void		partChannel(Channel* channel, std::string reason);
-			// void		part(std::vector<std::string> params);
 			int			whois(User* who);
 			void		kick(Channel* chan, std::string reason);
 			void		mode(User* ope, std::string params);

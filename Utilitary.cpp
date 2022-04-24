@@ -78,7 +78,7 @@ std::vector<std::string>	irc::split(std::string text, std::string space_delimite
 }
 
 int irc::sendString(int client_fd, const std::string& data) {
-	int result = send(client_fd, data.c_str(), data.length(), 0);
+	int result = send(client_fd, data.c_str(), data.length(), MSG_NOSIGNAL);
 	if (result == -1) {
 		std::cerr << "Error: send() with client fd = " << client_fd << std::endl;
 	}
