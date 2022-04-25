@@ -599,7 +599,7 @@ void Command::intKick() {
 	chans = irc::split(vec[0], ",", 0);
 	users = irc::split(vec[1], ",", 0);
 	if (vec.size() > 2 && vec[2] != ":") {
-		message = vec[2].erase(0, 1);
+		message = trim(vec[2], ":");
 	}
 	else {
 		message = "no reason";
