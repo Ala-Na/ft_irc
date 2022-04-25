@@ -201,7 +201,6 @@ void	Server::deleteUser(User* user, std::string reason) {
 	for (std::vector<User *>::iterator it1 = this->users.begin(); \
 			it1 != this->users.end(); it1++) {
 		if ((*it1) == user) {
-			std::cout << "Closing connection to client fd = " << (*it1)->getFd() << "\n" << std::endl;
 			this->deleteUserFromChannels(user, reason);
 			this->deleteServOperator(user);
 			this->sendError(user, reason);
@@ -211,6 +210,7 @@ void	Server::deleteUser(User* user, std::string reason) {
 			this->datas.erase(it2);
 			std::vector<pollfd>::iterator it3 = this->pfds.begin();
 			std::advance(it3, position + 1);
+			std::cout << "\nClosing connection to client fd = " << (*it3).fd << "\n" << std::endl;
 			close((*it3).fd);
 			this->pfds.erase(it3);
 			delete *it1;
@@ -328,6 +328,7 @@ void	Server::datasExtraction(std::string& buf, size_t pos) {
 			cmd_end = datas[pos].find("\r\n");
 		}
 		Command* cmd = new Command(getServer(), user, content);
+		std::cout << "New command: " << content << std::endl;
 		cmd->parseCommand();
 		delete cmd;
 	}

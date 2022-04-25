@@ -250,7 +250,7 @@ void	User::privmsgToUser(User* dest, std::string msg) // pov de la pax qui recoi
 }
 
 void	User::privmsgToChannel(Channel* channel, std::string msg) {
-	if (channel->userIsBannedFromChan(this) == true) {
+	if (channel->userIsBannedFromChan(this) == true || channel->userIsInChan(this) == false) {
 		std::vector<std::string> param;
 		param.push_back(channel->getChanName());
 		if (irc::numericReply(404, this, param) == -1) {
@@ -273,15 +273,12 @@ void	User::noticeToUser(User* dest, std::string msg) {
 }
 
 void	User::noticeToChannel(Channel* channel, std::string msg) {
-	if (channel->userIsBannedFromChan(this) == true) {
-		std::vector<std::string> param;
-		param.push_back(channel->getChanName());
-		if (irc::numericReply(404, this, param) == -1) {
-			return (this->_server->deleteUser(this, "Fatal error"));
-		}
-	}
 	std::string	full_msg = ":" + this->getNickname() + "!" + this->getUsername() + "@" + this->getHostname();
 	full_msg += " NOTICE " + channel->getChanName() + " :" + msg + "\r\n";
+	if (channel->userIsBannedFromChan(this) == true || channel->userIsInChan(this) == false) {
+		irc::sendString(this->getFd(), full_msg);
+		return ;
+	}
 	channel->writeToAllChanUsers(full_msg, this);
 }
 
