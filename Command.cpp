@@ -44,7 +44,7 @@ std::string	Command::getWord () {
 }
 
 void	Command::goToExecution () {
-	int const nbr_cmd = 24;
+	int const nbr_cmd = 25;
 	void (Command::*pmf[nbr_cmd])() = {&Command::intPass, &Command::intNick, \
 		&Command::intUser, &Command::intOper, \
 		&Command::intJoin, &Command::intTopic, &Command::intMode, \
@@ -53,10 +53,10 @@ void	Command::goToExecution () {
 		&Command::intNotice, &Command::intKill, &Command::intQuit, \
 		&Command::intWhoIs, &Command::intAway, &Command::intWallops, \
 		&Command::intUserhost, &Command::intMotd, \
-		&Command::intSummon, &Command::intUsers, &Command::intPing};
+		&Command::intSummon, &Command::intUsers, &Command::intPing, &Command::intTime};
 	std::string msg[nbr_cmd] = {"PASS", "NICK", "USER", "OPER", "JOIN", "TOPIC", "MODE", "PART", "NAMES", \
 		"LIST", "INVITE", "KICK", "PRIVMSG", "NOTICE", "KILL", "QUIT", \
-		"WHOIS", "AWAY", "WALLOPS", "USERHOST", "MOTD", "SUMMON", "USERS", "PING"};
+		"WHOIS", "AWAY", "WALLOPS", "USERHOST", "MOTD", "SUMMON", "USERS", "PING", "TIME"};
 
 	for (unsigned long i = 0; i < nbr_cmd; i++) {
 		if (prefix == "VERSION")
@@ -77,6 +77,10 @@ void	Command::goToExecution () {
 }
 
 // Intermediate Commands
+void	Command::intTime() {
+	this->server.retrieveTime(this->user, this->param);
+}
+
 void	Command::intUser() {
 	this->server.checkUserCmd(this->user, this->param);
 }

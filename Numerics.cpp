@@ -265,7 +265,7 @@ std::string	irc::replyString(int num_nb, User* user, std::vector<std::string>& s
 			msg += irc::RplYourOper();
 			break;
 		case 391:
-			msg += irc::RplTime(server, s_params[0]);
+			msg += irc::RplTime(s_params[0], s_params[1]);
 			break;
 		case 401:
 			msg += irc::ErrNoSuchNick(s_params[0]);
