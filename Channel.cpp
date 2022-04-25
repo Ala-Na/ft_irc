@@ -342,7 +342,7 @@ int Channel::addUser(User* user_to_add)
 	return (0);
 };
 
-// Here, message is either a PART or KICK formated message (KICK/PART #channel (nick for KICK) :reason)
+// Here, message is either a PART or KICK or QUIT formated message (KICK/PART #channel (nick for KICK) :reason)
 int Channel::deleteChanUser(User* user_to_delete, std::string message, bool kick) {
 	std::string msg;
 

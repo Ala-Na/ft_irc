@@ -273,12 +273,11 @@ void	User::noticeToUser(User* dest, std::string msg) {
 }
 
 void	User::noticeToChannel(Channel* channel, std::string msg) {
-	std::string	full_msg = ":" + this->getNickname() + "!" + this->getUsername() + "@" + this->getHostname();
-	full_msg += " NOTICE " + channel->getChanName() + " :" + msg + "\r\n";
 	if (channel->userIsBannedFromChan(this) == true || channel->userIsInChan(this) == false) {
-		irc::sendString(this->getFd(), full_msg);
 		return ;
 	}
+	std::string	full_msg = ":" + this->getNickname() + "!" + this->getUsername() + "@" + this->getHostname();
+	full_msg += " NOTICE " + channel->getChanName() + " :" + msg + "\r\n";
 	channel->writeToAllChanUsers(full_msg, this);
 }
 
