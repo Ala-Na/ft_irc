@@ -6,6 +6,22 @@ using namespace irc;
 
 bool	irc::running = true;
 
+bool	check_password(const char* password) {
+	size_t	len = strlen(password);
+	
+	if (len > 10) {
+		std::cerr << "Password is too long" << std::endl;
+		return false;
+	}
+	for(size_t i = 0; i < len; i++) {
+		if (!isalnum(password[i])) {
+			std::cerr << "Password doesn't contains only alphanumerics characters" << std::endl;
+			return false;
+		}
+	}
+	return true;
+}
+
 short	check_port_validity(const char* port)
 {
 	int	port_nb = std::atoi(port);
@@ -40,7 +56,9 @@ int	main (int argc, char **argv)
 
 	signal(SIGINT, sig_handler_function);
 
-	// TODO make verification for password
+	if (check_password(argv[2]) == false) {
+		return 1;
+	}
 	password = argv[2];
 
 	// Launch server
