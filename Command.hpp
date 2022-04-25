@@ -69,6 +69,7 @@ namespace irc {
 			void		intSummon();
 			void		intUsers();
 			void		intPing();
+			void		intTime();
 	};
 };
 

@@ -584,7 +584,9 @@ void	Server::retrieveTime(User* user, std::string parameters) {
 	std::string s_time = std::asctime(std::localtime(&time));
 	std::vector<std::string> params;
 	params.push_back(name);
+	std::cout << "in retrieve time name: " << name << std::endl;
 	params.push_back(s_time);
+	std::cout << "in retrieve time s_time: " << s_time << std::endl;
 	if (irc::numericReply(391, user, params) == -1) {
 		this->deleteUser(user, "Fatal error");
 	}
