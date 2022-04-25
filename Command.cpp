@@ -278,7 +278,7 @@ void Command::intJoin() {
 	}
 	while (i < vec_chan_names.size()) {
 		params.clear();
-		if (vec_chan_names[i] == "#0") { // SPECIAL CASE
+		if (vec_chan_names[i] == "0") { // SPECIAL CASE
 			std::vector<Channel *>	usr_chan = this->user->getChannels();
 			for (std::vector<Channel *>::iterator chan = usr_chan.begin(); chan != usr_chan.end(); chan ++) {
 				this->user->partChannel(*chan, "");
