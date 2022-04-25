@@ -276,13 +276,9 @@ void Command::intJoin() {
 	if (vec.size() > 1) {
 		vec_keys = irc::split(vec[1], ",", 0);
 	}
-	std::cout << "in INTJOIN i: " << i << std::endl;
-	std::cout << "in INTJOIN vec chan names size: " << vec_chan_names.size() << std::endl;
 	while (i < vec_chan_names.size()) {
 		params.clear();
-		std::cout << "vec_chan_names[i]: " << vec_chan_names[i] << std::endl;
 		if (vec_chan_names[i] == "#0") { // SPECIAL CASE
-			std::cout << "HERE in INTJOOIN\n";
 			std::vector<Channel *>	usr_chan = this->user->getChannels();
 			for (std::vector<Channel *>::iterator chan = usr_chan.begin(); chan != usr_chan.end(); chan ++) {
 				this->user->partChannel(*chan, "");
@@ -478,7 +474,6 @@ void Command::intPart() {
 		}
 		return ;
 	}
-	// std::cout << "chans.size(): " << chans.size() << std::endl;
 	for (size_t i = 0; i < chans.size(); i++) {
 		part_msg = "PART ";
 		chans[i] = irc::trim(chans[i], " ");
