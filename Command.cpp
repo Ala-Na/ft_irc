@@ -59,6 +59,8 @@ void	Command::goToExecution () {
 		"WHOIS", "AWAY", "WALLOPS", "USERHOST", "MOTD", "SUMMON", "USERS", "PING"};
 
 	for (unsigned long i = 0; i < nbr_cmd; i++) {
+		if (prefix == "VERSION")
+			return ;
 		if (!this->prefix.compare(msg[i])) {
 			if (i >= 3 && this->user->isRegistered() == false) {
 				return;
@@ -274,9 +276,13 @@ void Command::intJoin() {
 	if (vec.size() > 1) {
 		vec_keys = irc::split(vec[1], ",", 0);
 	}
+	std::cout << "in INTJOIN i: " << i << std::endl;
+	std::cout << "in INTJOIN vec chan names size: " << vec_chan_names.size() << std::endl;
 	while (i < vec_chan_names.size()) {
 		params.clear();
-		if (vec_chan_names[i] == "0") { // SPECIAL CASE
+		std::cout << "vec_chan_names[i]: " << vec_chan_names[i] << std::endl;
+		if (vec_chan_names[i] == "#0") { // SPECIAL CASE
+			std::cout << "HERE in INTJOOIN\n";
 			std::vector<Channel *>	usr_chan = this->user->getChannels();
 			for (std::vector<Channel *>::iterator chan = usr_chan.begin(); chan != usr_chan.end(); chan ++) {
 				this->user->partChannel(*chan, "");
@@ -472,6 +478,7 @@ void Command::intPart() {
 		}
 		return ;
 	}
+	// std::cout << "chans.size(): " << chans.size() << std::endl;
 	for (size_t i = 0; i < chans.size(); i++) {
 		part_msg = "PART ";
 		chans[i] = irc::trim(chans[i], " ");
@@ -599,7 +606,7 @@ void Command::intKick() {
 	chans = irc::split(vec[0], ",", 0);
 	users = irc::split(vec[1], ",", 0);
 	if (vec.size() > 2 && vec[2] != ":") {
-		message = vec[2].erase(0, 1);
+		message = trim(vec[2], ":");
 	}
 	else {
 		message = "no reason";
