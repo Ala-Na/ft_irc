@@ -198,7 +198,10 @@ void	Command::intPrivMsg() {
 			}
 			return;
 		}
-		this->param.erase(0, params[0].size() + 2);
+		this->param.erase(0, params[0].size() + 1);
+		if (param[0] == ':') {
+			this->param.erase(0, 1);
+		}
 		this->user->privmsgToUser(dest, this->param);
 	} else {
 		Channel*	chan = this->server.getChannelByName(params[0]);
@@ -208,7 +211,10 @@ void	Command::intPrivMsg() {
 			}
 			return;
 		}
-		this->param.erase(0, params[0].size() + 2);
+		this->param.erase(0, params[0].size() + 1);
+		if (param[0] == ':') {
+			this->param.erase(0, 1);
+		}
 		this->user->privmsgToChannel(chan, this->param);
 	}
 }
@@ -229,14 +235,20 @@ void	Command::intNotice() {
 		if (dest == NULL) {
 			return;
 		}
-		this->param.erase(0, params[0].size() + 2);
+		this->param.erase(0, params[0].size() + 1);
+		if (param[0] == ':') {
+			this->param.erase(0, 1);
+		}
 		this->user->noticeToUser(dest, this->param);
 	} else {
 		Channel*	chan = this->server.getChannelByName(params[0]);
 		if (chan == NULL) {
 			return;
 		}
-		this->param.erase(0, params[0].size() + 2);
+		this->param.erase(0, params[0].size() + 1);
+		if (param[0] == ':') {
+			this->param.erase(0, 1);
+		}
 		this->user->noticeToChannel(chan, this->param);
 	}
 }
