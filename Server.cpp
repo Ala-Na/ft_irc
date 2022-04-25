@@ -360,28 +360,15 @@ Channel*	Server::getChannelByName(std::string name) {
 	return (NULL);
 }
 
-User*	Server::getUserByUsername(std::string name)
-{
-	unsigned long i;
-
-	i = 0;
-	while (i < users.size()) {
-		if (users[i]->getUsername() == name) {
-			return (users[i]);
-		}
-		i++;
-	}
-	return (NULL);
-}
-
 User*	Server::getUserByNick(std::string nick)
 {
 	unsigned long i;
 
 	i = 0;
 	while (i < users.size()) {
-		if (users[i]->getNickname() == nick)
+		if (users[i]->getNickname() == nick) {
 			return (users[i]);
+		}
 		i++;
 	}
 	return (NULL);
