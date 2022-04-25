@@ -510,11 +510,10 @@ void    Command::intQuit() {
 
 	message = irc::trim(param, ":");
 	vec_chan = this->user->getChannels();
-	this->server.sendError(user, this->param);
 	for (std::vector<Channel *>::reverse_iterator rit = vec_chan.rbegin(); rit != vec_chan.rend(); rit++) {
 		(*rit)->deleteChanUser(user, "QUIT :" + message);
 	}
-	this->server.deleteUser(user, "Fatal error");
+	this->server.deleteUser(user, this->param.erase(0, 1));
 	this->server.deleteEmptyChannels();
 }
 
