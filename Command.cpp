@@ -757,7 +757,6 @@ void Command::intKill() {
 		chans[i]->deleteChanUser(user_to_kill, "PART " + chans[i]->getChanName() + " :KILL - " + vec[1]);
 	}
 	this->server.deleteEmptyChannels();
-	this->server.sendError(user_to_kill, "KILL - " + vec[1]);
 	this->server.deleteUser(user_to_kill, "KILL - " + vec[1]);
 }
 
