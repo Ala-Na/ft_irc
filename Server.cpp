@@ -640,24 +640,22 @@ void	Server::sendError (User* user, std::string parameter) {
 	irc::sendString(fd, parameter);
 }
 
-void	Server::sendPong (User* user, std::string server_name) {
+void	Server::sendPong (User* user, std::string server_names) {
+	std::vector<std::string>	serv;
 	std::vector<std::string>	params;
+	std::string					pong_msg;
 	int							ret;
 	std::string 				name = this->conf.find("name")->second;
 
-	if (server_name.empty()) {
+	serv = irc::split(server_names, " ", 0);
+	if (serv[0].empty()) {
 		ret = irc::numericReply(409, user, params);
-	} else if (server_name != name) {
-		params.push_back(server_name);
+	} else if (serv.size() > 1 && serv[1] != name) {
+		params.push_back(serv[1]);
 		ret = irc::numericReply(402, user, params);
 	} else {
-		server_name.insert(0, " :");
-		server_name.insert(0, name);
-		server_name.insert(0, " PONG ");
-		server_name.insert(0, name);
-		server_name.insert(0, ":");
-		server_name += "\r\n";
-		ret = irc::sendString(user->getFd(), server_name);
+		pong_msg = ":" + name + " PONG " + name + " :" + serv[0] + "\r\n";
+		ret = irc::sendString(user->getFd(), pong_msg);
 	}
 	if (ret == -1) {
 		this->deleteUser(user, "Fatal error");
