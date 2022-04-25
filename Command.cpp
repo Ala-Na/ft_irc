@@ -17,10 +17,8 @@ void	Command::parseCommand () {
 	} else {
 		this->prefix = first_word;
 	}
-	std::cout << this->prefix << std::endl;
 	this->prefix = ft_toupper_str(this->prefix);
 	this->param = this->content;
-	std::cout << this->param << std::endl;
 
 	this->goToExecution();
 
@@ -60,7 +58,6 @@ void	Command::goToExecution () {
 		"LIST", "INVITE", "KICK", "PRIVMSG", "NOTICE", "KILL", "QUIT", \
 		"WHOIS", "AWAY", "WALLOPS", "USERHOST", "MOTD", "SUMMON", "USERS", "PING"};
 
-	std::cout << this->prefix << std::endl;
 	for (unsigned long i = 0; i < nbr_cmd; i++) {
 		if (!this->prefix.compare(msg[i])) {
 			if (i >= 3 && this->user->isRegistered() == false) {
@@ -677,7 +674,6 @@ void Command::intTopic() {
 		}
 		return ;
 	}
-	std::cout << irc::there_is_no(':', param) << std::endl;
 	vec = irc::split(param, ":", 0);
 	if (vec[0][0] != '#') {
 		vec[0].insert(0, "#");

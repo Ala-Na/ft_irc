@@ -6,7 +6,6 @@ using namespace irc;
 #define END "\r\n"
 
 int	irc::sendNumeric(int fd, std::string msg) {
-	std::cout << msg << std::endl;
 	int res = irc::sendString(fd, msg);
 	if (res == -1) {
 		return -1;
