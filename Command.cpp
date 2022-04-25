@@ -143,11 +143,10 @@ void	Command::intUserhost() {
 	}
 	nicks = irc::split(param, " ", 0);
 	for (size_t i = 0; i < nicks.size(); i++) {
-	{
 		User* usr = this->server.getUserByNick(nicks[i]);
 		if (usr != NULL) {
 			reply.append(usr->getNickname());
-			if (usr->get_o()) {}
+			if (usr->get_o()) {
 				reply.append("*");
 			}
 			reply.append("=");
