@@ -261,7 +261,6 @@ int Channel::listAllUsersInChan(User* user_asking) {
 		names += vec_chan_users[i]->getNickname();
 		names += " ";
 	}
-	std::cout << names << std::endl;
 	params.push_back(names);
 	ret = irc::numericReply(353, user_asking, params);
 	params.clear();
@@ -352,8 +351,6 @@ int Channel::deleteChanUser(User* user_to_delete, std::string message, bool kick
 		msg += " ";
 	}
 	msg += message + "\r\n";
-	std::cout << message << std::endl;
-	std::cout << msg << std::endl;
 	for (std::vector<User *>::iterator it = vec_chan_users.begin(); it != vec_chan_users.end(); it++) {
 		if ((*it) == user_to_delete) {
 			if (message.find("QUIT") == 0) {
@@ -700,10 +697,8 @@ void	Channel::setModes(User* user, std::string modes) {
 		if (ope == true) {
 			change++;
 		}
-		std::cout << change << std::endl;
 	}
 	if (ope == false && change == 0) {
-		std::cout << change << std::endl;
 		param.push_back(chan_name);
 		if (irc::numericReply(482, user, param) == -1) { // ERR_CHANOPRIVSNEEDED
 			this->server->deleteUser(user, "Fatal error");

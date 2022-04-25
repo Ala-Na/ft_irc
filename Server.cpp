@@ -303,7 +303,7 @@ void	Server::receiveDatas() {
 				break ;
 			} else {
 				buf[bytes_recv] = 0;
-				std::cout << "\n\n-----------------\n\nFrom client (fd = " << (*it).fd << "): " << buf << std::endl;
+				std::cout << "\nFrom client (fd = " << (*it).fd << "): " << buf;
 				s_buf = buf;
 				this->datasExtraction(s_buf, it - pfds.begin() - 1);
 				break ;
@@ -327,7 +327,6 @@ void	Server::datasExtraction(std::string& buf, size_t pos) {
 			datas[pos].erase(0, cmd_end + 2);
 			cmd_end = datas[pos].find("\r\n");
 		}
-		std::cout << "\nCreating new command with: " << content << std::endl;
 		Command* cmd = new Command(getServer(), user, content);
 		cmd->parseCommand();
 		delete cmd;
@@ -352,7 +351,6 @@ Channel*	Server::getChannelByName(std::string name) {
 	{
 		curr_chan = channels[i]->getChanName();
 		transform(curr_chan.begin(), curr_chan.end(), curr_chan.begin(), ::toupper);
-		// std::cout << "chan_name to find: " << name << " - chan_names in vec: " << curr_chan << std::endl;
 		if (curr_chan == name)
 			return (channels[i]);
 		i++;

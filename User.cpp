@@ -430,6 +430,7 @@ void	User::mode(User* ope, std::string new_modes) {
 			sendMode(ope, mode_msg + "-r");
 		} else if (*it == 'o' && plus == false && get_o() == true) {
 			set_o(false);
+			this->_server->deleteServOperator(this);
 			sendMode(ope, mode_msg + "-o");
 		} else if (valid.find_first_of(*it) == std::string::npos && !isspace(*it)) {
 			irc::numericReply(501, ope, params);
