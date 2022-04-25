@@ -6,7 +6,6 @@
 #include <vector>
 #include <stdlib.h>
 
-// TODO modify following
 #include "Server.hpp"
 #include "User.hpp"
 #include "Channel.hpp"
