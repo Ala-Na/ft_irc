@@ -58,9 +58,9 @@ void	Command::goToExecution () {
 		"LIST", "INVITE", "KICK", "PRIVMSG", "NOTICE", "KILL", "QUIT", \
 		"WHOIS", "AWAY", "WALLOPS", "USERHOST", "MOTD", "SUMMON", "USERS", "PING", "TIME"};
 
+	if (prefix == "VERSION")
+		return ;
 	for (unsigned long i = 0; i < nbr_cmd; i++) {
-		if (prefix == "VERSION")
-			return ;
 		if (!this->prefix.compare(msg[i])) {
 			if (i >= 3 && this->user->isRegistered() == false) {
 				return;
@@ -812,7 +812,6 @@ void		Command::intPass() {
 
 void	Command::intSummon() {
 	std::vector<std::string>	params;
-
 	if (irc::numericReply(445, user, params) == -1) {
 		this->server.deleteUser(this->user, "Fatal error");
 	}
