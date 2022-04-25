@@ -358,6 +358,12 @@ int Channel::deleteChanUser(User* user_to_delete, std::string message, bool kick
 			} else {
 				writeToAllChanUsers(msg, NULL);
 			}
+			for (std::vector<User *>::iterator op = vec_chan_operators.begin(); op != vec_chan_operators.end(); op++) {
+				if ((*op) == user_to_delete) {
+					vec_chan_operators.erase(op);
+					break;
+				}
+			}
 			vec_chan_users.erase(it);
 			user_to_delete->leaveChannel(this);
 			return (0);
